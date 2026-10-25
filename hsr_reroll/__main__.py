@@ -14,9 +14,12 @@ ROOT = Path(__file__).resolve().parent.parent
 def cmd_simulate(a):
     from . import simulator
     plan = simulator.Plan(departure=a.departure, limited=a.limited, standard=a.standard,
-                          limited_name=a.name, win_rate=a.win_rate)
+                          limited_name=a.name, win_rate=a.win_rate, budget=a.budget)
     s = simulator.run(plan, trials=a.trials, seed=a.seed, goal_score=a.goal, limited_score=a.limited_score)
-    print(f"시뮬레이션 {s.trials:,}회 | 출발 {plan.departure} + 한정 {plan.limited} + 상시 {plan.standard}뽑")
+    if plan.budget is not None:
+        print(f"시뮬레이션 {s.trials:,}회 | 패스 {plan.budget}장 (출발 워프 먼저, 나머지 한정)")
+    else:
+        print(f"시뮬레이션 {s.trials:,}회 | 출발 {plan.departure} + 한정 {plan.limited} + 상시 {plan.standard}뽑")
     print(f"  평균 5성 수      : {s.mean_5star:.2f}")
     print(f"  한정 5성 1+ 확률 : {s.p_limited:.1%}")
     print(f"  5성 2+ 확률      : {s.p_two_plus_5star:.1%}")
@@ -25,6 +28,16 @@ def cmd_simulate(a):
         print(f"  목표 점수 {a.goal}+ 확률: {s.p_goal:.2%}  -> 평균 {s.expected_accounts_for_goal:.1f} 계정 필요")
     print("  5성 개수 분포    : " + "  ".join(f"{k}개 {v:.1%}" for k, v in s.count_hist.items()))
     print("  상시 5성 등장률  : " + "  ".join(f"{k} {v:.1%}" for k, v in s.standard_hist.items()))
+
+
+def cmd_simreport(a):
+    from . import simreport
+    md = simreport.run([int(x) for x in a.budgets.split(",")], a.trials, a.name, a.minutes)
+    out = Path(a.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(md, "utf-8")
+    print(md.split("<details>")[0])
+    print(f"저장: {out}")
 
 
 def cmd_capture(a):
@@ -119,7 +132,16 @@ def main(argv=None):
     s.add_argument("--seed", type=int)
     s.add_argument("--goal", type=float, help="이 점수 이상이면 '성공 계정'")
     s.add_argument("--limited-score", type=float, default=9)
+    s.add_argument("--budget", type=int, help="총 패스 수 (출발 워프 먼저, 나머지 한정 배너)")
     s.set_defaults(fn=cmd_simulate)
+
+    s = sub.add_parser("simreport", help="예산별 목표 달성 확률 표(markdown) 생성")
+    s.add_argument("--budgets", default="20,30,40,60,80,100,130")
+    s.add_argument("--trials", type=int, default=200_000)
+    s.add_argument("--name", default="Blade")
+    s.add_argument("--minutes", type=float, default=25)
+    s.add_argument("--out", default="reroll_data/simulation.md")
+    s.set_defaults(fn=cmd_simreport)
 
     s = sub.add_parser("capture", help="게임 화면에서 템플릿 이미지 잘라 저장")
     s.add_argument("name")

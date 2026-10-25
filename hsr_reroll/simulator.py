@@ -40,6 +40,7 @@ class Plan:
     standard: int = 0            # pulls on Stellar Warp
     limited_name: str = "Limited"
     win_rate: float = 0.5        # chance a limited 5-star is the rate-up
+    budget: int | None = None    # total passes; if set, Departure x10s (8 passes each) first, rest on limited
 
     def __post_init__(self):
         self.departure = max(0, min(50, self.departure))
@@ -80,6 +81,8 @@ def _roll_banner(rng: random.Random, pulls: int, rate: dict, hard_cap: int | Non
 
 def simulate_account(plan: Plan, rng: random.Random) -> Outcome:
     out = Outcome()
+    if plan.budget is not None:
+        return _simulate_budget(plan, rng, out)
     if plan.departure:
         # Departure Warp ends after its first 5-star, guaranteed by pull 50.
         hits, fours = _roll_banner(rng, plan.departure, CHAR_RATE, hard_cap=50, stop_first=True)
@@ -101,6 +104,23 @@ def simulate_account(plan: Plan, rng: random.Random) -> Outcome:
     for _ in hits:
         # Stellar Warp 5-stars are split between characters and light cones.
         out.five_stars.append(rng.choice(STANDARD_5STARS) if rng.random() < 0.5 else "LightCone")
+    return out
+
+
+def _simulate_budget(plan: Plan, rng: random.Random, out: Outcome) -> Outcome:
+    # Departure only sells x10 at 8 passes; it closes after its 5-star, refunding nothing extra.
+    dep_pulls = min(50, (plan.budget // 8) * 10)
+    hits, fours = _roll_banner(rng, dep_pulls, CHAR_RATE, hard_cap=50, stop_first=True)
+    out.four_stars += fours
+    used = dep_pulls
+    if hits:
+        out.five_stars.append(rng.choice(STANDARD_5STARS))
+        used = -(-hits[0] // 10) * 10
+    rest = plan.budget - used * 8 // 10
+    sub = Plan(departure=0, limited=rest, limited_name=plan.limited_name, win_rate=plan.win_rate)
+    extra = simulate_account(sub, rng)
+    out.five_stars += extra.five_stars
+    out.four_stars += extra.four_stars
     return out
 
 

@@ -133,3 +133,11 @@ def test_scenarios_use_known_steps(name):
         collect_types(sub, types)
     for t in types:
         assert hasattr(Runner, "s_" + t), t
+
+
+def test_budget_mode_spends_departure_first():
+    rng = random.Random(5)
+    for _ in range(2000):
+        out = simulator.simulate_account(simulator.Plan(budget=40), rng)
+        assert len(out.five_stars) >= 1  # 40 passes buy all 50 Departure pulls
+    assert len(simulator.simulate_account(simulator.Plan(budget=0), rng).five_stars) == 0
