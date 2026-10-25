@@ -1,0 +1,19 @@
+{
+  "_comment": "score: reroll value 0-10 used by the simulator and ledger. Edit freely. Tiers summarised from Oct 2026 community lists (Game8, Pocket Tactics, Beebom, Korean tier posts) as of version 4.6 phase 2.",
+  "limited_default_score": 8,
+  "characters": [
+    {"name": "Bronya",  "ko": "브로냐",  "pool": "standard", "tier": "SS", "score": 6,   "role": "버퍼(Harmony)"},
+    {"name": "Himeko",  "ko": "히메코",  "pool": "standard", "tier": "SS", "score": 5,   "role": "광역 딜러(Erudition)"},
+    {"name": "Welt",    "ko": "웰트",    "pool": "standard", "tier": "SS", "score": 4.5, "role": "디버퍼/서브딜(Nihility)"},
+    {"name": "Gepard",  "ko": "게파드",  "pool": "standard", "tier": "S",  "score": 4,   "role": "보존 탱커(Preservation)"},
+    {"name": "Clara",   "ko": "클라라",  "pool": "standard", "tier": "S",  "score": 3,   "role": "반격 딜러(Destruction)"},
+    {"name": "Bailu",   "ko": "백로",    "pool": "standard", "tier": "S",  "score": 3,   "role": "힐러(Abundance)"},
+    {"name": "Yanqing", "ko": "언경",    "pool": "standard", "tier": "B",  "score": 1.5, "role": "단일 딜러(Hunt)"},
+    {"name": "LightCone", "ko": "5성 광추", "pool": "standard", "tier": "-", "score": 1, "role": "상시 5성 광추"},
+
+    {"name": "Mortenax Blade", "ko": "블레이드(Mortenax Blade)", "pool": "limited", "tier": "SS", "score": 9, "role": "딜러 - 4.6 후반 복각 (~11/10)"},
+    {"name": "Pearl",          "ko": "펄",                       "pool": "limited", "tier": "SS", "score": 7, "role": "환락(Elation) 생존 서포터 - 4.6 신규 (~11/10)"},
+    {"name": "Evanescia",      "ko": "에바네시아",               "pool": "limited", "tier": "SS", "score": 8, "role": "물리 환락 딜러 - 4.6 전반 복각(종료)"},
+    {"name": "Archer",         "ko": "아처",                     "pool": "selector", "tier": "SS", "score": 0, "role": "4.6 Fate 이벤트 무료 선택권 (아처/길가메시)"}
+  ]
+}

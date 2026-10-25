@@ -1,0 +1,10 @@
+{
+  "_comment": "가장 안전한 반자동 모드: 사람이 튜토리얼/뽑기를 하고, 도구는 기록 조회·스크린샷·로그아웃 대기만 담당.",
+  "label_prefix": "acc",
+  "cycle": [
+    {"type": "prompt", "message": "{label}: 가입 -> 튜토리얼 -> 우편 -> 뽑기 -> 워프 '기록' 화면 열기까지 진행하세요"},
+    {"type": "screenshot", "name": "records"},
+    {"type": "fetch_results"},
+    {"type": "prompt", "message": "로그아웃 후 다음 계정 준비되면 Enter"}
+  ]
+}

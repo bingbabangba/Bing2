@@ -1,0 +1,78 @@
+{
+  "_comment": "한 계정 = 1 사이클. 템플릿 이름은 docs/템플릿_캡처_가이드.md 참고. 화면 문구/위치는 게임 버전에 따라 다르므로 직접 캡처 후 check 로 확인하세요.",
+  "threshold": 0.85,
+  "label_prefix": "acc",
+  "setup": [
+    {"type": "log", "message": "게임이 로그인 화면(시작 화면)에 있어야 합니다"}
+  ],
+  "cycle": [
+    {"type": "prompt", "message": "{label}: 새 HoYoverse 계정을 가입/로그인하세요 (이메일 인증코드·캡차는 직접 입력)"},
+    {"type": "click", "template": "start_tap", "timeout": 120, "optional": true},
+
+    {"type": "log", "message": "튜토리얼 진행: 대사 스킵 + 자동 전투 + 녹화 매크로"},
+    {"type": "until", "template": "phone_menu_ready", "timeout": 2400, "do": [
+      {"type": "if", "template": "dialog_skip", "then": [
+        {"type": "click", "template": "dialog_skip", "timeout": 2},
+        {"type": "click", "template": "confirm", "timeout": 3, "optional": true}
+      ]},
+      {"type": "if", "template": "dialog_option", "then": [{"type": "click", "template": "dialog_option", "timeout": 2}]},
+      {"type": "if", "template": "battle_auto_off", "then": [{"type": "click", "template": "battle_auto_off", "timeout": 2}]},
+      {"type": "if", "template": "tutorial_close", "then": [{"type": "click", "template": "tutorial_close", "timeout": 2}]},
+      {"type": "if", "template": "skip_cutscene", "then": [
+        {"type": "click", "template": "skip_cutscene", "timeout": 2},
+        {"type": "click", "template": "confirm", "timeout": 3, "optional": true}
+      ]},
+      {"type": "if", "template": "walk_segment_1", "then": [{"type": "replay", "file": "../macros/walk_1.json"}]},
+      {"type": "if", "template": "walk_segment_2", "then": [{"type": "replay", "file": "../macros/walk_2.json"}]},
+      {"type": "click", "x": 0.5, "y": 0.85, "after": 0.4}
+    ]},
+
+    {"type": "call", "name": "claim_mail"},
+    {"type": "call", "name": "warp_all"},
+    {"type": "call", "name": "open_records"},
+    {"type": "fetch_results"},
+    {"type": "call", "name": "logout"}
+  ],
+  "subroutines": {
+    "claim_mail": [
+      {"type": "key", "key": "esc"},
+      {"type": "click", "template": "menu_mail", "timeout": 10, "optional": true},
+      {"type": "click", "template": "mail_claim_all", "timeout": 10, "optional": true},
+      {"type": "key", "key": "esc", "times": 3, "interval": 1.0}
+    ],
+    "warp_all": [
+      {"type": "key", "key": "esc"},
+      {"type": "click", "template": "menu_warp", "timeout": 10},
+      {"type": "repeat", "times": 10, "do": [
+        {"type": "if", "template": "warp_x10", "then": [
+          {"type": "click", "template": "warp_x10", "timeout": 3},
+          {"type": "click", "template": "confirm", "timeout": 3, "optional": true},
+          {"type": "until", "template": "warp_result_close", "timeout": 90, "do": [
+            {"type": "click", "template": "warp_skip", "timeout": 1, "optional": true},
+            {"type": "click", "x": 0.5, "y": 0.5, "after": 0.4}
+          ]},
+          {"type": "screenshot", "name": "warp_result"},
+          {"type": "click", "template": "warp_result_close", "timeout": 5}
+        ], "else": [
+          {"type": "click", "template": "warp_next_banner", "timeout": 2, "optional": true}
+        ]}
+      ]}
+    ],
+    "open_records": [
+      {"type": "click", "template": "warp_details", "timeout": 10, "optional": true},
+      {"type": "click", "template": "warp_records", "timeout": 10, "optional": true},
+      {"type": "sleep", "sec": 3},
+      {"type": "screenshot", "name": "records"},
+      {"type": "key", "key": "esc", "times": 3, "interval": 1.0}
+    ],
+    "logout": [
+      {"type": "key", "key": "esc"},
+      {"type": "click", "template": "menu_more", "timeout": 10, "optional": true},
+      {"type": "click", "template": "menu_settings", "timeout": 10, "optional": true},
+      {"type": "click", "template": "settings_account", "timeout": 10, "optional": true},
+      {"type": "click", "template": "logout_button", "timeout": 10, "optional": true},
+      {"type": "click", "template": "confirm", "timeout": 5, "optional": true},
+      {"type": "wait", "template": "login_screen", "timeout": 120}
+    ]
+  }
+}
