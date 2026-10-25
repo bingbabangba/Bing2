@@ -1,0 +1,86 @@
+{
+  "_comment": "안드로이드 에뮬레이터(ADB)용 1계정 사이클. run-multi 로 여러 인스턴스 동시 실행. 템플릿은 에뮬레이터 화면에서 `--serial <주소> capture <이름>` 으로 캡처 (해상도 1920x1080 가로 권장, 모든 인스턴스 동일 해상도).",
+  "threshold": 0.85,
+  "label_prefix": "emu",
+  "setup": [
+    {"type": "launch", "wait": 20},
+    {"type": "wait", "template": "login_screen", "timeout": 600}
+  ],
+  "cycle": [
+    {"type": "prompt", "message": "{label}: 이 에뮬레이터에서 새 계정 가입/로그인 (이메일 코드·캡차 직접 입력)"},
+    {"type": "click", "template": "start_tap", "timeout": 180, "optional": true},
+
+    {"type": "until", "template": "phone_menu_ready", "timeout": 3000, "do": [
+      {"type": "if", "template": "dialog_skip", "then": [
+        {"type": "click", "template": "dialog_skip", "timeout": 2},
+        {"type": "click", "template": "confirm", "timeout": 3, "optional": true}
+      ]},
+      {"type": "if", "template": "dialog_option", "then": [{"type": "click", "template": "dialog_option", "timeout": 2}]},
+      {"type": "if", "template": "battle_auto_off", "then": [{"type": "click", "template": "battle_auto_off", "timeout": 2}]},
+      {"type": "if", "template": "tutorial_close", "then": [{"type": "click", "template": "tutorial_close", "timeout": 2}]},
+      {"type": "if", "template": "skip_cutscene", "then": [
+        {"type": "click", "template": "skip_cutscene", "timeout": 2},
+        {"type": "click", "template": "confirm", "timeout": 3, "optional": true}
+      ]},
+      {"type": "if", "template": "walk_segment_1", "then": [{"type": "replay", "file": "../macros/emu_walk_1.json"}]},
+      {"type": "if", "template": "walk_segment_2", "then": [{"type": "replay", "file": "../macros/emu_walk_2.json"}]},
+      {"type": "click", "x": 0.5, "y": 0.85, "after": 0.4}
+    ]},
+
+    {"type": "call", "name": "claim_mail"},
+    {"type": "call", "name": "warp_all"},
+    {"type": "call", "name": "open_records"},
+    {"type": "fetch_results"},
+    {"type": "call", "name": "logout"}
+  ],
+  "subroutines": {
+    "open_phone": [
+      {"type": "click", "template": "phone_button", "timeout": 10, "optional": true}
+    ],
+    "claim_mail": [
+      {"type": "call", "name": "open_phone"},
+      {"type": "click", "template": "menu_mail", "timeout": 10, "optional": true},
+      {"type": "click", "template": "mail_claim_all", "timeout": 10, "optional": true},
+      {"type": "key", "key": "back", "times": 3, "interval": 1.0}
+    ],
+    "warp_all": [
+      {"type": "call", "name": "open_phone"},
+      {"type": "click", "template": "menu_warp", "timeout": 10},
+      {"type": "repeat", "times": 12, "do": [
+        {"type": "if", "template": "warp_x10", "then": [
+          {"type": "click", "template": "warp_x10", "timeout": 3},
+          {"type": "click", "template": "confirm", "timeout": 3, "optional": true},
+          {"type": "until", "template": "warp_result_close", "timeout": 120, "do": [
+            {"type": "click", "template": "warp_skip", "timeout": 1, "optional": true},
+            {"type": "click", "x": 0.5, "y": 0.5, "after": 0.4}
+          ]},
+          {"type": "screenshot", "name": "warp_result"},
+          {"type": "click", "template": "warp_result_close", "timeout": 5}
+        ], "else": [
+          {"type": "click", "template": "warp_next_banner", "timeout": 2, "optional": true}
+        ]}
+      ]}
+    ],
+    "open_records": [
+      {"type": "click", "template": "warp_details", "timeout": 10, "optional": true},
+      {"type": "click", "template": "warp_records", "timeout": 10, "optional": true},
+      {"type": "sleep", "sec": 4},
+      {"type": "screenshot", "name": "records"},
+      {"type": "key", "key": "back", "times": 3, "interval": 1.0}
+    ],
+    "logout": [
+      {"type": "call", "name": "open_phone"},
+      {"type": "click", "template": "menu_more", "timeout": 10, "optional": true},
+      {"type": "click", "template": "menu_settings", "timeout": 10, "optional": true},
+      {"type": "click", "template": "settings_account", "timeout": 10, "optional": true},
+      {"type": "click", "template": "logout_button", "timeout": 10, "optional": true},
+      {"type": "click", "template": "confirm", "timeout": 5, "optional": true},
+      {"type": "if", "template": "login_screen", "else": [
+        {"type": "log", "message": "UI 로그아웃 실패 -> 게임 재시작"},
+        {"type": "stop_app"},
+        {"type": "launch", "wait": 20}
+      ]},
+      {"type": "wait", "template": "login_screen", "timeout": 300}
+    ]
+  }
+}

@@ -42,10 +42,10 @@ def cmd_simreport(a):
 
 def cmd_capture(a):
     import cv2
-    from . import vision, winio
-    hwnd = winio.find_window()
-    winio.focus(hwnd)
-    img = winio.Screen(hwnd).grab()
+    from . import vision
+    be = make_backend(a)
+    be.prepare()
+    img = be.grab()
     print("마우스로 영역을 드래그하고 Enter/Space, 취소는 c")
     roi = cv2.selectROI(f"capture: {a.name}", img, showCrosshair=True)
     cv2.destroyAllWindows()
@@ -57,9 +57,8 @@ def cmd_capture(a):
 
 
 def cmd_check(a):
-    from . import vision, winio
-    hwnd = winio.find_window()
-    img = winio.Screen(hwnd).grab()
+    from . import vision
+    img = make_backend(a).grab()
     t = vision.Templates(a.templates)
     for p in sorted(Path(a.templates).glob("*.png")):
         m = vision.find(img, t.get(p.stem), threshold=0.0)
@@ -67,15 +66,58 @@ def cmd_check(a):
         print(f"  {flag} {p.stem:<28} {m.score if m else 0:.3f}")
 
 
+def make_device(a, serial: str):
+    from . import adbio
+    return adbio.Device(adbio.Adb(a.adb), serial, adbio.PACKAGES.get(a.package, a.package))
+
+
+def make_backend(a):
+    """--serial selects an emulator over adb, otherwise the PC client window."""
+    from . import backends
+    if a.serial:
+        return backends.AdbBackend(make_device(a, a.serial))
+    return backends.WindowsBackend(game_dir=a.game_dir)
+
+
 def cmd_run(a):
     from .runner import Runner
-    r = Runner(Path(a.scenario), Path(a.templates), Ledger(a.ledger), game_dir=a.game_dir, dry_run=a.dry_run)
+    r = Runner(Path(a.scenario), Path(a.templates), Ledger(a.ledger), make_backend(a), dry_run=a.dry_run)
+    print("F12(Windows) 또는 Ctrl+C 로 중단")
     r.run(a.accounts, a.start)
+
+
+def cmd_devices(a):
+    from . import adbio
+    adb = adbio.Adb(a.adb)
+    families = adbio.EMULATOR_PORTS if a.emulator == "all" else {a.emulator: adbio.EMULATOR_PORTS[a.emulator]}
+    for fam, ports in families.items():
+        ok = adb.connect_ports(ports)
+        if ok:
+            print(f"{fam}: {', '.join(ok)}")
+    devs = adb.devices()
+    print(f"\n연결된 기기 {len(devs)}개:")
+    for d in devs:
+        dev = make_device(a, d)
+        w, h = (lambda img: (img.shape[1], img.shape[0]))(dev.screencap())
+        print(f"  {d:<22} {w}x{h}  게임 실행 중: {'예' if dev.is_running() else '아니오'}")
+
+
+def cmd_run_multi(a):
+    from . import adbio
+    from .runner import run_multi
+    serials = a.devices.split(",") if a.devices != "auto" else adbio.Adb(a.adb).devices()
+    if not serials:
+        sys.exit("연결된 에뮬레이터가 없습니다. 먼저 `devices` 로 연결하세요.")
+    print(f"{len(serials)}개 에뮬레이터에서 각 {a.accounts}계정씩 실행: {', '.join(serials)}")
+    errors = run_multi(Path(a.scenario), Path(a.templates), Ledger(a.ledger),
+                       [make_device(a, s) for s in serials], a.accounts, dry_run=a.dry_run)
+    for serial, e in errors.items():
+        print(f"  {serial}: {e!r}")
 
 
 def cmd_fetch(a):
     from .runner import fetch_new_results
-    fetch_new_results(Ledger(a.ledger), a.label, a.game_dir)
+    fetch_new_results(Ledger(a.ledger), a.label, make_backend(a).read_authkeys())
 
 
 def cmd_refresh(a):
@@ -120,6 +162,9 @@ def main(argv=None):
     p.add_argument("--ledger", default=str(DEFAULT_PATH))
     p.add_argument("--templates", default=str(ROOT / "templates"))
     p.add_argument("--game-dir", default=None, help="StarRail_Data 경로 (자동 탐지 실패 시)")
+    p.add_argument("--serial", help="에뮬레이터 adb 주소 (예: 127.0.0.1:16384). 없으면 PC 클라이언트")
+    p.add_argument("--adb", help="adb 실행 파일 경로 (에뮬레이터 설치 폴더의 adb.exe)")
+    p.add_argument("--package", default="global", help="global | cn | 패키지명")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     s = sub.add_parser("simulate", help="새 계정 뽑기 결과 몬테카를로 시뮬레이션")
@@ -161,6 +206,17 @@ def main(argv=None):
     s.add_argument("--start", type=int, help="계정 번호 시작값")
     s.add_argument("--dry-run", action="store_true")
     s.set_defaults(fn=cmd_run)
+
+    s = sub.add_parser("devices", help="에뮬레이터 adb 포트 자동 연결 + 목록")
+    s.add_argument("--emulator", default="all", choices=["all", "mumu12", "ldplayer", "bluestacks", "nox", "memu"])
+    s.set_defaults(fn=cmd_devices)
+
+    s = sub.add_parser("run-multi", help="여러 에뮬레이터에서 동시에 시나리오 실행")
+    s.add_argument("scenario")
+    s.add_argument("--devices", default="auto", help="auto 또는 serial,serial,...")
+    s.add_argument("--accounts", type=int, default=5, help="에뮬레이터당 계정 수")
+    s.add_argument("--dry-run", action="store_true")
+    s.set_defaults(fn=cmd_run_multi)
 
     s = sub.add_parser("fetch", help="로그인 중인 계정의 워프 기록을 장부에 기록")
     s.add_argument("--label")

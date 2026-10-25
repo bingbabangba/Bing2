@@ -30,6 +30,22 @@ run_admin.bat refresh      :: 기록 반영 지연(~1시간)으로 비어 있던
 run_admin.bat report       :: reroll_data\report.html
 run_admin.bat mark acc007 keep --note "블레이드+브로냐"
 ```
+## 에뮬레이터 여러 개 동시 실행 (ADB) — 가장 많은 계정을 볼 수 있는 방법
+1. MuMu Player 12 또는 LDPlayer 설치 → 인스턴스 1개에 스타레일 설치·리소스 다운로드까지 완료
+2. 그 인스턴스를 **복제(멀티 인스턴스 매니저 → 복사)** 해서 N개 만들기 (게임 재다운로드 불필요)
+3. 모든 인스턴스: 해상도 1920x1080 가로, ADB 켜기, (결과 자동 기록을 원하면) **루트 켜기**
+4. 명령:
+```bat
+run_admin.bat --adb "C:\Program Files\Netease\MuMuPlayer-12.0\shell\adb.exe" devices
+run_admin.bat --serial 127.0.0.1:16384 capture menu_warp          :: 템플릿은 인스턴스 하나에서 캡처
+run_admin.bat --serial 127.0.0.1:16384 check
+run_admin.bat run-multi scenarios\emulator_cycle.json --accounts 10 --dry-run
+run_admin.bat run-multi scenarios\emulator_cycle.json --accounts 10   :: 인스턴스마다 10계정, 라벨 e1-001, e2-001 ...
+```
+- 가입 단계(`prompt`)는 여러 인스턴스가 동시에 요청하면 **순서대로 한 대씩** 물어봅니다.
+- 루트가 없으면 결과 자동 기록은 건너뛰고 뽑기 결과 스크린샷(`reroll_data\shots\<라벨>`)만 남습니다.
+- 메모리: 인스턴스당 약 4~6GB. 16GB PC는 2~3개, 32GB는 5~6개가 현실적.
+
 수동으로 하나만 기록하려면 게임에서 **워프 → 상세 정보 → 기록** 화면을 연 뒤 `run_admin.bat fetch --label acc001`.
 
 중단: **F12**. 인식 실패 시 스크린샷(`reroll_data\shots\<계정>`)을 남기고 사람에게 넘깁니다.
@@ -41,7 +57,8 @@ run_admin.bat mark acc007 keep --note "블레이드+브로냐"
 | 결과 확인 = 기록 API | **채택** | 화면 OCR보다 정확. 단, 기록 반영이 최대 ~1시간 늦어 `refresh` 제공 |
 | 튜토리얼 자동 진행 | 부분 가능 | 대사/전투/버튼은 이미지 인식, 이동 구간은 녹화 매크로. 패치로 화면이 바뀌면 재캡처 필요 |
 | 계정 가입 자동화 | **미포함(의도적)** | 이메일 인증코드·캡차는 사람 입력 단계(`prompt`)로 둠. 캡차 우회·대량 가입 자동화는 만들지 않음 |
-| 안드로이드 에뮬레이터 다중 실행 | 대안 | 여러 인스턴스 병렬은 가능하지만 사양 부담 큼. 이 도구의 시뮬레이터/장부는 그대로 사용 가능 |
+| 안드로이드 에뮬레이터 다중 실행 (ADB) | **채택** | `run-multi` 로 인스턴스 수만큼 병렬. 결과 자동 기록은 루트 필요 |
+| 클라우드(Linux 컨테이너)에서 에뮬레이터 | 불가 | [docs/불가능한_영역.md](docs/불가능한_영역.md) 참고 |
 
 리세 1회 소요 시간(가입~뽑기): 커뮤니티 기준 약 20~30분. 자동 모드는 사람이 가입 1~2분만 개입.
 

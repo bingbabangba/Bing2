@@ -6,6 +6,7 @@ import csv
 import hashlib
 import html
 import json
+import threading
 import time
 from importlib import resources
 from pathlib import Path
@@ -35,6 +36,7 @@ def score_names(names: list[str], table: dict | None = None) -> float:
 class Ledger:
     def __init__(self, path: Path = DEFAULT_PATH):
         self.path = Path(path)
+        self.lock = threading.RLock()  # shared by parallel emulator runners
         self.accounts: list[dict] = []
         if self.path.exists():
             self.accounts = json.loads(self.path.read_text("utf-8"))
