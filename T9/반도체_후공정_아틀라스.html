@@ -1,0 +1,1361 @@
+<title>반도체 후공정 아틀라스</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Gowun+Batang:wght@700&display=swap">
+<style>
+/* Layout: 단면도(cross-section)를 읽듯 위에서 아래로 내려가는 한 줄 칼럼 + 데스크톱에서는 왼쪽 고정 목차. 색은 실리콘(회청)·구리·PCB 녹색·EMC 흑색 등 실제 패키지 재료색에서 가져옴 */
+:root{
+  --bg:#f2f4f6; --surface:#ffffff; --surface2:#e9edf1; --ink:#15202b; --mute:#566472; --line:#d3dae1;
+  --cu:#a85a1c; --cu-soft:#f5e6d8; --si:#a9bccf; --si-d:#7f97ae; --sub:#3c7a58; --sub-soft:#dcefe3;
+  --emc:#2a2f37; --sol:#b6bcc4; --bad:#b83227; --bad-soft:#f8e4e1; --warn:#9a6411; --warn-soft:#f6ecd9;
+  --blue:#245f9e; --blue-soft:#e1ecf7; --ok:#2c7a4f; --vio:#5b4bb3; --vio-soft:#ebe8f8;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --disp:"Gowun Batang","IBM Plex Sans KR","Apple SD Gothic Neo",serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --r:10px; --ondark:#ffffff;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1317; --surface:#151c22; --surface2:#1b242c; --ink:#e4eaf0; --mute:#9aa8b5; --line:#2b3640;
+  --cu:#e39a62; --cu-soft:#3a281a; --si:#5f7894; --si-d:#8aa3bd; --sub:#58a87c; --sub-soft:#183226;
+  --emc:#3d444e; --sol:#7d858f; --bad:#ef7b6f; --bad-soft:#3a1d1a; --warn:#e2ad55; --warn-soft:#352812;
+  --blue:#78aee8; --blue-soft:#172a3d; --ok:#67c08d; --vio:#a99cf0; --vio-soft:#251f42; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1317; --surface:#151c22; --surface2:#1b242c; --ink:#e4eaf0; --mute:#9aa8b5; --line:#2b3640;
+  --cu:#e39a62; --cu-soft:#3a281a; --si:#5f7894; --si-d:#8aa3bd; --sub:#58a87c; --sub-soft:#183226;
+  --emc:#3d444e; --sol:#7d858f; --bad:#ef7b6f; --bad-soft:#3a1d1a; --warn:#e2ad55; --warn-soft:#352812;
+  --blue:#78aee8; --blue-soft:#172a3d; --ok:#67c08d; --vio:#a99cf0; --vio-soft:#251f42; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.75;word-break:keep-all;overflow-wrap:break-word}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+a{color:var(--blue)} a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--cu);outline-offset:2px}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:8px}
+.topbar .in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.brand{font-family:var(--disp);font-size:17px;white-space:nowrap}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.chips::-webkit-scrollbar{display:none}
+.chips a{flex:none;font:500 12.5px/1 var(--body);padding:7px 10px;border-radius:999px;background:var(--surface2);color:var(--ink);text-decoration:none}
+.chips a.on{background:var(--cu);color:var(--surface)}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 80px}
+.grid{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:40px}
+@media(min-width:1040px){.grid{grid-template-columns:230px minmax(0,1fr)}}
+.side{display:none}
+@media(min-width:1040px){.side{display:block;position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);align-self:start;max-height:calc(100vh - 90px);overflow:auto;padding-top:28px;font-size:13.5px}}
+.side ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.side a{display:block;padding:5px 10px;border-radius:6px;color:var(--mute);text-decoration:none;line-height:1.4}
+.side a.on{background:var(--cu-soft);color:var(--cu);font-weight:600}
+.side .n{font-family:var(--mono);font-size:11.5px;margin-right:6px}
+main{min-width:0;max-width:820px}
+.hero{padding-block:36px 8px}
+.eyebrow{font:600 12px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--cu)}
+h1{font-family:var(--disp);font-size:clamp(30px,6vw,46px);line-height:1.2;margin:.3em 0 .4em;text-wrap:balance}
+.hero p{font-size:17px;color:var(--mute);max-width:62ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.tag{font:500 12.5px/1 var(--body);padding:6px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--line);color:var(--mute)}
+section.chap{padding-top:56px}
+.chap-h{display:flex;align-items:baseline;gap:14px;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:18px}
+.chap-h .no{font:600 14px var(--mono);color:var(--cu)}
+h2{font-family:var(--disp);font-size:clamp(24px,4.2vw,32px);line-height:1.3;margin:0;text-wrap:balance}
+h3{font-size:20px;line-height:1.45;margin:40px 0 10px;text-wrap:balance}
+h3 .k{font:600 12.5px var(--mono);color:var(--cu);margin-right:8px;vertical-align:2px}
+h4{font-size:16px;margin:24px 0 6px}
+p{margin:0 0 14px;max-width:68ch}
+ul,ol{padding-left:1.25em;margin:0 0 14px;max-width:68ch} li{margin:3px 0}
+.lead{font-size:17px;color:var(--ink);border-left:3px solid var(--cu);padding:4px 0 4px 14px;margin:0 0 18px}
+.analogy{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin:16px 0;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.analogy .ic{font:600 11px var(--mono);letter-spacing:.08em;color:var(--surface);background:var(--ink);padding:4px 7px;border-radius:4px;margin-top:3px}
+.analogy p{margin:0}
+b,strong{font-weight:600}
+mark{background:var(--cu-soft);color:inherit;padding:0 3px;border-radius:3px}
+code,.mono{font-family:var(--mono);font-size:.9em}
+.fig{margin:20px 0 22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.fig .sc{overflow-x:auto;padding:14px 12px 6px}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+.fig.narrow svg{min-width:0}
+.fig figcaption{font-size:13.5px;color:var(--mute);padding:8px 14px 12px;border-top:1px dashed var(--line);line-height:1.6}
+.fig figcaption b{color:var(--ink)}
+/* SVG 재료색 */
+.si{fill:var(--si)} .sid{fill:var(--si-d)} .cu{fill:var(--cu)} .sub{fill:var(--sub)} .subs{fill:var(--sub-soft)} .emc{fill:var(--emc)} .sol{fill:var(--sol)}
+.bg2{fill:var(--surface2)} .sf{fill:var(--surface)} .inkf{fill:var(--ink)} .badf{fill:var(--bad)} .blf{fill:var(--blue)} .okf{fill:var(--ok)} .vif{fill:var(--vio)} .cus{fill:var(--cu-soft)} .wnf{fill:var(--warn)}
+.ln{stroke:var(--ink);fill:none;stroke-width:1.4} .lnm{stroke:var(--mute);fill:none;stroke-width:1.2} .lnd{stroke:var(--mute);fill:none;stroke-width:1.2;stroke-dasharray:4 4}
+.lncu{stroke:var(--cu);fill:none;stroke-width:2} .lnbad{stroke:var(--bad);fill:none;stroke-width:2} .lnbl{stroke:var(--blue);fill:none;stroke-width:1.8}
+.edge{stroke:var(--ink);stroke-width:1;stroke-opacity:.35}
+.t{fill:var(--ink);font:500 12.5px var(--body)} .tm{fill:var(--mute);font:400 11.5px var(--body)} .tn{fill:var(--mute);font:400 11px var(--mono)}
+.tb{fill:var(--ink);font:700 14px var(--body)} .tc{fill:var(--cu);font:600 12px var(--body)} .tbad{fill:var(--bad);font:600 12px var(--body)} .tw{fill:var(--ondark);font:600 12px var(--body)} .tbl{fill:var(--blue);font:600 12px var(--body)}
+/* 박스 */
+.box{border-radius:var(--r);padding:14px 16px 4px;margin:16px 0;border:1px solid var(--line);background:var(--surface)}
+.box>.lab{display:inline-block;font:600 11.5px/1 var(--mono);letter-spacing:.06em;padding:5px 8px;border-radius:4px;margin-bottom:8px}
+.box p,.box ul{max-width:none}
+.box.bad{border-color:color-mix(in srgb,var(--bad) 35%,var(--line))} .box.bad>.lab{background:var(--bad-soft);color:var(--bad)}
+.box.neck{border-color:color-mix(in srgb,var(--warn) 40%,var(--line))} .box.neck>.lab{background:var(--warn-soft);color:var(--warn)}
+.box.mech{border-color:color-mix(in srgb,var(--sub) 40%,var(--line))} .box.mech>.lab{background:var(--sub-soft);color:var(--sub)}
+.box.iv{border-color:color-mix(in srgb,var(--blue) 40%,var(--line))} .box.iv>.lab{background:var(--blue-soft);color:var(--blue)}
+.box.news{border-color:color-mix(in srgb,var(--vio) 40%,var(--line))} .box.news>.lab{background:var(--vio-soft);color:var(--vio)}
+.duo{display:grid;grid-template-columns:1fr;gap:0 14px}
+@media(min-width:700px){.duo{grid-template-columns:1fr 1fr}.duo>.box{margin:8px 0}}
+.terms{display:grid;grid-template-columns:1fr;gap:8px;margin:14px 0 18px}
+@media(min-width:640px){.terms{grid-template-columns:1fr 1fr}}
+.terms details{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+.terms summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:10px}
+.terms summary::-webkit-details-marker{display:none}
+.terms summary::after{content:"+";font-family:var(--mono);color:var(--cu)} .terms details[open] summary::after{content:"−"}
+.terms summary small{font:400 12px var(--mono);color:var(--mute);margin-left:6px}
+.terms details p{margin:6px 0 2px;font-size:14.5px;color:var(--mute)}
+.tw-wrap{overflow-x:auto;margin:14px 0 18px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:560px}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.55}
+th{background:var(--surface2);font-weight:600;font-size:13.5px;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.photo{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 18px}
+.photo a{font-size:13.5px;text-decoration:none;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.photo a::before{content:"사진·원문 ↗ ";font:600 11px var(--mono);color:var(--cu)}
+.steps{counter-reset:s;list-style:none;padding:0;display:grid;gap:8px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;margin:0}
+.steps li::before{content:counter(s);font:600 13px/28px var(--mono);text-align:center;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface)}
+.sum{background:var(--ink);color:var(--surface);border-radius:var(--r);padding:16px 18px 6px;margin:26px 0 8px}
+.sum .lab{font:600 11.5px var(--mono);letter-spacing:.1em;color:var(--cu-soft);display:block;margin-bottom:6px}
+.sum ul{max-width:none} .sum li{margin:4px 0}
+.small{font-size:13.5px;color:var(--mute)}
+hr.sep{border:0;border-top:1px dashed var(--line);margin:30px 0}
+input[type=search]{width:100%;font:inherit;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.chk{list-style:none;padding:0} .chk li{display:flex;gap:10px;align-items:flex-start}
+.chk input{margin-top:6px;accent-color:var(--cu);width:17px;height:17px;flex:none}
+.quiz details{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0}
+.quiz summary{cursor:pointer;font-weight:600}
+.quiz details p{margin:8px 0 2px;color:var(--mute)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0 18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.kpi .v{font:600 22px/1.2 var(--mono);color:var(--cu);font-variant-numeric:tabular-nums}
+.kpi .d{font-size:13px;color:var(--mute);line-height:1.5;margin-top:4px}
+footer{max-width:1180px;margin:60px auto 0;color:var(--mute);font-size:13px;border-top:1px solid var(--line);padding-top:18px}
+</style>
+
+<header class="topbar"><div class="in">
+  <span class="brand">후공정 아틀라스</span>
+  <nav class="chips" id="chips" aria-label="장 이동">
+    <a href="#c0">0 지도</a><a href="#c1">1 기초</a><a href="#c2">2 전공정</a><a href="#c3">3 EDS</a><a href="#c4">4 조립</a><a href="#c5">5 테스트</a><a href="#c6">6 불량</a><a href="#c7">7 패키지 종류</a><a href="#c8">8 최신 기술</a><a href="#c9">9 내 직무</a><a href="#c10">10 부록</a>
+  </nav>
+</div></header>
+
+<div class="wrap"><div class="grid">
+<aside class="side" aria-label="목차"><ol id="toc">
+  <li><a href="#c0"><span class="n">00</span>전체 지도</a></li>
+  <li><a href="#c1"><span class="n">01</span>기초 체력</a></li>
+  <li><a href="#c2"><span class="n">02</span>전공정과 그 최신 트렌드</a></li>
+  <li><a href="#c3"><span class="n">03</span>EDS 웨이퍼 테스트</a></li>
+  <li><a href="#c4"><span class="n">04</span>조립 공정 단계별</a></li>
+  <li><a href="#c5"><span class="n">05</span>패키지 테스트·신뢰성</a></li>
+  <li><a href="#c6"><span class="n">06</span>검사·계측·불량 도감</a></li>
+  <li><a href="#c7"><span class="n">07</span>패키지 종류의 진화</a></li>
+  <li><a href="#c8"><span class="n">08</span>첨단 패키징 최신 기술</a></li>
+  <li><a href="#c9"><span class="n">09</span>TSP 공정기술과 나</a></li>
+  <li><a href="#c10"><span class="n">10</span>부록: 용어·숫자·퀴즈·계획</a></li>
+</ol></aside>
+
+<main>
+<div class="hero">
+  <div class="eyebrow">삼성전자 DS · TSP총괄 반도체공정기술 면접 대비</div>
+  <h1>웨이퍼 한 장이 칩이 되어 나가기까지</h1>
+  <p>반도체 비전공자가 TSP(Test &amp; System Package) 공정을 처음부터 이해할 수 있게 만든 자료입니다. 전공정은 후공정을 이해하는 데 필요한 만큼 다루고, 후공정은 공정마다 원리·장비·불량·병목·기계공학 연결까지 내려갑니다. 마지막에는 HBM, 하이브리드 본딩, zHBM, 유리기판 같은 최신 기술로 이어집니다.</p>
+  <div class="meta"><span class="tag">면접 11월 13일</span><span class="tag">근거: 삼성 공식 자료 · 학술·교과서 수준 공개 지식 · 보도</span><span class="tag">실제 라인 조건은 비공개라 다루지 않음</span></div>
+</div>
+
+<div class="box iv" style="margin-top:22px"><span class="lab">읽는 법</span>
+<p>모든 공정 절은 같은 순서로 반복됩니다. <b>비유 → 그림 → 원리 → 장비 → 불량 → 병목 → 기계공학 연결 → 면접 포인트 → 용어</b>. 색 박스의 뜻은 이렇습니다.</p>
+<ul><li><b style="color:var(--bad)">불량</b>: 이 공정에서 생기는 대표 불량과 원인</li><li><b style="color:var(--warn)">병목</b>: 기술적으로 어려운 지점, 지금 업계가 풀고 있는 문제</li><li><b style="color:var(--sub)">기계 연결</b>: 기계공학 지식·내 경험과 이어지는 부분</li><li><b style="color:var(--blue)">면접</b>: 바로 말로 꺼낼 수 있는 한두 문장</li><li><b style="color:var(--vio)">공식·보도</b>: 삼성 발표나 언론 보도에 근거한 최신 정보</li></ul>
+<p class="small">용어는 회색 칸을 누르면 펼쳐집니다. 부록에 전체 용어 검색이 있습니다.</p></div>
+
+<!-- ========== 0장 ========== -->
+<section class="chap" id="c0">
+<div class="chap-h"><span class="no">00</span><h2>전체 지도: 모래에서 제품까지</h2></div>
+<p class="lead">반도체 제조는 크게 두 덩어리입니다. <b>웨이퍼 위에 회로를 새기는 전공정(FAB)</b>과, <b>그 회로를 검사하고 잘라서 쓸 수 있는 부품으로 만드는 후공정(TSP)</b>입니다.</p>
+
+<div class="analogy"><span class="ic">비유</span><p>전공정은 <b>아파트 수백 세대를 한 번에 짓는 공사</b>입니다. 웨이퍼 한 장이 단지 하나, 칩 하나가 세대 하나입니다. 후공정은 <b>세대마다 하자를 점검하고(테스트), 분양 가능한 집만 골라(소팅), 수도·전기를 바깥 도로에 연결하고(배선), 외벽을 씌워(몰드) 입주시키는 일</b>입니다.</p></div>
+
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 900 300" role="img" aria-label="반도체 제조 전체 흐름">
+  <rect x="8" y="20" width="420" height="262" rx="10" class="bg2"/>
+  <rect x="444" y="20" width="448" height="262" rx="10" class="cus"/>
+  <text x="24" y="46" class="tb">전공정 (FAB) · 화성·평택·기흥 등</text>
+  <text x="460" y="46" class="tb">후공정 (TSP) · 온양·천안</text>
+  <!-- wafer -->
+  <g transform="translate(70,130)"><circle r="42" class="si"/><g class="edge">
+  <line x1="-42" y1="-14" x2="42" y2="-14"/><line x1="-42" y1="14" x2="42" y2="14"/><line x1="-14" y1="-42" x2="-14" y2="42"/><line x1="14" y1="-42" x2="14" y2="42"/></g>
+  <rect x="-3" y="39" width="6" height="5" class="sf"/></g>
+  <text x="38" y="196" class="t">① 웨이퍼</text><text x="30" y="212" class="tm">실리콘 원판 300mm</text>
+  <!-- fab steps -->
+  <g transform="translate(150,80)">
+    <rect width="250" height="104" rx="8" class="sf"/>
+    <text x="12" y="22" class="t">② 회로 새기기 (수백 단계 반복)</text>
+    <text x="12" y="44" class="tm">산화 → 포토(노광) → 식각</text>
+    <text x="12" y="62" class="tm">→ 증착·이온주입 → 금속배선</text>
+    <text x="12" y="80" class="tm">→ CMP(평탄화) … 층마다 반복</text>
+    <text x="12" y="98" class="tn">수 주 ~ 수 개월</text>
+  </g>
+  <path d="M112 130 H146" class="ln" marker-end="url(#ar)"/>
+  <g transform="translate(150,206)"><rect width="250" height="54" rx="8" class="sf"/>
+  <text x="12" y="22" class="t">결과: 칩 수백 개가 박힌 웨이퍼</text><text x="12" y="42" class="tm">아직 자르지도, 검사하지도 않은 상태</text></g>
+  <path d="M404 232 C430 232 430 132 456 132" class="lncu" marker-end="url(#arcu)"/>
+  <!-- TSP steps -->
+  <g transform="translate(460,64)">
+    <rect width="132" height="58" rx="8" class="sf"/><text x="10" y="22" class="t">③ EDS 테스트</text><text x="10" y="42" class="tm">칩별 양·불 판정</text>
+    <rect x="148" width="132" height="58" rx="8" class="sf"/><text x="158" y="22" class="t">④ 조립</text><text x="158" y="42" class="tm">갈기·자르기·붙이기</text>
+    <rect x="296" width="132" height="58" rx="8" class="sf"/><text x="306" y="22" class="t">⑤ 연결·몰드</text><text x="306" y="42" class="tm">배선·보호막</text>
+    <rect y="96" width="132" height="58" rx="8" class="sf"/><text x="10" y="118" class="t">⑥ 마킹·볼</text><text x="10" y="138" class="tm">각인·솔더볼 부착</text>
+    <rect x="148" y="96" width="132" height="58" rx="8" class="sf"/><text x="158" y="118" class="t">⑦ 패키지 테스트</text><text x="158" y="138" class="tm">번인·최종 검사</text>
+    <rect x="296" y="96" width="132" height="58" rx="8" class="emc"/><text x="306" y="118" class="tw">⑧ 출하</text><text x="306" y="138" class="tw" style="font-weight:400">고객사 보드로</text>
+    <path d="M134 29 H144" class="ln" marker-end="url(#ar)"/><path d="M282 29 H292" class="ln" marker-end="url(#ar)"/>
+    <path d="M362 60 C362 80 66 76 66 92" class="ln" marker-end="url(#ar)"/>
+    <path d="M134 125 H144" class="ln" marker-end="url(#ar)"/><path d="M282 125 H292" class="ln" marker-end="url(#ar)"/>
+  </g>
+  <text x="460" y="252" class="tc">테스트 데이터 → 전공정으로 피드백</text>
+  <path d="M640 240 C560 290 300 300 250 264" class="lnd" marker-end="url(#ar)"/>
+  <defs>
+   <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="inkf"/></marker>
+   <marker id="arcu" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="cu"/></marker>
+   <marker id="arbad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="badf"/></marker>
+  </defs>
+</svg></div>
+<figcaption><b>그림 0-1. 반도체 제조 전체 흐름.</b> 삼성 8대 공정 기준으로는 웨이퍼 제조 → 산화 → 포토 → 식각 → 증착·이온주입 → 금속배선 → EDS → 패키징 순서입니다. TSP총괄이 맡는 범위는 ③~⑧입니다.</figcaption></figure>
+
+<h3><span class="k">0.1</span>TSP가 맡는 일 한 문장 정리</h3>
+<p>삼성전자 DS 채용 직무 소개에 따르면 TSP총괄 공정기술은 <b>Back-Lap, Saw, CoW Bonding, Mold, Marking, Solder Ball Attach 등 패키지 양산 공정</b>과 <b>테스트 공정</b>의 수율·품질·생산성을 개선하고, 신규 공정·소재·장비를 평가해 도입하며, 계측·검사를 자동화합니다. 최근 중점은 <b>HBM과 2.5D 패키지</b>입니다.</p>
+
+<div class="tw-wrap"><table>
+<tr><th>패키지의 역할</th><th>뜻</th><th>망가지면</th></tr>
+<tr><td>전기 연결</td><td>칩의 미세한 전극을 보드 크기의 단자로 넓혀 연결</td><td>신호 끊김(오픈), 단락(쇼트)</td></tr>
+<tr><td>전력 공급</td><td>칩에 전원을 안정적으로 전달</td><td>전압 강하, 오동작</td></tr>
+<tr><td>방열</td><td>칩에서 나는 열을 밖으로 빼냄</td><td>성능 저하, 수명 단축</td></tr>
+<tr><td>보호</td><td>습기·충격·오염으로부터 칩을 지킴</td><td>부식, 크랙, 박리</td></tr>
+</table></div>
+<p class="small">출처: 삼성전자 반도체 뉴스룸 「반도체 8대 공정 9탄: 패키징」. TSP총괄 메모리PKG개발팀 현직자 인터뷰(「나는 신입사원입니다! 시즌2 Ep.4」)에서는 패키지 설계의 3대 특성을 <b>Electrical · Mechanical · Thermal</b>로 표현합니다.</p>
+
+<div class="box mech"><span class="lab">기계 연결</span>
+<p>4가지 역할 중 <b>방열과 보호는 열전달·재료역학</b>, 전기 연결도 결국 <b>접합부(솔더·와이어)의 기계적 신뢰성</b> 문제입니다. "패키지는 전기·열·기계가 동시에 걸리는 다물리(multiphysics) 구조물"이라는 관점이 이 자료 전체의 축입니다.</p></div>
+
+<div class="photo">
+<a href="https://news.samsungsemiconductor.com/kr/%eb%b0%98%eb%8f%84%ec%b2%b4-8%eb%8c%80-%ea%b3%b5%ec%a0%95-9%ed%83%84-%ec%99%b8%eb%b6%80%ed%99%98%ea%b2%bd%ec%9c%bc%eb%a1%9c%eb%b6%80%ed%84%b0-%eb%b0%98%eb%8f%84%ec%b2%b4%eb%a5%bc-%eb%b3%b4%ed%98%b8-2/" target="_blank" rel="noopener">삼성 8대 공정 9탄 · 패키징</a>
+<a href="https://news.samsungsemiconductor.com/kr/%eb%b0%98%eb%8f%84%ec%b2%b4-%eb%b0%b1%ea%b3%bc%ec%82%ac%ec%a0%84-ep-15-%eb%b0%98%eb%8f%84%ec%b2%b4-8%eb%8c%80-%ea%b3%b5%ec%a0%95%ec%9d%98-%eb%a7%88%ec%a7%80%eb%a7%89-%eb%8b%a8%ea%b3%84-%ea%b3%a0/" target="_blank" rel="noopener">반도체 백과사전 Ep.15 · 패키징 공정 영상</a>
+<a href="https://semiconductor.samsung.com/kr/support/tools-resources/fabrication-process/" target="_blank" rel="noopener">삼성 반도체 8대 공정 모음</a>
+</div>
+</section>
+
+<!-- ========== 1장 ========== -->
+<section class="chap" id="c1">
+<div class="chap-h"><span class="no">01</span><h2>기초 체력: 이것만 알면 대화가 된다</h2></div>
+<p class="lead">현직자와 대화할 때 계속 나오는 단어는 열 개 남짓입니다. 이 장에서 그 단어들의 <b>크기 감각</b>까지 잡습니다.</p>
+
+<h3><span class="k">1.1</span>반도체는 왜 '반'도체인가</h3>
+<p>도체(구리)는 전기가 늘 통하고, 부도체(유리)는 늘 안 통합니다. 반도체(실리콘)는 <b>조건에 따라 통하게도, 안 통하게도 만들 수 있는</b> 물질입니다. 불순물을 넣거나(도핑) 전압을 걸어 전류를 켜고 끄는 스위치, 즉 <b>트랜지스터</b>를 만들 수 있습니다. 칩 하나에 이런 스위치가 수십억~수백억 개 들어갑니다.</p>
+
+<h3><span class="k">1.2</span>웨이퍼 · 다이 · 칩 · 패키지</h3>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 230" role="img" aria-label="웨이퍼에서 패키지까지 크기 비교">
+  <g transform="translate(110,112)"><circle r="88" class="si"/>
+   <g class="edge"><line x1="-88" y1="-44" x2="88" y2="-44"/><line x1="-88" y1="-22" x2="88" y2="-22"/><line x1="-88" y1="0" x2="88" y2="0"/><line x1="-88" y1="22" x2="88" y2="22"/><line x1="-88" y1="44" x2="88" y2="44"/>
+   <line x1="-44" y1="-88" x2="-44" y2="88"/><line x1="-22" y1="-88" x2="-22" y2="88"/><line x1="0" y1="-88" x2="0" y2="88"/><line x1="22" y1="-88" x2="22" y2="88"/><line x1="44" y1="-88" x2="44" y2="88"/></g>
+   <rect x="0" y="0" width="22" height="22" class="cu" opacity=".85"/></g>
+  <text x="58" y="222" class="t">웨이퍼 (지름 300mm)</text>
+  <path d="M140 118 L300 118" class="lncu" marker-end="url(#arcu)"/>
+  <g transform="translate(310,62)"><rect width="110" height="110" class="si"/><rect x="8" y="8" width="94" height="94" class="sid" opacity=".5"/>
+   <g class="cu"><rect x="2" y="2" width="6" height="6"/><rect x="102" y="2" width="6" height="6"/><rect x="2" y="102" width="6" height="6"/><rect x="102" y="102" width="6" height="6"/><rect x="52" y="2" width="6" height="6"/><rect x="52" y="102" width="6" height="6"/></g></g>
+  <text x="318" y="194" class="t">다이(Die) = 칩 한 개</text><text x="318" y="212" class="tm">한 변 수 mm ~ 수십 mm</text>
+  <path d="M430 118 L520 118" class="lncu" marker-end="url(#arcu)"/>
+  <g transform="translate(530,70)"><rect y="62" width="190" height="14" class="sub"/><rect x="20" y="10" width="150" height="52" rx="3" class="emc"/>
+   <g class="sol"><circle cx="18" cy="84" r="7"/><circle cx="46" cy="84" r="7"/><circle cx="74" cy="84" r="7"/><circle cx="102" cy="84" r="7"/><circle cx="130" cy="84" r="7"/><circle cx="158" cy="84" r="7"/></g>
+   <text x="95" y="42" text-anchor="middle" class="tw">SAMSUNG</text></g>
+  <text x="560" y="194" class="t">패키지 = 제품 부품</text><text x="560" y="212" class="tm">칩 + 기판 + 몰드 + 솔더볼</text>
+</svg></div>
+<figcaption><b>그림 1-1.</b> 웨이퍼에서 잘라낸 사각형 하나가 <b>다이</b>, 다이에 외부 연결과 보호막을 입힌 것이 <b>패키지</b>입니다. 현장에서는 다이와 칩을 거의 같은 뜻으로 씁니다.</figcaption></figure>
+
+<div class="terms">
+<details><summary>웨이퍼 <small>Wafer</small></summary><p>실리콘 단결정 덩어리(잉곳)를 얇게 썬 원판. 현재 주력은 지름 300mm(12인치), 두께 약 775㎛. 전공정이 끝난 웨이퍼를 후공정이 받습니다.</p></details>
+<details><summary>다이 / 칩 <small>Die / Chip</small></summary><p>웨이퍼 위에 바둑판처럼 배열된 회로 하나. 잘라내기 전에도 다이라고 부릅니다. 웨이퍼 한 장에서 나오는 다이 수를 Net Die라고 합니다.</p></details>
+<details><summary>스크라이브 라인 <small>Scribe Line</small></summary><p>다이와 다이 사이의 좁은 길. 절단(다이싱)할 때 칼이 지나가는 곳이고, 공정 관리용 테스트 패턴(TEG)이 들어 있기도 합니다.</p></details>
+<details><summary>패드 / 범프 <small>Pad / Bump</small></summary><p>패드는 칩 표면의 금속 단자, 범프는 그 위에 솟아 있는 작은 금속 돌기입니다. 범프를 통해 칩을 뒤집어 기판에 바로 붙입니다(플립칩).</p></details>
+<details><summary>기판 <small>Substrate</small></summary><p>칩을 올리는 얇은 회로판. 칩의 미세한 단자를 보드 크기로 넓혀 줍니다. 유기 기판(수지+구리 배선)이 주류이고, 최근 유리 기판이 차세대로 거론됩니다.</p></details>
+<details><summary>수율 <small>Yield</small></summary><p>투입한 것 중 양품 비율. 반도체 원가와 이익을 좌우하는 숫자이고, 공정기술 엔지니어의 성적표입니다.</p></details>
+</div>
+
+<h3><span class="k">1.3</span>메모리와 로직, 무엇이 다른가</h3>
+<div class="tw-wrap"><table>
+<tr><th>종류</th><th>역할</th><th>비유</th><th>후공정 특징</th></tr>
+<tr><td><b>DRAM</b></td><td>작업 중인 데이터를 잠깐 저장 (전원 끄면 사라짐)</td><td>책상 위</td><td>HBM, LPDDR, DDR5 모듈. 적층·고속 테스트가 핵심</td></tr>
+<tr><td><b>NAND</b></td><td>오래 저장 (전원 꺼도 유지)</td><td>책장</td><td>칩 여러 장을 계단식으로 쌓고 와이어로 연결(SSD, UFS)</td></tr>
+<tr><td><b>로직 (AP·GPU·CPU)</b></td><td>계산하고 판단</td><td>두뇌</td><td>I/O가 많아 플립칩, 큰 칩은 2.5D 패키지</td></tr>
+</table></div>
+<p>TSP는 주로 메모리 패키지를 담당하지만, AVP(첨단 패키지) 조직이 2024년 TSP로 옮겨오면서(보도 기준) 로직과 메모리를 합치는 2.5D·3D 패키지 비중이 커지고 있습니다.</p>
+
+<h3><span class="k">1.4</span>크기 감각 잡기</h3>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 190" role="img" aria-label="크기 감각 로그 스케일">
+  <line x1="40" y1="96" x2="830" y2="96" class="ln"/>
+  <g class="tn">
+   <text x="40" y="122">1nm</text><text x="160" y="122">10nm</text><text x="280" y="122">100nm</text><text x="400" y="122">1㎛</text><text x="520" y="122">10㎛</text><text x="640" y="122">100㎛</text><text x="760" y="122">1mm</text></g>
+  <g class="lnm"><line x1="40" y1="90" x2="40" y2="102"/><line x1="160" y1="90" x2="160" y2="102"/><line x1="280" y1="90" x2="280" y2="102"/><line x1="400" y1="90" x2="400" y2="102"/><line x1="520" y1="90" x2="520" y2="102"/><line x1="640" y1="90" x2="640" y2="102"/><line x1="760" y1="90" x2="760" y2="102"/></g>
+  <g>
+   <circle cx="100" cy="96" r="5" class="blf"/><text x="70" y="78" class="t">트랜지스터 게이트</text><text x="80" y="60" class="tm">수 nm (전공정)</text>
+   <circle cx="470" cy="96" r="5" class="cu"/><text x="420" y="150" class="t">하이브리드 본딩 피치</text><text x="440" y="166" class="tm">수 ㎛ 이하</text>
+   <circle cx="563" cy="96" r="5" class="cu"/><text x="520" y="60" class="t">TSV 지름·와이어 굵기</text><text x="540" y="78" class="tm">약 5~25㎛</text>
+   <circle cx="610" cy="96" r="5" class="cu"/><text x="590" y="186" class="tm">HBM 마이크로범프 피치 수십 ㎛</text>
+   <circle cx="660" cy="96" r="5" class="cu"/><text x="660" y="150" class="t">머리카락 굵기 ~70㎛</text>
+   <circle cx="721" cy="96" r="5" class="sid"/><text x="690" y="60" class="t">웨이퍼 두께 775㎛</text>
+   <circle cx="790" cy="96" r="5" class="emc"/><text x="740" y="78" class="tm">솔더볼 피치 0.4~1mm</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 1-2. 로그 눈금.</b> 전공정은 nm 세계, 후공정은 ㎛~mm 세계입니다. 다만 하이브리드 본딩처럼 후공정도 점점 ㎛ 이하로 내려가면서 <b>전공정 수준의 청정도·정밀도</b>가 필요해지고 있습니다. 수치는 업계 일반 범위입니다.</figcaption></figure>
+
+<div class="sum"><span class="lab">1장 한 장 요약</span><ul>
+<li>웨이퍼(300mm) → 다이(칩 하나) → 패키지(제품 부품)</li>
+<li>패키지 4대 역할: 전기 연결 · 전력 공급 · 방열 · 보호 = Electrical · Mechanical · Thermal</li>
+<li>전공정은 nm, 후공정은 ㎛~mm. 그런데 첨단 패키징은 그 경계가 무너지는 중</li>
+</ul></div>
+</section>
+
+<!-- ========== 2장 ========== -->
+<section class="chap" id="c2">
+<div class="chap-h"><span class="no">02</span><h2>전공정: 후공정이 물려받는 것들</h2></div>
+<p class="lead">후공정 엔지니어가 전공정을 알아야 하는 이유는 하나입니다. <b>웨이퍼에 이미 들어 있는 것(배선층, 패드, TSV, 응력)이 후공정의 조건과 불량을 결정</b>하기 때문입니다.</p>
+
+<h3><span class="k">2.1</span>8대 공정 한눈에 (삼성 반도체 8대 공정 기준)</h3>
+<div class="tw-wrap"><table>
+<tr><th>#</th><th>공정</th><th>하는 일 (한 줄)</th><th>비유</th><th>후공정과의 연결</th></tr>
+<tr><td class="num">1</td><td>웨이퍼 제조</td><td>모래 → 고순도 실리콘 → 잉곳 → 얇게 썰어 연마</td><td>도화지 만들기</td><td>웨이퍼 두께(775㎛)를 후공정이 다시 갈아냄</td></tr>
+<tr><td class="num">2</td><td>산화</td><td>표면에 얇은 산화막(SiO₂)을 길러 보호·절연</td><td>코팅</td><td>절연막 품질이 하이브리드 본딩 계면에 영향</td></tr>
+<tr><td class="num">3</td><td>포토(노광)</td><td>빛으로 회로 패턴을 감광막에 찍음</td><td>필름 사진 인화</td><td>패드·범프 위치를 정하는 재배선(RDL)도 포토 공정 사용</td></tr>
+<tr><td class="num">4</td><td>식각</td><td>필요 없는 부분을 깎아 패턴을 남김</td><td>판화 새기기</td><td>TSV 구멍(깊은 식각), 플라즈마 다이싱이 같은 원리</td></tr>
+<tr><td class="num">5</td><td>증착·이온주입</td><td>얇은 막을 쌓고(증착) 불순물을 넣어 전기 특성 부여</td><td>층 쌓기·양념</td><td>TSV 내벽 절연·배리어 막, 범프 하부 금속(UBM)</td></tr>
+<tr><td class="num">6</td><td>금속배선</td><td>트랜지스터들을 구리·알루미늄 선으로 연결</td><td>전선 깔기</td><td>배선층(BEOL)의 Low-k 막은 약해서 다이싱·본딩 때 박리 위험</td></tr>
+<tr><td class="num">7</td><td>EDS</td><td>웨이퍼 상태로 칩마다 전기 검사</td><td>입주 전 점검</td><td>TSP의 첫 공정 (3장)</td></tr>
+<tr><td class="num">8</td><td>패키징</td><td>자르고, 붙이고, 연결하고, 씌우기</td><td>포장·배송 준비</td><td>TSP의 본업 (4장)</td></tr>
+</table></div>
+
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 250" role="img" aria-label="전공정 패턴 형성 반복 루프">
+  <g transform="translate(20,40)">
+   <!-- step 1 deposit -->
+   <rect x="0" y="80" width="150" height="30" class="si"/><rect x="0" y="66" width="150" height="14" class="cu" opacity=".7"/>
+   <text x="0" y="135" class="t">① 증착</text><text x="0" y="152" class="tm">막을 고르게 쌓기</text>
+   <!-- step 2 PR + light -->
+   <g transform="translate(170,0)"><rect y="80" width="150" height="30" class="si"/><rect y="66" width="150" height="14" class="cu" opacity=".7"/><rect y="56" width="150" height="10" class="vif" opacity=".55"/>
+    <rect x="20" y="0" width="110" height="10" class="emc"/><rect x="60" y="0" width="30" height="10" class="sf"/>
+    <path d="M75 12 V52" class="lnbl" marker-end="url(#ar)"/><path d="M45 12 V24" class="lnd"/><path d="M105 12 V24" class="lnd"/>
+    <text x="0" y="135" class="t">② 감광막 + 노광</text><text x="0" y="152" class="tm">마스크 구멍으로만 빛</text></g>
+   <!-- step 3 etch -->
+   <g transform="translate(340,0)"><rect y="80" width="150" height="30" class="si"/><rect y="66" width="60" height="14" class="cu" opacity=".7"/><rect x="90" y="66" width="60" height="14" class="cu" opacity=".7"/>
+    <rect y="56" width="60" height="10" class="vif" opacity=".55"/><rect x="90" y="56" width="60" height="10" class="vif" opacity=".55"/>
+    <path d="M75 20 V60" class="lnbad" marker-end="url(#arbad)"/><text x="88" y="34" class="tbad">플라즈마</text>
+    <text x="0" y="135" class="t">③ 현상·식각</text><text x="0" y="152" class="tm">빛 받은 곳을 깎아냄</text></g>
+   <!-- step 4 strip -->
+   <g transform="translate(510,0)"><rect y="80" width="150" height="30" class="si"/><rect y="66" width="60" height="14" class="cu" opacity=".7"/><rect x="90" y="66" width="60" height="14" class="cu" opacity=".7"/>
+    <text x="0" y="135" class="t">④ 감광막 제거·세정</text><text x="0" y="152" class="tm">패턴 한 층 완성</text></g>
+   <g transform="translate(690,48)"><rect width="140" height="70" rx="8" class="bg2"/><text x="12" y="28" class="t">층마다 반복</text><text x="12" y="48" class="tm">수십 ~ 100층 이상</text><text x="12" y="64" class="tm">+ CMP로 평탄화</text></g>
+   <path d="M152 96 H166" class="ln" marker-end="url(#ar)"/><path d="M322 96 H336" class="ln" marker-end="url(#ar)"/><path d="M492 96 H506" class="ln" marker-end="url(#ar)"/><path d="M662 96 H686" class="ln" marker-end="url(#ar)"/>
+  </g>
+</svg></div>
+<figcaption><b>그림 2-1. 패턴 하나를 만드는 기본 루프.</b> 증착 → 노광 → 식각 → 세정을 층마다 반복합니다. 이 루프가 만든 배선층 위에서 후공정이 시작됩니다.</figcaption></figure>
+
+<div class="terms">
+<details><summary>FEOL / BEOL <small>Front / Back End Of Line</small></summary><p>FEOL은 트랜지스터를 만드는 아래층 공정, BEOL은 그 위에 금속 배선을 까는 위층 공정입니다. 후공정(Back-end)과 이름이 비슷하지만 BEOL은 전공정 안의 단계입니다. 헷갈리기 쉬운 용어라 면접에서 정확히 구분하면 좋습니다.</p></details>
+<details><summary>CMP <small>Chemical Mechanical Polishing</small></summary><p>화학 약품과 연마 패드로 표면을 평평하게 갈아내는 공정. 원래 전공정 기술이지만 <b>하이브리드 본딩</b>에서는 후공정의 핵심이 됩니다. 기계공학의 마찰·마모·접촉역학 문제입니다.</p></details>
+<details><summary>Low-k <small>저유전율 절연막</small></summary><p>배선 사이 신호 간섭을 줄이려고 쓰는 다공성 절연막. 전기적으로 좋지만 기계적으로 약해서, 다이싱·본딩 압력에 금이 가거나 벗겨지는 불량의 원인이 됩니다.</p></details>
+<details><summary>노드 <small>Node · 7nm, 4nm, 2nm…</small></summary><p>공정 세대를 부르는 이름. 예전엔 실제 게이트 길이였지만 지금은 세대 명칭에 가깝습니다. 삼성 HBM4의 베이스 다이는 4나노 로직 공정으로 만듭니다.</p></details>
+</div>
+
+<h3><span class="k">2.2</span>전공정 최신 트렌드: 더 작게, 더 높이, 뒤집어서</h3>
+<p>미세화(더 작게)가 점점 비싸고 어려워지자, 업계는 <b>구조를 바꾸고(입체화)</b>, <b>층을 쌓고</b>, <b>전원선을 뒤로 빼는</b> 방향으로 가고 있습니다. 이 흐름이 결국 첨단 패키징 수요로 이어집니다.</p>
+
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 240" role="img" aria-label="트랜지스터 구조의 진화 Planar FinFET GAA">
+  <g transform="translate(30,30)">
+   <rect y="110" width="220" height="40" class="si"/>
+   <rect x="80" y="86" width="60" height="24" class="cu"/><rect x="20" y="104" width="60" height="6" class="blf" opacity=".6"/><rect x="140" y="104" width="60" height="6" class="blf" opacity=".6"/>
+   <path d="M80 112 H140" class="lnbad"/><text x="68" y="132" class="tbad">채널(평면)</text>
+   <text x="0" y="180" class="tb">Planar (평면형)</text><text x="0" y="198" class="tm">게이트가 채널을 위에서만 제어</text><text x="0" y="214" class="tm">→ 작아지면 누설 전류↑</text>
+  </g>
+  <g transform="translate(320,30)">
+   <rect y="110" width="220" height="40" class="si"/>
+   <rect x="95" y="50" width="30" height="60" class="sid"/>
+   <path d="M80 110 V40 H140 V110" class="lncu" style="stroke-width:10"/>
+   <text x="152" y="70" class="tc">게이트</text><text x="34" y="96" class="tm">핀(Fin)</text>
+   <text x="0" y="180" class="tb">FinFET</text><text x="0" y="198" class="tm">채널을 지느러미처럼 세워 3면 제어</text><text x="0" y="214" class="tm">2010년대 주력</text>
+  </g>
+  <g transform="translate(610,30)">
+   <rect y="110" width="220" height="40" class="si"/>
+   <rect x="70" y="30" width="80" height="80" rx="6" class="cu" opacity=".85"/>
+   <rect x="60" y="46" width="100" height="10" class="sid"/><rect x="60" y="66" width="100" height="10" class="sid"/><rect x="60" y="86" width="100" height="10" class="sid"/>
+   <text x="166" y="72" class="tm">나노시트</text>
+   <text x="0" y="180" class="tb">GAA (Gate-All-Around)</text><text x="0" y="198" class="tm">게이트가 채널을 4면 모두 감쌈</text><text x="0" y="214" class="tm">삼성 MBCFET: 3나노부터 적용</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 2-2. 트랜지스터 구조 진화.</b> 게이트가 채널을 더 많은 면에서 감쌀수록 누설 전류(양자 터널링 포함)를 잘 막습니다. 삼성은 2022년 GAA(MBCFET) 기반 3나노 양산을 세계 최초로 발표했습니다.</figcaption></figure>
+
+<div class="tw-wrap"><table>
+<tr><th>트렌드</th><th>내용</th><th>후공정·TSP와 연결</th></tr>
+<tr><td><b>EUV · High-NA EUV</b></td><td>파장 13.5nm 극자외선으로 더 미세한 패턴. High-NA는 렌즈 개구수를 0.33→0.55로 키워 해상도를 더 높임</td><td>칩 면적당 기능↑ → I/O 밀도↑ → 범프 피치 미세화 압박</td></tr>
+<tr><td><b>GAA (MBCFET)</b></td><td>게이트가 채널을 4면에서 감싸는 구조. 2나노 이후 주력</td><td>HBM4 베이스 다이 등 로직 다이의 성능·전력 개선</td></tr>
+<tr><td><b>후면 전력 공급 (BSPDN)</b></td><td>전원선을 웨이퍼 뒷면으로 빼서 신호선과 분리. 웨이퍼를 아주 얇게 갈고 뒷면에 배선</td><td><b>웨이퍼 박막화·임시 접합(본딩/디본딩)</b> 같은 후공정 기술이 전공정 안으로 들어옴</td></tr>
+<tr><td><b>DRAM 미세화 (1b → 1c → …)</b></td><td>삼성 HBM4에 1c(6세대 10나노급) DRAM 적용. 다음은 수직 채널(VCT)·4F² 셀, 장기적으로 3D DRAM 연구</td><td>칩이 고성능일수록 발열↑ → 패키지 방열 설계 부담</td></tr>
+<tr><td><b>3D NAND 고단화</b></td><td>셀을 수백 층 쌓음. 층이 많아지면 웨이퍼를 두 번 나눠 만들어 붙이기도 함</td><td>웨이퍼 본딩 기술 공유. 패키지에서는 NAND 칩 다단 적층(zNAND-O 등)</td></tr>
+<tr><td><b>웨이퍼 본딩</b></td><td>회로가 있는 웨이퍼 두 장을 맞붙이는 기술 (이미지센서, 일부 NAND)</td><td>HBM·zHBM의 Wafer-on-Wafer, 하이브리드 본딩과 같은 계열 기술</td></tr>
+</table></div>
+
+<div class="box news"><span class="lab">공식·보도</span><ul>
+<li>삼성전자 2026년 3분기 실적: 파운드리 실적 개선 요인으로 <b>HBM 베이스 다이 매출 성장</b>과 2나노 HPC 수주를 명시. 메모리·파운드리·패키징이 한 제품(HBM) 안에서 만나는 구조입니다.</li>
+<li>삼성 HBM4: 1c DRAM + 4나노 로직 베이스 다이 (2026년 2월 양산 출하 발표).</li>
+</ul></div>
+
+<div class="box neck"><span class="lab">병목</span>
+<p><b>미세화는 '물리 한계 + 비용 폭증'에 걸려 있습니다.</b> 터널링으로 누설 전류가 늘고, EUV 장비와 공정 단계가 늘어 개발비가 기하급수적으로 증가합니다. 또 노광 장비가 한 번에 찍을 수 있는 면적(레티클)에 상한이 있어 칩을 무한정 키울 수도 없습니다. 그래서 <b>칩을 여러 개로 나눠 만든 뒤 패키지에서 합치는 방식(칩렛·2.5D·3D)</b>이 대안이 됐습니다. 삼성 반도Chat Ep.7은 이를 'Beyond Moore'라고 부릅니다.</p></div>
+
+<div class="box iv"><span class="lab">면접</span>
+<p>"미세화가 물리적·경제적 한계에 가까워지면서 성능 향상의 무게중심이 패키지로 옮겨오고 있습니다. 후면 전력 공급이나 웨이퍼 본딩처럼 전공정에서도 후공정 기술(박막화, 본딩)이 쓰이기 시작해서, 전·후공정의 경계가 흐려지고 있다고 이해하고 있습니다."</p></div>
+
+<div class="sum"><span class="lab">2장 한 장 요약</span><ul>
+<li>전공정 = 증착 → 노광 → 식각 → 세정을 층마다 반복 (+ CMP)</li>
+<li>후공정이 물려받는 것: 웨이퍼 두께, 약한 배선층(Low-k), 패드·범프, TSV, 잔류 응력</li>
+<li>트렌드: GAA, High-NA EUV, 후면 전력, 1c DRAM, 3D NAND, 웨이퍼 본딩 → 전·후공정 경계 붕괴</li>
+</ul></div>
+<div class="photo"><a href="https://semiconductor.samsung.com/kr/support/tools-resources/fabrication-process/" target="_blank" rel="noopener">삼성 8대 공정 1~7탄 (각 공정 사진·영상)</a></div>
+</section>
+
+<!-- ========== 3장 ========== -->
+<section class="chap" id="c3">
+<div class="chap-h"><span class="no">03</span><h2>EDS: 자르기 전에 칩마다 건강검진</h2></div>
+<p class="lead">EDS(Electrical Die Sorting)는 웨이퍼 상태 그대로 칩 하나하나에 전기를 흘려 <b>양품·불량·수리 가능</b>을 가려내는 공정입니다. 불량 칩에 패키지 비용을 쓰지 않게 하고, 결과를 전공정에 돌려줍니다.</p>
+
+<div class="analogy"><span class="ic">비유</span><p>입주 전 하자 점검. 점검 바늘(프로브)을 세대마다 꽂아 전기·수도가 제대로 나오는지 보고, 고칠 수 있는 하자는 고치고(리페어), 못 고치는 세대는 지도에 X 표시(잉킹)를 합니다.</p></div>
+
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 270" role="img" aria-label="EDS 프로브 카드와 웨이퍼 맵">
+  <g transform="translate(30,20)">
+   <rect x="10" y="0" width="300" height="30" rx="4" class="bg2"/><text x="22" y="20" class="t">테스터 (ATE) : 신호를 만들고 응답을 측정</text>
+   <path d="M160 32 V52" class="ln" marker-end="url(#ar)"/>
+   <rect x="20" y="56" width="280" height="22" rx="3" class="sub"/><text x="34" y="72" class="tw">프로브 카드 (회로 기판)</text>
+   <g class="lncu"><path d="M70 78 L82 116"/><path d="M110 78 L118 116"/><path d="M150 78 L154 116"/><path d="M190 78 L190 116"/><path d="M230 78 L226 116"/><path d="M270 78 L262 116"/></g>
+   <text x="304" y="104" class="tc">프로브 니들 (수천 개)</text>
+   <rect x="40" y="118" width="240" height="14" class="si"/><g class="cu"><rect x="78" y="114" width="8" height="4"/><rect x="114" y="114" width="8" height="4"/><rect x="150" y="114" width="8" height="4"/><rect x="186" y="114" width="8" height="4"/><rect x="222" y="114" width="8" height="4"/><rect x="258" y="114" width="8" height="4"/></g>
+   <rect x="20" y="132" width="280" height="16" class="emc"/><text x="34" y="144" class="tw">척 (온도 조절: 고온·저온 테스트)</text>
+   <text x="20" y="176" class="t">프로버(Prober): 웨이퍼를 옮기고 정렬해</text><text x="20" y="194" class="t">패드에 바늘을 정확히 닿게 하는 장비</text>
+   <text x="20" y="220" class="tm">오버드라이브: 바늘을 패드에 닿은 뒤</text><text x="20" y="236" class="tm">조금 더 눌러 산화막을 뚫는 거리</text>
+  </g>
+  <g transform="translate(560,40)">
+   <text x="0" y="-8" class="t">웨이퍼 맵 (BIN 맵)</text>
+   <circle cx="120" cy="110" r="105" class="bg2"/>
+   <g id="wm"></g>
+   <g transform="translate(0,232)"><rect width="12" height="12" class="okf"/><text x="18" y="11" class="tm">양품 BIN1</text><rect x="90" width="12" height="12" class="wnf"/><text x="108" y="11" class="tm">수리 후 양품</text><rect x="200" width="12" height="12" class="badf"/><text x="218" y="11" class="tm">불량</text></g>
+  </g>
+</svg></div>
+<figcaption><b>그림 3-1. EDS의 구성과 결과물.</b> 불량이 가장자리나 특정 구역에 몰려 있으면 전공정 장비 문제를 의심할 수 있습니다. 웨이퍼 맵은 <b>공정의 지문</b>입니다. (맵은 예시)</figcaption></figure>
+
+<h3><span class="k">3.1</span>EDS의 4단계 (삼성 8대 공정 8탄 기준)</h3>
+<ol class="steps">
+<li><div><b>ET Test &amp; WBI</b>: 전기적 특성 검사(ET) + 웨이퍼 번인(WBI). 고온·고전압을 걸어 곧 망가질 약한 칩을 미리 드러냅니다.</div></li>
+<li><div><b>Hot / Cold Test</b>: 고온·저온에서 동작을 확인하고, 수리가 가능한 칩인지 판정합니다.</div></li>
+<li><div><b>Repair</b>: 메모리는 예비 셀(Redundancy)을 갖고 있습니다. 레이저로 퓨즈를 끊어 불량 셀을 예비 셀로 바꿔치기한 뒤 다시 검사합니다.</div></li>
+<li><div><b>Inking</b>: 불량 칩 표시. 예전엔 잉크를 찍었지만 지금은 데이터(웨이퍼 맵)로 관리해 조립 장비가 불량 칩을 건너뛰게 합니다.</div></li>
+</ol>
+
+<div class="terms">
+<details><summary>ATE <small>Automatic Test Equipment</small></summary><p>테스트 신호를 만들어 넣고 칩의 응답을 측정·판정하는 장비. 수십억 원대 고가 장비라 <b>테스트 시간 단축 = 원가 절감</b>입니다.</p></details>
+<details><summary>프로브 카드 <small>Probe Card</small></summary><p>테스터와 칩 패드를 잇는 바늘판. 제품마다 패드 배치가 달라 전용으로 만들고, 바늘이 닳는 소모품입니다.</p></details>
+<details><summary>BIN <small>분류 번호</small></summary><p>테스트 결과에 따라 칩에 붙이는 등급 번호. BIN1은 보통 양품, 나머지는 불량 유형별 번호입니다. BIN 분포를 보면 어느 공정이 문제인지 거꾸로 추적할 수 있습니다.</p></details>
+<details><summary>KGD <small>Known Good Die</small></summary><p>검증이 끝난 양품 다이. 여러 칩을 한 패키지에 넣는 HBM·2.5D에서는 KGD 확보가 수율의 출발점입니다.</p></details>
+</div>
+
+<div class="box bad"><span class="lab">불량</span><ul>
+<li><b>프로브 마크 과다</b>: 바늘이 패드를 너무 깊게 긁으면 이후 와이어 본딩·범프 접합이 약해짐</li>
+<li><b>접촉 불량(Contact fail)</b>: 바늘 끝 오염·마모로 저항이 커져 양품을 불량으로 판정 (과검)</li>
+<li><b>과검 / 미검</b>: 양품을 버리거나(수율 손실), 불량을 통과시키거나(고객 불량). 테스트의 양대 리스크</li>
+</ul></div>
+<div class="box neck"><span class="lab">병목</span>
+<p>HBM용 DRAM은 패드가 작고 TSV 범프가 수천 개라 <b>바늘을 미세 피치로 정확히 대는 것</b>부터 어렵습니다. 또 적층 후에는 고칠 방법이 없어서 웨이퍼 단계에서 얼마나 정확히 걸러내느냐(KGD)가 최종 수율을 좌우합니다. 칩당 99% 양품이어도 12단이면 0.99¹² ≈ <b>88.6%</b>, 16단이면 ≈ <b>85.1%</b>입니다.</p></div>
+<div class="box mech"><span class="lab">기계 연결</span>
+<p>프로브 바늘 = <b>외팔보 처짐</b>(접촉력과 오버드라이브), 고온 테스트 시 프로브 카드의 <b>열팽창</b>으로 바늘 위치가 틀어지는 문제, 프로버의 <b>정밀 위치 제어</b>. 로봇팔 정밀도 개선 경험을 연결할 수 있는 지점입니다.</p></div>
+<div class="photo"><a href="https://semiconductor.samsung.com/kr/support/tools-resources/fabrication-process/eight-essential-semiconductor-fabrication-processes-part-8-eds-electrical-die-sorting-for-the-perfect-chips" target="_blank" rel="noopener">삼성 8대 공정 8탄 · EDS</a></div>
+</section>
+
+<!-- ========== 4장 ========== -->
+<section class="chap" id="c4">
+<div class="chap-h"><span class="no">04</span><h2>조립 공정: 갈고, 자르고, 붙이고, 잇고, 씌운다</h2></div>
+<p class="lead">공식 직무 설명에 나오는 공정 순서(Back-Lap → Saw → CoW Bonding → Mold → Marking → Solder Ball Attach)를 따라갑니다. 일반 패키지와 HBM이 갈라지는 지점은 따로 표시했습니다.</p>
+
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 900 150" role="img" aria-label="조립 공정 순서">
+  <g class="t">
+  <g transform="translate(6,30)"><rect width="100" height="56" rx="8" class="si"/><text x="50" y="25" text-anchor="middle" class="t">Back-Lap</text><text x="50" y="43" text-anchor="middle" class="tm">갈기</text></g>
+  <g transform="translate(118,30)"><rect width="100" height="56" rx="8" class="si"/><text x="50" y="25" text-anchor="middle" class="t">Saw</text><text x="50" y="43" text-anchor="middle" class="tm">자르기</text></g>
+  <g transform="translate(230,30)"><rect width="110" height="56" rx="8" class="cus"/><text x="55" y="25" text-anchor="middle" class="t">Die / CoW</text><text x="55" y="43" text-anchor="middle" class="tm">붙이기·쌓기</text></g>
+  <g transform="translate(352,30)"><rect width="110" height="56" rx="8" class="cus"/><text x="55" y="25" text-anchor="middle" class="t">Interconnect</text><text x="55" y="43" text-anchor="middle" class="tm">와이어·플립칩</text></g>
+  <g transform="translate(474,30)"><rect width="96" height="56" rx="8" class="emc"/><text x="48" y="25" text-anchor="middle" class="tw">Mold</text><text x="48" y="43" text-anchor="middle" class="tw" style="font-weight:400">씌우기</text></g>
+  <g transform="translate(582,30)"><rect width="96" height="56" rx="8" class="bg2"/><text x="48" y="25" text-anchor="middle" class="t">Marking</text><text x="48" y="43" text-anchor="middle" class="tm">각인</text></g>
+  <g transform="translate(690,30)"><rect width="96" height="56" rx="8" class="sol"/><text x="48" y="25" text-anchor="middle" class="t">SBA</text><text x="48" y="43" text-anchor="middle" class="t" style="font-weight:400">볼 달기</text></g>
+  <g transform="translate(798,30)"><rect width="96" height="56" rx="8" class="bg2"/><text x="48" y="25" text-anchor="middle" class="t">Singulation</text><text x="48" y="43" text-anchor="middle" class="tm">낱개로</text></g>
+  </g>
+  <g class="ln"><path d="M107 58h9" marker-end="url(#ar)"/><path d="M219 58h9" marker-end="url(#ar)"/><path d="M341 58h9" marker-end="url(#ar)"/><path d="M463 58h9" marker-end="url(#ar)"/><path d="M571 58h9" marker-end="url(#ar)"/><path d="M679 58h9" marker-end="url(#ar)"/><path d="M787 58h9" marker-end="url(#ar)"/></g>
+  <text x="230" y="112" class="tc">HBM은 여기서 TSV 칩을 한 층씩 쌓는 CoW 본딩 (TC-NCF)</text>
+  <path d="M285 88 V98" class="lncu"/>
+</svg></div>
+<figcaption><b>그림 4-0. 조립 공정 순서.</b> 실제 라인은 제품에 따라 순서가 바뀌거나(예: 자르기 전에 반쯤 자르는 DBG) 단계가 합쳐집니다(예: 몰드와 언더필을 한 번에 하는 MUF).</figcaption></figure>
+
+<!-- 4.1 BG -->
+<h3><span class="k">4.1</span>Back-Lap · Back Grinding: 웨이퍼 뒷면을 갈아 얇게</h3>
+<div class="analogy"><span class="ic">비유</span><p>두꺼운 도마를 대패로 밀어 얇은 판자로 만드는 일. 단, 앞면에는 망가지면 안 되는 회로가 있어서 <b>앞면을 테이프로 보호하고 뒷면만</b> 갑니다.</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 230" role="img" aria-label="백그라인딩 단면">
+  <g transform="translate(40,20)">
+   <rect x="40" y="0" width="140" height="40" rx="6" class="emc"/><text x="110" y="25" text-anchor="middle" class="tw">스핀들 (회전)</text>
+   <rect x="20" y="40" width="180" height="16" class="sol"/><text x="210" y="53" class="tm">다이아몬드 휠</text>
+   <path d="M220 20 a12 12 0 1 1 -1 -6" class="lnm" marker-end="url(#ar)"/>
+   <rect x="0" y="56" width="360" height="34" class="si"/><text x="10" y="78" class="t">웨이퍼 (뒷면이 위로) 775㎛ →</text>
+   <rect x="0" y="90" width="360" height="8" class="cu" opacity=".6"/><text x="368" y="97" class="tm">회로면</text>
+   <rect x="0" y="98" width="360" height="10" class="vif" opacity=".45"/><text x="368" y="110" class="tm">BG 테이프 (보호)</text>
+   <rect x="-10" y="108" width="380" height="20" class="bg2"/><text x="10" y="123" class="tm">진공 척 테이블 (회전)</text>
+   <path d="M0 56 h360" class="lnbad" stroke-dasharray="5 4"/><text x="0" y="154" class="tbad">↓ 연삭 → 수십~수백 ㎛</text>
+  </g>
+  <g transform="translate(520,30)">
+   <text x="0" y="0" class="t">두께 비교 (축척 근사)</text>
+   <rect y="14" width="280" height="38" class="si"/><text x="290" y="38" class="tn">775㎛ 원래</text>
+   <rect y="66" width="280" height="10" class="si"/><text x="290" y="76" class="tn">~100㎛ 일반 박형</text>
+   <rect y="92" width="280" height="2" class="cu"/><text x="290" y="98" class="tn">수십 ㎛ HBM 코어</text>
+   <text x="0" y="132" class="tm">얇아질수록 종이처럼 휘고 깨짐</text>
+   <text x="0" y="150" class="tm">→ 임시 캐리어에 붙여 가공하기도 함</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 4-1. 백그라인딩.</b> 거친 휠로 빨리 깎고(추삭) 고운 휠로 마무리(정삭)한 뒤, 연삭으로 생긴 손상층을 폴리싱이나 건식 식각으로 없앱니다(Stress Relief).</figcaption></figure>
+<p><b>왜 갈아야 하나.</b> 패키지 전체 두께 규격이 정해져 있기 때문입니다. HBM은 12~16장을 JEDEC 높이 규격 안에 넣어야 해서 코어 다이를 수십 ㎛까지 갈아냅니다(삼성 HBM 자료 기준 '수십 ㎛ 수준'). 얇을수록 열도 잘 빠집니다.</p>
+<div class="terms">
+<details><summary>TTV <small>Total Thickness Variation</small></summary><p>웨이퍼 한 장 안에서 가장 두꺼운 곳과 얇은 곳의 차이. 얇은 칩을 여러 장 쌓으면 이 차이가 누적되어 스택이 기울어집니다.</p></details>
+<details><summary>DBG <small>Dicing Before Grinding</small></summary><p>먼저 앞면에서 칩 사이를 반쯤 파 둔 뒤, 뒷면을 갈다 보면 저절로 칩이 분리되는 방식. 얇은 칩의 깨짐을 줄입니다. 레이저로 내부를 개질한 뒤 가는 SDBG도 있습니다.</p></details>
+<details><summary>임시 접합·분리 <small>Temporary Bonding / Debonding</small></summary><p>너무 얇은 웨이퍼를 유리·실리콘 캐리어에 임시로 붙여 가공한 뒤 떼어내는 기술. TSV 뒷면 노출 공정과 후면 전력 공급에 필수입니다.</p></details>
+<details><summary>Stress Relief</summary><p>연삭 자국(미세 크랙층)을 제거해 칩 강도를 회복하는 공정. 생략하면 칩이 쉽게 깨집니다.</p></details>
+</div>
+<div class="duo">
+<div class="box bad"><span class="lab">불량</span><ul><li>두께 편차(TTV) 초과</li><li>휨(Warpage): 회로면과 뒷면의 응력 차</li><li>크랙·치핑(가장자리 이빨 빠짐)</li><li>연삭 자국(스크래치), 테이프 박리 시 회로 손상</li></ul></div>
+<div class="box neck"><span class="lab">병목</span><p>두께가 수십 ㎛로 내려가면 웨이퍼를 <b>옮기는 것 자체</b>가 어렵습니다. 진공 흡착, 이송 로봇, 테이프 장력 하나하나가 수율에 영향을 줍니다. 16단 HBM으로 갈수록 더 얇게 갈아야 해서 병목이 커집니다.</p></div>
+</div>
+<div class="box mech"><span class="lab">기계 연결</span><p><b>연삭 가공</b>(가공 조건: 휠 회전수·이송속도·냉각수), <b>잔류응력과 휨</b>(재료역학), TTV(<b>기하공차</b>), 얇은 판의 <b>좌굴·진동</b>. 기계가공·재료역학 수업이 그대로 쓰이는 공정입니다.</p></div>
+
+<!-- 4.2 Saw -->
+<h3><span class="k">4.2</span>Saw · Dicing: 칩 단위로 자르기</h3>
+<div class="analogy"><span class="ic">비유</span><p>바둑판처럼 생긴 쿠키 반죽을 칼로 자르는 일. 칼로 자를지(블레이드), 레이저로 녹일지, 속을 갈라 똑 부러뜨릴지(스텔스), 약품으로 녹여낼지(플라즈마)에 따라 품질과 비용이 달라집니다.</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 880 240" role="img" aria-label="다이싱 방식 4가지 비교">
+  <g transform="translate(10,20)">
+   <circle cx="90" cy="40" r="36" class="sol"/><rect x="86" y="70" width="8" height="40" class="sol"/>
+   <rect x="0" y="108" width="80" height="22" class="si"/><rect x="100" y="108" width="80" height="22" class="si"/><rect x="0" y="130" width="180" height="8" class="vif" opacity=".45"/>
+   <g class="badf"><circle cx="78" cy="112" r="3"/><circle cx="104" cy="126" r="2.5"/><circle cx="96" cy="100" r="2"/></g>
+   <text x="0" y="164" class="tb">블레이드</text><text x="0" y="182" class="tm">다이아몬드 톱날로 절단</text><text x="0" y="198" class="tm">싸고 범용 / 치핑·입자</text>
+  </g>
+  <g transform="translate(230,20)">
+   <path d="M90 0 L90 98" class="lnbad" style="stroke-width:4"/><text x="100" y="40" class="tbad">레이저</text>
+   <rect x="0" y="108" width="80" height="22" class="si"/><rect x="100" y="108" width="80" height="22" class="si"/><rect x="80" y="108" width="20" height="6" class="si"/><rect x="0" y="104" width="180" height="4" class="cu" opacity=".6"/>
+   <rect x="82" y="104" width="16" height="4" class="sf"/>
+   <rect x="0" y="130" width="180" height="8" class="vif" opacity=".45"/>
+   <text x="0" y="164" class="tb">레이저 그루빙</text><text x="0" y="182" class="tm">약한 배선층을 레이저로 먼저 홈</text><text x="0" y="198" class="tm">→ 블레이드로 마무리</text>
+  </g>
+  <g transform="translate(450,20)">
+   <path d="M90 0 L90 118" class="lnbl" stroke-dasharray="3 3"/><circle cx="90" cy="120" r="6" class="blf" opacity=".6"/>
+   <rect x="0" y="108" width="180" height="22" class="si"/><path d="M90 110 V130" class="lnbad" stroke-dasharray="2 2"/>
+   <rect x="0" y="130" width="180" height="8" class="vif" opacity=".45"/><path d="M10 152 h40 M130 152 h40" class="ln" marker-end="url(#ar)"/>
+   <text x="0" y="172" class="tb">스텔스</text><text x="0" y="190" class="tm">내부에 초점 → 개질층 → 테이프</text><text x="0" y="206" class="tm">당겨 분리. 물·입자 없음</text>
+  </g>
+  <g transform="translate(670,20)">
+   <g class="vif" opacity=".35"><circle cx="40" cy="60" r="10"/><circle cx="90" cy="40" r="12"/><circle cx="140" cy="62" r="9"/><circle cx="70" cy="86" r="7"/><circle cx="118" cy="84" r="8"/></g>
+   <rect x="0" y="100" width="76" height="8" class="emc"/><rect x="104" y="100" width="76" height="8" class="emc"/><text x="2" y="96" class="tn">마스크</text>
+   <rect x="0" y="108" width="76" height="22" class="si"/><rect x="104" y="108" width="76" height="22" class="si"/>
+   <rect x="0" y="130" width="180" height="8" class="vif" opacity=".45"/>
+   <text x="0" y="164" class="tb">플라즈마</text><text x="0" y="182" class="tm">건식 식각으로 모든 길을 동시에</text><text x="0" y="198" class="tm">치핑·입자 거의 없음, 강도↑</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 4-2. 다이싱 방식 4가지.</b> 블레이드 → 레이저 그루빙 → 스텔스 → 플라즈마로 갈수록 깨끗하지만 장비·공정 비용이 올라갑니다.</figcaption></figure>
+<div class="box news"><span class="lab">공식·보도</span><p>삼성전자는 하이브리드 본딩 도입을 위해 블레이드 다이싱을 <b>레이저 그루빙·플라즈마 다이싱</b>으로 바꾸는 방안을 검토하고, <b>CMP</b>를 핵심 공정으로 꼽았습니다(ITF Korea 발표, 시사저널e 2025.02.18 보도). 범프 없이 표면끼리 붙이는 하이브리드 본딩에서는 <b>미세 입자 하나가 접합 불량(보이드)</b>이 되기 때문입니다.</p></div>
+<div class="duo">
+<div class="box bad"><span class="lab">불량</span><ul><li>앞면·뒷면 치핑, 측면 크랙</li><li>Low-k 배선층 박리(Delamination)</li><li>절단 폭(커프) 편차, 위치 오차</li><li>표면 입자·오염 → 다음 공정 접합 불량</li></ul></div>
+<div class="box neck"><span class="lab">병목</span><p>칩이 얇고 약한 배선층이 많을수록 블레이드는 한계에 부딪힙니다. 반대로 플라즈마는 깨끗하지만 마스크 공정과 장비 투자가 필요합니다. <b>품질·속도·비용의 삼각 트레이드오프</b>를 제품마다 다르게 고르는 것이 공정기술의 일입니다.</p></div>
+</div>
+<div class="box mech"><span class="lab">기계 연결</span><p>치핑 = <b>취성 재료의 균열 진전</b>(파괴역학), 블레이드 <b>마모 예측</b>, 고속 회전체 <b>진동</b>, 스텔스 다이싱의 분리 = 테이프 <b>인장(확장)</b> 응력 설계.</p></div>
+
+<!-- 4.3 Die attach / CoW -->
+<h3><span class="k">4.3</span>Die Attach · CoW Bonding: 칩을 집어서 붙이고 쌓기</h3>
+<div class="analogy"><span class="ic">비유</span><p>핀셋으로 아주 얇은 유리 조각을 집어 정확한 자리에 붙이는 일을 1시간에 수천 번 반복합니다. HBM은 여기에 더해 <b>그 유리 조각 12~16장을 탑처럼 쌓습니다</b>.</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 880 270" role="img" aria-label="다이 픽업과 본딩">
+  <g transform="translate(20,20)">
+   <text x="0" y="0" class="t">① 픽업</text>
+   <rect x="60" y="16" width="70" height="40" rx="4" class="emc"/><text x="95" y="40" text-anchor="middle" class="tw">콜렛</text>
+   <path d="M95 58 V74" class="lnbl" marker-end="url(#ar)"/><text x="104" y="70" class="tbl">진공 흡착</text>
+   <rect x="0" y="96" width="60" height="14" class="si"/><rect x="66" y="80" width="58" height="14" class="si"/><rect x="130" y="96" width="60" height="14" class="si"/>
+   <rect x="0" y="110" width="190" height="8" class="vif" opacity=".45"/><text x="198" y="118" class="tm">다이싱 테이프</text>
+   <g class="lncu"><path d="M85 140 V120"/><path d="M95 140 V118"/><path d="M105 140 V120"/></g><text x="64" y="160" class="tc">이젝터 핀 (밀어 올림)</text>
+  </g>
+  <g transform="translate(300,20)">
+   <text x="0" y="0" class="t">② 정렬 → 본딩</text>
+   <rect x="40" y="16" width="120" height="30" rx="4" class="emc"/><text x="100" y="36" text-anchor="middle" class="tw">본딩 헤드 (열·압력)</text>
+   <rect x="60" y="46" width="80" height="14" class="si"/><rect x="60" y="60" width="80" height="6" class="vif" opacity=".55"/>
+   <path d="M100 70 V90" class="ln" marker-end="url(#ar)"/>
+   <rect x="0" y="96" width="200" height="16" class="sub"/><text x="208" y="108" class="tm">기판 / 하부 칩</text>
+   <rect x="-10" y="112" width="220" height="14" class="bg2"/><text x="0" y="146" class="tm">스테이지 (가열)</text>
+   <circle cx="20" cy="70" r="10" class="lnbl"/><path d="M20 70 l30 -10" class="lnd"/><text x="-4" y="94" class="tbl">카메라</text>
+  </g>
+  <g transform="translate(600,20)">
+   <text x="0" y="0" class="t">③ HBM: 한 층씩 반복 (CoW)</text>
+   <rect x="20" y="210" width="220" height="16" class="si"/><text x="20" y="244" class="tm">베이스 다이 웨이퍼</text>
+   <g><rect x="60" y="190" width="140" height="18" class="si"/><rect x="60" y="208" width="140" height="2" class="vif"/>
+   <rect x="60" y="168" width="140" height="18" class="si"/><rect x="60" y="186" width="140" height="2" class="vif"/>
+   <rect x="60" y="146" width="140" height="18" class="si"/><rect x="60" y="164" width="140" height="2" class="vif"/>
+   <rect x="60" y="124" width="140" height="18" class="si"/><rect x="60" y="142" width="140" height="2" class="vif"/>
+   <rect x="60" y="102" width="140" height="18" class="si" opacity=".5"/></g>
+   <g class="cu"><rect x="84" y="102" width="4" height="108"/><rect x="128" y="102" width="4" height="108"/><rect x="172" y="102" width="4" height="108"/></g>
+   <text x="210" y="160" class="tm">TSV</text><path d="M206 156 h-28" class="lnm"/>
+   <rect x="80" y="40" width="100" height="26" rx="4" class="emc"/><text x="130" y="58" text-anchor="middle" class="tw">TC 본더</text><path d="M130 68 V96" class="ln" marker-end="url(#ar)"/>
+   <text x="210" y="196" class="tm">NCF 필름</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 4-3. 다이 본딩과 HBM CoW 적층.</b> 일반 패키지는 접착 필름(DAF)으로 붙이고 경화하면 끝이지만, HBM은 TSV 범프를 아래 칩과 전기적으로 연결하면서 쌓아야 합니다.</figcaption></figure>
+
+<div class="tw-wrap"><table>
+<tr><th>방식</th><th>원리</th><th>장점</th><th>과제</th></tr>
+<tr><td><b>TC-NCF</b> (삼성)</td><td>칩 사이에 비전도성 필름(NCF)을 넣고 <b>한 층씩</b> 열과 압력으로 누름(열압착)</td><td>얇은 칩의 휨 억제, 칩 사이 간격 균일</td><td>층마다 누르니 시간 오래 걸림(생산성), 필름 두께·방열</td></tr>
+<tr><td><b>MR-MUF</b> (SK하이닉스)</td><td>칩을 임시로 쌓은 뒤 <b>한꺼번에</b> 리플로우, 액상 수지로 틈을 채움</td><td>생산성, 방열</td><td>고단·박형에서 휨 제어</td></tr>
+<tr><td><b>Hybrid Bonding</b> (차세대)</td><td>범프 없이 구리–구리, 절연막–절연막을 직접 붙임</td><td>간격 0 → 스택 높이↓, 방열↑, 미세 피치</td><td>초청정·초평탄(CMP), 정렬 정밀도, 설비 투자</td></tr>
+</table></div>
+<div class="terms">
+<details><summary>CoW / WoW / CoC <small>Chip on Wafer 외</small></summary><p>무엇 위에 무엇을 붙이는지에 따른 이름. CoW는 웨이퍼 위에 칩을, WoW는 웨이퍼 위에 웨이퍼를, CoC는 칩 위에 칩을 붙입니다. 삼성 HBM은 베이스 다이 웨이퍼 위에 코어 칩을 쌓는 CoW 방식이고, zHBM은 WoW + 하이브리드 본딩을 언급합니다.</p></details>
+<details><summary>TC 본더 <small>Thermo-Compression Bonder</small></summary><p>칩을 열과 압력으로 눌러 붙이는 장비. 헤드 온도·압력·시간 프로파일과 헤드 평탄도가 핵심. HBM 적층의 대표 장비입니다.</p></details>
+<details><summary>NCF <small>Non-Conductive Film</small></summary><p>전기가 통하지 않는 접착 필름. 범프 주변을 채워 언더필 역할을 하고, 열압착 때 녹아 흐르면서 범프가 맞닿게 합니다.</p></details>
+<details><summary>DAF <small>Die Attach Film</small></summary><p>칩 뒷면에 붙이는 접착 필름. 와이어 본딩 패키지에서 칩을 기판에 붙이거나 NAND 칩을 계단식으로 쌓을 때 씁니다.</p></details>
+<details><summary>UPH <small>Units Per Hour</small></summary><p>시간당 처리 수량. 정밀도와 함께 장비 평가의 핵심 지표입니다.</p></details>
+<details><summary>콜렛 / 이젝터 <small>Collet / Ejector</small></summary><p>콜렛은 칩을 빨아들여 집는 흡착 노즐, 이젝터는 테이프 아래에서 칩을 밀어 올리는 핀입니다. 얇은 칩은 이 순간 잘 깨집니다.</p></details>
+</div>
+<div class="duo">
+<div class="box bad"><span class="lab">불량</span><ul><li>정렬 오차(Misalign), 칩 기울어짐(Tilt)</li><li>접착층 보이드, 필름 미충전</li><li>비접합(Non-wet), 인접 범프 붙음(Bridge)</li><li>픽업 시 칩 크랙, 칩 표면 오염</li><li>층 누적 휨 → 상층 접합 불량</li></ul></div>
+<div class="box neck"><span class="lab">병목</span><p>TC-NCF는 <b>층마다 가열·가압·냉각</b>을 반복해 UPH가 낮습니다. 층이 늘수록 아래층은 반복 가열을 받고, 누적 오차와 휨이 커집니다. 업계는 필름 박막화, 다수 헤드 동시 본딩, 하이브리드 본딩으로 이 병목을 풀려고 합니다.</p></div>
+</div>
+<div class="box mech"><span class="lab">기계 연결 (가장 직접적인 공정)</span><p>픽 앤 플레이스 = <b>로봇·메카트로닉스</b>, 정렬 = <b>비전 기반 위치 제어</b>, 본딩 헤드와 스테이지의 <b>평행도·평탄도</b> = 정밀 기구 설계, 가열·냉각 사이클 = <b>열전달·열응력</b>. 로봇팔 정밀도 46→97점 개선 경험을 그대로 연결할 수 있습니다.</p></div>
+<div class="box iv"><span class="lab">면접</span><p>"CoW 본딩에서 중요한 건 정렬 정밀도와 헤드–스테이지 평행도, 그리고 층마다 반복되는 열 이력이라고 생각합니다. 로봇팔 정밀도를 개선할 때 기구 강성·제어 변수·측정 방법을 나눠서 오차 원인을 찾았던 방식이 본더 공정 최적화에도 쓰일 수 있다고 봅니다."</p></div>
+<div class="photo"><a href="https://news.skhynix.co.kr/die-bonding/" target="_blank" rel="noopener">SK하이닉스 뉴스룸 · 다이 본딩 특강 (비교 자료)</a></div>
+
+<!-- 4.4 Interconnect -->
+<h3><span class="k">4.4</span>Interconnect: 칩과 기판을 전기로 잇기</h3>
+<div class="analogy"><span class="ic">비유</span><p><b>와이어 본딩</b>은 건물 옥상에서 전선을 늘어뜨려 길가 전봇대에 잇는 방식, <b>플립칩</b>은 건물을 뒤집어 바닥의 수많은 배관을 땅속 배관에 바로 꽂는 방식입니다. 연결 수와 거리가 완전히 달라집니다.</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 880 250" role="img" aria-label="와이어 본딩과 플립칩 단면 비교">
+  <g transform="translate(20,30)">
+   <text x="0" y="0" class="tb">와이어 본딩</text>
+   <rect x="0" y="150" width="380" height="20" class="sub"/>
+   <rect x="110" y="128" width="160" height="6" class="vif" opacity=".55"/><rect x="110" y="100" width="160" height="28" class="si"/>
+   <g class="cu"><rect x="116" y="96" width="10" height="4"/><rect x="254" y="96" width="10" height="4"/><rect x="34" y="146" width="16" height="4"/><rect x="330" y="146" width="16" height="4"/></g>
+   <path d="M121 96 C118 40 70 40 42 146" class="lncu"/><path d="M259 96 C262 40 310 40 338 146" class="lncu"/>
+   <circle cx="121" cy="94" r="4" class="cu"/><text x="128" y="70" class="tc">① 볼 본드</text><text x="16" y="138" class="tc">② 스티치</text>
+   <text x="300" y="44" class="tm">와이어 굵기 약 15~25㎛</text>
+   <g class="sol"><circle cx="40" cy="178" r="7"/><circle cx="100" cy="178" r="7"/><circle cx="160" cy="178" r="7"/><circle cx="220" cy="178" r="7"/><circle cx="280" cy="178" r="7"/><circle cx="340" cy="178" r="7"/></g>
+   <text x="0" y="210" class="tm">패드가 칩 가장자리에만 → 연결 수 제한, 경로 김</text>
+  </g>
+  <g transform="translate(470,30)">
+   <text x="0" y="0" class="tb">플립칩</text>
+   <rect x="0" y="150" width="380" height="20" class="sub"/>
+   <rect x="80" y="96" width="220" height="30" class="si"/><text x="190" y="116" text-anchor="middle" class="t">칩 (회로면이 아래)</text>
+   <rect x="80" y="126" width="220" height="24" class="vif" opacity=".22"/>
+   <g class="sol"><circle cx="96" cy="138" r="8"/><circle cx="124" cy="138" r="8"/><circle cx="152" cy="138" r="8"/><circle cx="180" cy="138" r="8"/><circle cx="208" cy="138" r="8"/><circle cx="236" cy="138" r="8"/><circle cx="264" cy="138" r="8"/><circle cx="288" cy="138" r="8"/></g>
+   <text x="310" y="140" class="tm">범프</text><text x="310" y="124" class="tm" style="fill:var(--vio)">언더필</text>
+   <g class="sol"><circle cx="40" cy="178" r="7"/><circle cx="100" cy="178" r="7"/><circle cx="160" cy="178" r="7"/><circle cx="220" cy="178" r="7"/><circle cx="280" cy="178" r="7"/><circle cx="340" cy="178" r="7"/></g>
+   <text x="0" y="210" class="tm">칩 면 전체를 단자로 → 연결 수↑, 경로 짧음, 열 빠짐↑</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 4-4.</b> 삼성 8대 공정 9탄은 전통적으로 금선(gold wire)을 이용한 와이어 본딩을 설명하고, 고성능 제품일수록 플립칩·TSV처럼 짧은 연결로 바뀐다고 정리합니다.</figcaption></figure>
+
+<div class="tw-wrap"><table>
+<tr><th></th><th>와이어 본딩</th><th>플립칩</th></tr>
+<tr><td>장비</td><td>와이어 본더: 초음파 + 열 + 압력으로 금·구리선을 접합</td><td>플립칩 본더 + 리플로우 오븐 + 언더필 디스펜서 (또는 TC 본더)</td></tr>
+<tr><td>주 사용처</td><td>NAND 다단 적층, 저가·범용 메모리, 센서</td><td>AP, GPU, 서버 메모리, HBM 아래 연결</td></tr>
+<tr><td>대표 불량</td><td>볼 리프트(떨어짐), 넥 크랙, 와이어 스위핑(몰드 때 휨), 와이어끼리 닿음</td><td>범프 크랙, 비접합(Non-wet), 브리지, 언더필 보이드</td></tr>
+<tr><td>핵심 변수</td><td>초음파 출력·시간, 루프 높이·형상</td><td>범프 높이 균일도, 리플로우 프로파일, 기판 휨</td></tr>
+</table></div>
+
+<h4>리플로우와 언더필: 플립칩의 두 단짝</h4>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 240" role="img" aria-label="리플로우 온도 프로파일">
+  <g transform="translate(60,20)">
+   <line x1="0" y1="180" x2="740" y2="180" class="ln"/><line x1="0" y1="0" x2="0" y2="180" class="ln"/>
+   <text x="-10" y="-4" class="tn" text-anchor="end">℃</text>
+   <g class="tn" text-anchor="end"><text x="-6" y="184">25</text><text x="-6" y="112">150</text><text x="-6" y="76">217</text><text x="-6" y="56">250</text></g>
+   <line x1="0" y1="72" x2="740" y2="72" class="lnd"/><text x="744" y="76" class="tc">솔더 녹는점 (SAC305 약 217℃)</text>
+   <path d="M0 180 C80 160 130 120 180 112 L360 100 C420 92 450 52 500 52 C540 52 560 90 610 130 L740 170" class="lncu" style="stroke-width:3"/>
+   <g class="tm"><text x="40" y="200">① 예열</text><text x="230" y="200">② 소킹 (플럭스 활성화·온도 균일)</text><text x="460" y="200">③ 피크</text><text x="620" y="200">④ 냉각</text></g>
+   <text x="470" y="40" class="tm">피크 약 240~250℃</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 4-5. 리플로우 온도 프로파일(무연 솔더 일반 예).</b> 솔더를 녹였다가 굳혀 접합합니다. 녹는점 이상 머무는 시간(TAL)이 짧으면 접합이 약하고, 길면 금속간화합물(IMC)이 과하게 자라 깨지기 쉽습니다.</figcaption></figure>
+<p><b>언더필이 필요한 이유.</b> 실리콘의 열팽창계수(CTE)는 약 3ppm/℃, 유기 기판은 약 15~17ppm/℃입니다. 온도가 오르내릴 때마다 칩과 기판이 서로 다르게 늘었다 줄었다 하고, 그 차이를 <b>작은 범프가 혼자 버티면 피로로 깨집니다</b>. 칩과 기판 사이를 에폭시로 채우면 응력이 넓게 나뉘어 수명이 크게 늘어납니다.</p>
+<div class="terms">
+<details><summary>CTE <small>열팽창계수</small></summary><p>온도 1℃ 오를 때 길이가 얼마나 늘어나는지(ppm/℃). 서로 다른 재료를 붙인 패키지에서 휨·크랙의 근본 원인입니다. 대략 Si 3, Cu 17, 유기 기판 15~17, EMC 수~십여(필러량에 따라), 유리 3~9(조성에 따라 조절).</p></details>
+<details><summary>IMC <small>금속간화합물</small></summary><p>솔더와 구리가 만나는 경계에 생기는 얇은 화합물층. 접합에 꼭 필요하지만 너무 두꺼워지면 단단하고 잘 깨집니다.</p></details>
+<details><summary>Non-wet / Bridge</summary><p>Non-wet은 솔더가 패드에 제대로 퍼져 붙지 않은 상태(오픈), Bridge는 이웃 범프끼리 솔더가 붙어버린 상태(쇼트)입니다. 둘 다 휨과 관계가 깊습니다.</p></details>
+<details><summary>CUF / MUF <small>언더필 방식</small></summary><p>CUF(Capillary Underfill)는 칩 옆에 액체를 떨어뜨려 모세관 현상으로 틈에 스며들게 하는 방식, MUF(Molded Underfill)는 몰드 수지가 언더필 역할까지 한 번에 하는 방식입니다.</p></details>
+</div>
+<div class="box mech"><span class="lab">기계 연결</span><p>열응력 σ ≈ E·Δα·ΔT, 솔더의 <b>저주기 피로</b>(Coffin–Manson 식), 언더필 침투 = <b>모세관 유동</b>(점도·표면장력·간극), 와이어 본딩 = <b>초음파 마찰 접합</b>. 재료역학·유체역학·열전달이 한 공정에 다 들어 있습니다.</p></div>
+
+<!-- 4.5 Mold -->
+<h3><span class="k">4.5</span>Mold: 검은 보호막 씌우기</h3>
+<div class="analogy"><span class="ic">비유</span><p>와플 기계. 금형 사이에 칩이 올라간 기판을 넣고, 데운 수지를 부어 굳히면 칩이 검은 껍질 안에 들어갑니다. 원리는 플라스틱 <b>사출성형</b>과 거의 같습니다.</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 880 230" role="img" aria-label="트랜스퍼 몰딩과 컴프레션 몰딩">
+  <g transform="translate(20,20)">
+   <text x="0" y="0" class="tb">트랜스퍼 몰딩</text>
+   <rect x="0" y="20" width="380" height="30" class="bg2"/><text x="10" y="40" class="tm">상부 금형</text>
+   <rect x="0" y="130" width="380" height="30" class="bg2"/><text x="10" y="150" class="tm">하부 금형</text>
+   <rect x="20" y="114" width="340" height="16" class="sub"/>
+   <rect x="60" y="94" width="60" height="20" class="si"/><rect x="160" y="94" width="60" height="20" class="si"/><rect x="260" y="94" width="60" height="20" class="si"/>
+   <path d="M20 60 H360 V114 H20 Z" class="emc" opacity=".35"/>
+   <path d="M-6 76 H40" class="lncu" marker-end="url(#arcu)" style="stroke-width:3"/><text x="2" y="70" class="tc">수지 주입</text>
+   <path d="M60 80 H330" class="lnm" marker-end="url(#ar)"/>
+   <path d="M86 94 q6 -18 20 0" class="lnbad"/><text x="70" y="184" class="tbad">옆에서 밀어 넣는 흐름 → 와이어가 휨(스위핑)</text>
+  </g>
+  <g transform="translate(470,20)">
+   <text x="0" y="0" class="tb">컴프레션 몰딩</text>
+   <rect x="0" y="20" width="380" height="30" class="bg2"/><path d="M190 50 V70" class="ln" marker-end="url(#ar)"/><path d="M90 50 V70" class="ln" marker-end="url(#ar)"/><path d="M290 50 V70" class="ln" marker-end="url(#ar)"/>
+   <rect x="0" y="130" width="380" height="30" class="bg2"/>
+   <rect x="20" y="114" width="340" height="16" class="sub"/>
+   <rect x="60" y="94" width="60" height="20" class="si"/><rect x="160" y="94" width="60" height="20" class="si"/><rect x="260" y="94" width="60" height="20" class="si"/>
+   <rect x="20" y="74" width="340" height="40" class="emc" opacity=".35"/>
+   <text x="0" y="184" class="tc">수지를 깔고 위에서 눌러 성형 → 흐름이 짧고 균일</text>
+   <text x="0" y="202" class="tm">웨이퍼·대형 패널, 얇은 패키지에 유리</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 4-6.</b> 삼성 뉴스룸 설명: EMC(Epoxy Molding Compound)를 가열해 젤 상태로 만든 뒤 금형에 부어 굳힙니다. 굳힌 뒤 오븐에서 한 번 더 완전히 경화(PMC)합니다.</figcaption></figure>
+<div class="terms">
+<details><summary>EMC <small>Epoxy Molding Compound</small></summary><p>에폭시 수지 + 실리카 필러(가루) + 경화제 등의 혼합물. 필러를 많이 넣으면 CTE가 낮아져 휨이 줄지만, 점도가 올라가 잘 안 흘러갑니다.</p></details>
+<details><summary>Tg <small>유리전이온도</small></summary><p>수지가 단단한 상태에서 말랑한 상태로 바뀌는 온도. Tg 위에서는 CTE가 몇 배로 커져서 휨 거동이 확 달라집니다.</p></details>
+<details><summary>경화 수축 <small>Cure Shrinkage</small></summary><p>수지가 굳으면서 부피가 줄어드는 현상. 칩·기판은 그대로인데 몰드만 줄어 휨이 생깁니다.</p></details>
+<details><summary>PMC <small>Post Mold Cure</small></summary><p>성형 후 오븐에서 몇 시간 더 가열해 완전히 경화시키는 공정.</p></details>
+</div>
+<div class="duo">
+<div class="box bad"><span class="lab">불량</span><ul><li><b>휨(Warpage)</b>: CTE 차이 + 경화 수축 + 상하 비대칭</li><li>보이드(기포), 미충전(Incomplete fill)</li><li>와이어 스위핑, 칩 표면 박리(Delamination)</li><li>플래시(수지가 금형 틈으로 새어 나옴)</li></ul></div>
+<div class="box neck"><span class="lab">병목</span><p>패키지가 얇아지고 커질수록(대형 2.5D 패키지, 패널) <b>휨 제어</b>가 가장 큰 숙제입니다. HBM처럼 칩 간격이 좁으면 수지가 좁은 틈을 다 채우기도 어렵습니다. 저CTE·고필러 EMC와 컴프레션 몰딩, 시뮬레이션 기반 조건 설계로 대응합니다.</p></div>
+</div>
+<div class="box mech"><span class="lab">기계 연결</span><p>몰드 = <b>사출성형</b>(유동·경화·금형 설계), 휨 = <b>이종재료 적층판의 열변형</b>(바이메탈 원리), Moldflow·ANSYS 같은 <b>CAE 해석</b>. AGV 리프트 정적 해석 경험을 "휨 해석·지그 설계"로 연결할 수 있습니다.</p></div>
+
+<!-- 4.6 Marking, SBA, Singulation -->
+<h3><span class="k">4.6</span>Marking → Solder Ball Attach → Singulation</h3>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 880 210" role="img" aria-label="마킹 볼 부착 절단">
+  <g transform="translate(20,20)">
+   <text x="0" y="0" class="tb">① 마킹</text>
+   <rect x="20" y="70" width="220" height="40" rx="2" class="emc"/><rect x="20" y="110" width="220" height="12" class="sub"/>
+   <path d="M130 14 V66" class="lnbad" style="stroke-width:3"/><text x="140" y="34" class="tbad">레이저</text>
+   <text x="130" y="96" text-anchor="middle" class="tw">SAMPLE 2611</text>
+   <text x="0" y="150" class="tm">제품명·로트·날짜 각인 → OCR 검사</text><text x="0" y="168" class="tm">추적성(Traceability)의 출발점</text>
+  </g>
+  <g transform="translate(310,20)">
+   <text x="0" y="0" class="tb">② SBA (볼 부착)</text>
+   <rect x="20" y="40" width="220" height="40" rx="2" class="emc"/><rect x="20" y="80" width="220" height="12" class="sub"/>
+   <g class="sol"><circle cx="40" cy="100" r="8"/><circle cx="80" cy="100" r="8"/><circle cx="120" cy="100" r="8"/><circle cx="200" cy="100" r="8"/><circle cx="220" cy="100" r="8"/></g>
+   <circle cx="160" cy="100" r="8" class="lnbad"/><text x="146" y="128" class="tbad">미부착</text>
+   <text x="0" y="150" class="tm">플럭스 → 볼 올리기 → 리플로우 → 세정</text><text x="0" y="168" class="tm">볼 높이 균일도(Coplanarity)가 핵심</text>
+  </g>
+  <g transform="translate(600,20)">
+   <text x="0" y="0" class="tb">③ Singulation</text>
+   <rect x="0" y="50" width="250" height="34" class="emc"/><rect x="0" y="84" width="250" height="10" class="sub"/>
+   <path d="M83 30 V104 M167 30 V104" class="lnbad" stroke-dasharray="4 3"/>
+   <text x="0" y="132" class="tm">스트립(여러 패키지가 붙은 판)을</text><text x="0" y="150" class="tm">낱개로 절단 → 세정·검사 → 트레이 적재</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 4-7.</b> 볼 부착 후 패키지는 BGA(Ball Grid Array) 형태가 됩니다. 볼은 고객사 보드와 연결되는 '다리'입니다.</figcaption></figure>
+<div class="box news"><span class="lab">공식·보도</span><ul>
+<li>한미반도체는 SEDEX 2026에서 절단·세정·건조·비전 검사·적재를 한 장비에서 하는 <b>micro SAW &amp; Vision Placement(MSVP)</b>를 소개했습니다(이코노미리뷰 보도).</li>
+<li>삼성 뉴스룸 「거인의 도구들: 시료 트레이」(2026.11.06): 품질 평가용 칩을 담는 트레이가 <b>칩과 평가 설비를 잇는 솔더볼의 손상</b>을 막는다고 소개. 볼은 핸들링 중에도 쉽게 다치는 부분입니다.</li>
+</ul></div>
+<div class="duo">
+<div class="box bad"><span class="lab">불량</span><ul><li>마킹: 깊이 부족·판독 불가·위치 틀어짐</li><li>SBA: 볼 미부착, 이중 볼, 브리지, 볼 높이·위치 편차</li><li>절단: 패키지 모서리 치핑, 버(burr), 크기 편차</li></ul></div>
+<div class="box mech"><span class="lab">기계 연결</span><p>Coplanarity = <b>기하공차</b>, 볼 전단 강도 시험(Ball Shear), 낙하·진동 시험 = <b>동역학</b>, 트레이·지그 설계 = <b>기구 설계</b>.</p></div>
+</div>
+
+<div class="sum"><span class="lab">4장 한 장 요약</span><ul>
+<li>BG: 얇게 → TTV·휨·크랙 / Saw: 깨끗하게 → 치핑·입자 / Bonding: 정확하게 → 정렬·보이드·비접합</li>
+<li>Interconnect: 와이어(싸고 유연) vs 플립칩(빠르고 많이). 리플로우 프로파일 + 언더필(CTE 응력 분산)</li>
+<li>Mold: 사출성형과 같은 원리, 최대 과제는 휨 / Marking·SBA·Singulation: 추적성·볼 품질·외관</li>
+<li>모든 공정의 공통 키워드: <b>휨, 열, 정렬, 청정도</b></li>
+</ul></div>
+</section>
+
+<!-- ========== 5장 ========== -->
+<section class="chap" id="c5">
+<div class="chap-h"><span class="no">05</span><h2>패키지 테스트와 신뢰성: 출하 전 마지막 관문</h2></div>
+<p class="lead">삼성 뉴스룸 설명대로 패키지 테스트는 전압·신호·온도 조건을 바꿔 가며 <b>전기적 특성, 기능, 동작 속도</b>를 검사하고, 그 결과를 각 공정에 피드백해 품질 개선에 씁니다.</p>
+<div class="analogy"><span class="ic">비유</span><p>신차 출고 전 주행 시험. 그냥 시동만 걸어 보는 게 아니라 고온 사막·혹한 조건에서 일부러 오래 혹사시켜(번인) <b>초기에 고장 날 차를 공장 안에서 먼저 걸러냅니다</b>.</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 250" role="img" aria-label="욕조 곡선">
+  <g transform="translate(60,20)">
+   <line x1="0" y1="180" x2="740" y2="180" class="ln"/><line x1="0" y1="0" x2="0" y2="180" class="ln"/>
+   <text x="6" y="10" class="tn">고장률</text><text x="700" y="200" class="tn">시간 →</text>
+   <rect x="0" y="0" width="150" height="180" class="cus" opacity=".7"/>
+   <path d="M4 10 C40 120 90 150 150 152 L560 152 C620 150 680 110 730 20" class="lncu" style="stroke-width:3"/>
+   <text x="12" y="200" class="t">① 초기 고장</text><text x="300" y="200" class="t">② 우발 고장 (안정)</text><text x="590" y="200" class="t">③ 마모 고장</text>
+   <text x="18" y="80" class="tc">번인으로</text><text x="18" y="96" class="tc">이 구간을</text><text x="18" y="112" class="tc">공장 안에서</text><text x="18" y="128" class="tc">소진</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 5-1. 욕조 곡선(Bathtub Curve).</b> 번인은 곡선 앞부분(초기 불량)을 출하 전에 잘라내는 공정입니다. 신뢰성 시험은 뒷부분(마모)이 충분히 늦게 오는지 확인합니다.</figcaption></figure>
+
+<h3><span class="k">5.1</span>테스트 장비 3총사</h3>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 220" role="img" aria-label="테스터 핸들러 소켓 구성">
+  <g transform="translate(20,20)">
+   <rect width="220" height="150" rx="8" class="bg2"/><text x="16" y="28" class="tb">ATE (테스터)</text>
+   <text x="16" y="54" class="tm">신호 생성·응답 측정·판정</text><text x="16" y="74" class="tm">테스트 프로그램 실행</text><text x="16" y="94" class="tm">고가 장비 → 시간이 곧 돈</text>
+   <path d="M222 80 H300" class="lncu" style="stroke-width:3"/><text x="232" y="72" class="tc">케이블</text>
+  </g>
+  <g transform="translate(320,20)">
+   <rect width="200" height="150" rx="8" class="sub" opacity=".25"/><text x="16" y="28" class="tb">테스트 보드 + 소켓</text>
+   <rect x="50" y="70" width="100" height="40" rx="4" class="emc"/><g class="cu"><rect x="58" y="110" width="4" height="14"/><rect x="72" y="110" width="4" height="14"/><rect x="86" y="110" width="4" height="14"/><rect x="100" y="110" width="4" height="14"/><rect x="114" y="110" width="4" height="14"/><rect x="128" y="110" width="4" height="14"/></g>
+   <text x="16" y="146" class="tm">포고 핀이 볼에 닿아 접촉 (소모품)</text>
+  </g>
+  <g transform="translate(560,20)">
+   <rect width="280" height="150" rx="8" class="cus"/><text x="16" y="28" class="tb">핸들러 (로봇)</text>
+   <text x="16" y="54" class="tm">트레이에서 집기 → 온도 맞추기</text><text x="16" y="74" class="tm">→ 소켓에 꽂기 → 결과별 분류</text>
+   <text x="16" y="100" class="t">평가 지표</text><text x="16" y="120" class="tm">UPH, 동시 측정 수(Parallelism),</text><text x="16" y="138" class="tm">잼(Jam)률, 인덱스 타임</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 5-2.</b> 핸들러는 픽 앤 플레이스 로봇과 온도 챔버의 결합입니다. 로봇팔·AGV 경험과 가장 가까운 테스트 장비입니다.</figcaption></figure>
+<div class="terms">
+<details><summary>번인 <small>Burn-in</small></summary><p>고온·고전압으로 장시간 동작시켜 초기 불량을 드러내는 공정. 번인 보드에 수백 개를 꽂아 챔버에 넣습니다.</p></details>
+<details><summary>MBT <small>Monitoring Burn-in Test</small></summary><p>번인 중에 동작까지 모니터링해 번인과 테스트를 동시에 하는 방식. 테스트 시간을 줄입니다.</p></details>
+<details><summary>Parallelism <small>동시 측정 수</small></summary><p>테스터 한 대가 한 번에 검사하는 칩 수. 이 숫자를 늘리는 게 테스트 원가를 줄이는 가장 큰 레버입니다.</p></details>
+<details><summary>재테스트율 <small>Retest Rate</small></summary><p>불량 판정 후 다시 테스트하는 비율. 높으면 소켓 접촉 문제 같은 장비 측 요인을 의심합니다.</p></details>
+</div>
+
+<h3><span class="k">5.2</span>신뢰성 시험: "몇 년 뒤에도 괜찮은가"</h3>
+<div class="tw-wrap"><table>
+<tr><th>시험</th><th>방법</th><th>찾는 고장</th><th>물리</th></tr>
+<tr><td><b>TC</b> (온도 사이클)</td><td>저온↔고온 반복 (예: −55~125℃ 수백~수천 회)</td><td>솔더·범프 피로 크랙, 박리</td><td>CTE 불일치 열응력, 저주기 피로</td></tr>
+<tr><td><b>HTS</b> (고온 보관)</td><td>고온에서 장시간 방치</td><td>IMC 과성장, 와이어 접합 열화</td><td>확산</td></tr>
+<tr><td><b>THB / HAST</b></td><td>고온·고습 + 전압 (HAST는 가압으로 가속)</td><td>부식, 절연 파괴</td><td>수분 침투·전기화학</td></tr>
+<tr><td><b>MSL / Precon</b></td><td>흡습시킨 뒤 리플로우 통과</td><td>팝콘 크랙(속의 수분이 끓어 터짐)</td><td>증기압</td></tr>
+<tr><td><b>Drop / Vibration</b></td><td>낙하·진동</td><td>볼 접합부 파단</td><td>충격·동역학</td></tr>
+</table></div>
+<p class="small">조건은 JEDEC 표준에 따른 일반 예시입니다. 실제 조건은 제품·고객 요구에 따라 다릅니다.</p>
+<div class="box neck"><span class="lab">병목</span><p>HBM·대형 패키지는 테스트할 I/O가 많고 고속이라 <b>테스트 시간과 비용</b>이 커집니다. 또 적층 후에는 칩 하나만 꺼내 고칠 수 없어, 어느 단계에 테스트를 넣을지(중간 테스트, KGD) 자체가 공정 설계의 일부가 됐습니다. 삼성은 I-Cube4 발표(2021)에서 공정 중간에 테스트를 넣어 불량을 걸러내는 방식으로 수율을 높였다고 설명했습니다.</p></div>
+<div class="box news"><span class="lab">공식·보도</span><p>세메스는 SEDEX 2026에서 <b>후공정 테스트 무인화 설비</b>와 자동 물류(AMHS) 기술을 소개했습니다(이코노미리뷰 보도). 공식 직무 설명의 '테스트 비용 절감·자동화'와 같은 방향입니다.</p></div>
+<div class="box mech"><span class="lab">기계 연결</span><p>TC 시험 = <b>피로 수명 예측</b>, 낙하 = <b>충격 해석</b>, 핸들러 잼 = <b>기구 신뢰성</b>. 대량 생산에서는 잼률 1%만 줄여도 가동률이 크게 오릅니다.</p></div>
+</section>
+
+<!-- ========== 6장 ========== -->
+<section class="chap" id="c6">
+<div class="chap-h"><span class="no">06</span><h2>검사·계측·불량 분석, 그리고 불량 도감</h2></div>
+<p class="lead">공정기술 엔지니어의 하루 대부분은 <b>"왜 이 불량이 났는가"</b>를 찾는 일입니다. 이 장은 그 도구와 사고 순서, 그리고 직무면접 시나리오 문제에 바로 쓸 불량 도감입니다.</p>
+
+<h3><span class="k">6.1</span>안 자르고 보는 법 (비파괴 검사)</h3>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 880 220" role="img" aria-label="AOI X-ray SAT 원리">
+  <g transform="translate(20,20)">
+   <text x="0" y="0" class="tb">AOI (광학)</text>
+   <rect x="80" y="18" width="60" height="34" rx="4" class="emc"/><text x="110" y="40" text-anchor="middle" class="tw">카메라</text>
+   <path d="M110 54 L60 120 M110 54 L160 120" class="lnbl" stroke-dasharray="4 3"/>
+   <rect x="20" y="120" width="180" height="28" class="emc"/>
+   <text x="0" y="176" class="tm">표면: 치핑·이물·마킹·볼 미부착</text>
+  </g>
+  <g transform="translate(310,20)">
+   <text x="0" y="0" class="tb">X-ray</text>
+   <circle cx="110" cy="34" r="14" class="wnf"/>
+   <path d="M110 48 L50 150 M110 48 L170 150 M110 48 V150" class="lnd"/>
+   <rect x="30" y="100" width="160" height="24" class="emc" opacity=".6"/><g class="sol"><circle cx="70" cy="112" r="6"/><circle cx="110" cy="112" r="6"/><circle cx="150" cy="112" r="6"/></g><circle cx="110" cy="112" r="2.5" class="sf"/>
+   <rect x="20" y="150" width="180" height="8" class="bg2"/>
+   <text x="0" y="176" class="tm">투과: 범프 보이드·브리지·와이어 형상</text>
+  </g>
+  <g transform="translate(600,20)">
+   <text x="0" y="0" class="tb">SAT (초음파)</text>
+   <rect x="80" y="18" width="60" height="30" rx="4" class="emc"/><text x="110" y="38" text-anchor="middle" class="tw">트랜스듀서</text>
+   <path d="M110 50 V96" class="lnbl" marker-end="url(#ar)"/><path d="M122 96 V54" class="lncu" marker-end="url(#arcu)"/>
+   <rect x="20" y="80" width="200" height="14" class="bg2" opacity=".6"/><text x="226" y="92" class="tn">물</text>
+   <rect x="20" y="96" width="200" height="22" class="emc"/><rect x="60" y="118" width="120" height="3" class="badf"/><rect x="20" y="121" width="200" height="14" class="sub"/>
+   <text x="0" y="176" class="tm">경계면 반사: 박리·몰드 보이드·크랙</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 6-1.</b> AOI는 겉, X-ray는 금속(밀도 차), SAT는 경계면(박리)에 강합니다. 셋을 조합해 쓰고, 그래도 모르면 잘라서 봅니다.</figcaption></figure>
+<div class="terms">
+<details><summary>단면 분석 <small>Cross-section</small></summary><p>불량 지점을 잘라 연마한 뒤 현미경·SEM으로 직접 보는 파괴 분석. IMC 두께, 크랙 경로, 보이드 위치를 확인합니다.</p></details>
+<details><summary>SEM / EDS(분석) <small>전자현미경 / 성분 분석</small></summary><p>SEM은 전자빔으로 nm 단위까지 확대해 보는 현미경. 여기서 EDS는 테스트가 아니라 X선으로 성분을 알아내는 분석법(Energy Dispersive Spectroscopy)입니다. 약어가 같아 헷갈리기 쉽습니다.</p></details>
+<details><summary>Shadow Moiré <small>휨 측정</small></summary><p>격자 그림자 무늬로 패키지 표면의 높낮이를 재는 방법. 온도를 올려 가며 리플로우 중 휨이 어떻게 바뀌는지 봅니다.</p></details>
+<details><summary>SPC / Cpk</summary><p>SPC는 관리도로 공정 변동을 감시하는 통계적 공정 관리, Cpk는 공정이 규격 안에 얼마나 안정적으로 들어오는지 나타내는 지수(1.33 이상이면 양호로 흔히 봄)입니다.</p></details>
+</div>
+
+<h3><span class="k">6.2</span>불량을 쫓는 사고 순서</h3>
+<ol class="steps">
+<li><div><b>현상 정의</b>: 어떤 불량(BIN·검사 결과)이 언제부터, 어느 장비·로트·자재에서?</div></li>
+<li><div><b>층별(Stratification)</b>: 4M(사람·설비·재료·방법)으로 나눠 공통점 찾기. 장비 이력, 자재 로트 변경, 레시피 변경 확인</div></li>
+<li><div><b>위치 패턴 보기</b>: 특정 구역(가장자리·한쪽 끝)에 몰렸나? → 장비 측 요인(온도 분포, 평행도, 흡착) 의심</div></li>
+<li><div><b>물리 확인</b>: 비파괴(X-ray, SAT) → 파괴(단면, SEM) 순서</div></li>
+<li><div><b>가설 검증</b>: DOE(실험계획법)로 인자를 하나씩 바꿔 재현</div></li>
+<li><div><b>개선과 재발 방지</b>: 조건 변경, SPC 관리한계 재설정, 인터락(장비 자동 정지), 표준화</div></li>
+</ol>
+<div class="box iv"><span class="lab">면접</span><p>시나리오 문제가 나오면 이 6단계를 그대로 말하면 됩니다. "로봇팔 정밀도 개선 때도 결과 이상 → 변수 나누기 → 측정으로 원인 확인 → 조건 바꿔 검증 순서로 진행했습니다."라고 경험을 붙이면 설득력이 생깁니다. 열화상 연구의 "제품 문제인지 측정 환경 문제인지 구분한 경험"은 테스트 수율 하락 시나리오에 그대로 맞습니다.</p></div>
+
+<h3><span class="k">6.3</span>불량 도감</h3>
+<div class="tw-wrap"><table>
+<tr><th>불량</th><th>생김새</th><th>주로 생기는 공정</th><th>원인 후보</th><th>찾는 법</th><th>대책 방향</th></tr>
+<tr><td><b>휨 (Warpage)</b></td><td>패키지가 웃는/우는 모양으로 휨</td><td>BG, Mold, Reflow</td><td>CTE 차이, 경화 수축, 상하 비대칭</td><td>Shadow Moiré, 3D 계측</td><td>저CTE EMC, 두께 비율, 경화 조건, 시뮬레이션</td></tr>
+<tr><td><b>치핑·크랙</b></td><td>칩 가장자리 이빨 빠짐, 금</td><td>BG, Saw, Pick-up</td><td>블레이드 마모, 진동, 얇은 칩, 이젝터 힘</td><td>AOI, 현미경</td><td>방식 변경(스텔스·플라즈마), DBG, 조건 최적화</td></tr>
+<tr><td><b>박리 (Delamination)</b></td><td>층과 층 사이가 떨어짐</td><td>Saw(Low-k), Mold, Reflow</td><td>계면 접착력 부족, 수분, 열응력</td><td>SAT</td><td>표면 처리(플라즈마), 건조, 재료 변경</td></tr>
+<tr><td><b>보이드 (Void)</b></td><td>접합부·몰드 안의 빈 공간</td><td>Bonding, Underfill, Mold, HB</td><td>기포 갇힘, 입자, 가스 발생, 유동 부족</td><td>X-ray, SAT, 단면</td><td>진공·유동 조건, 청정도, 재료</td></tr>
+<tr><td><b>Non-wet (오픈)</b></td><td>솔더가 패드에 안 붙음</td><td>Flip chip, Reflow, CoW</td><td>휨으로 간격 벌어짐, 산화, 온도 부족</td><td>X-ray, 전기 테스트</td><td>휨 제어, 플럭스·프로파일, 압력</td></tr>
+<tr><td><b>Bridge (쇼트)</b></td><td>이웃 범프·볼끼리 붙음</td><td>Reflow, SBA, CoW</td><td>휨으로 눌림, 솔더 과다, 피치 미세</td><td>X-ray, 전기 테스트</td><td>솔더량, 압력·온도, 휨</td></tr>
+<tr><td><b>정렬 오차</b></td><td>위·아래 범프가 어긋남</td><td>Die/CoW Bonding</td><td>비전 오차, 열팽창, 헤드 정밀도</td><td>X-ray, 적외선 정렬 검사</td><td>캘리브레이션, 온도 보정</td></tr>
+<tr><td><b>와이어 스위핑</b></td><td>와이어가 옆으로 쓰러짐</td><td>Mold</td><td>수지 흐름, 점도, 와이어 길이</td><td>X-ray</td><td>컴프레션 몰딩, 점도·속도, 루프 형상</td></tr>
+<tr><td><b>팝콘 크랙</b></td><td>몰드 내부 폭발형 크랙</td><td>고객 리플로우</td><td>흡습 후 급가열</td><td>SAT, 단면</td><td>건조·포장(MSL 관리), 재료</td></tr>
+<tr><td><b>접촉 불량 (테스트)</b></td><td>양품을 불량 판정</td><td>EDS, Final Test</td><td>프로브·소켓 오염·마모</td><td>재테스트율, 장비별 층별</td><td>세정·교체 주기, 접촉력</td></tr>
+</table></div>
+
+<h3><span class="k">6.4</span>불량은 공정을 따라 흐른다</h3>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 880 210" role="img" aria-label="공정 간 불량 전파">
+  <g class="t">
+   <rect x="10" y="40" width="130" height="50" rx="8" class="si"/><text x="75" y="62" text-anchor="middle" class="t">BG 두께 편차</text><text x="75" y="80" text-anchor="middle" class="tm">TTV↑</text>
+   <rect x="190" y="40" width="130" height="50" rx="8" class="si"/><text x="255" y="62" text-anchor="middle" class="t">Saw 입자·치핑</text><text x="255" y="80" text-anchor="middle" class="tm">표면 오염</text>
+   <rect x="370" y="40" width="150" height="50" rx="8" class="cus"/><text x="445" y="62" text-anchor="middle" class="t">본딩 보이드·기울어짐</text><text x="445" y="80" text-anchor="middle" class="tm">접합 불균일</text>
+   <rect x="570" y="40" width="130" height="50" rx="8" class="emc"/><text x="635" y="62" text-anchor="middle" class="tw">몰드 후 휨↑</text><text x="635" y="80" text-anchor="middle" class="tw" style="font-weight:400">응력 집중</text>
+   <rect x="750" y="40" width="120" height="50" rx="8" class="badf"/><text x="810" y="62" text-anchor="middle" class="tw">테스트 BIN 불량</text><text x="810" y="80" text-anchor="middle" class="tw" style="font-weight:400">오픈·쇼트</text>
+   <path d="M142 65h44" class="lnbad" marker-end="url(#arbad)"/><path d="M322 65h44" class="lnbad" marker-end="url(#arbad)"/><path d="M522 65h44" class="lnbad" marker-end="url(#arbad)"/><path d="M702 65h44" class="lnbad" marker-end="url(#arbad)"/>
+   <path d="M810 94 C810 170 80 170 75 96" class="lnd" marker-end="url(#ar)"/>
+   <text x="300" y="186" class="tm">역추적: BIN 분포 → 로트·장비 이력 → 앞 공정 데이터</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 6-2.</b> 마지막 테스트에서 보이는 불량의 원인은 몇 공정 앞에 있는 경우가 많습니다. 그래서 공정기술 엔지니어는 자기 공정만 보지 않고 <b>앞뒤 공정의 데이터</b>를 함께 봅니다.</figcaption></figure>
+</section>
+
+<!-- ========== 7장 ========== -->
+<section class="chap" id="c7">
+<div class="chap-h"><span class="no">07</span><h2>패키지 종류의 진화: 다리에서 볼로, 볼에서 직접 접합으로</h2></div>
+<p class="lead">패키지의 역사는 <b>"더 많은 연결을, 더 짧게, 더 작은 면적에"</b>로 요약됩니다. 이 흐름 끝에 HBM과 하이브리드 본딩이 있습니다.</p>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 900 230" role="img" aria-label="패키지 세대 진화">
+  <g transform="translate(10,30)">
+   <rect x="20" y="40" width="100" height="40" rx="3" class="emc"/>
+   <g class="sol"><rect x="26" y="80" width="6" height="30"/><rect x="46" y="80" width="6" height="30"/><rect x="66" y="80" width="6" height="30"/><rect x="86" y="80" width="6" height="30"/><rect x="106" y="80" width="6" height="30"/></g>
+   <text x="10" y="140" class="tb">DIP · QFP</text><text x="10" y="158" class="tm">리드프레임, 다리(핀)</text><text x="10" y="174" class="tm">와이어 본딩</text>
+  </g>
+  <g transform="translate(190,30)">
+   <rect x="10" y="40" width="120" height="34" rx="3" class="emc"/><rect x="0" y="74" width="140" height="10" class="sub"/>
+   <g class="sol"><circle cx="14" cy="92" r="7"/><circle cx="42" cy="92" r="7"/><circle cx="70" cy="92" r="7"/><circle cx="98" cy="92" r="7"/><circle cx="126" cy="92" r="7"/></g>
+   <text x="0" y="140" class="tb">BGA</text><text x="0" y="158" class="tm">바닥 전체에 솔더볼</text><text x="0" y="174" class="tm">연결 수↑</text>
+  </g>
+  <g transform="translate(370,30)">
+   <rect x="20" y="50" width="100" height="22" class="si"/><g class="sol"><circle cx="30" cy="78" r="5"/><circle cx="50" cy="78" r="5"/><circle cx="70" cy="78" r="5"/><circle cx="90" cy="78" r="5"/><circle cx="110" cy="78" r="5"/></g>
+   <rect x="0" y="84" width="140" height="10" class="sub"/>
+   <text x="0" y="140" class="tb">플립칩 BGA · WLCSP</text><text x="0" y="158" class="tm">칩 뒤집어 범프로 직결</text><text x="0" y="174" class="tm">칩 크기 = 패키지 (WLCSP)</text>
+  </g>
+  <g transform="translate(550,30)">
+   <rect x="20" y="20" width="100" height="26" rx="3" class="emc"/><g class="sol"><circle cx="32" cy="52" r="5"/><circle cx="108" cy="52" r="5"/></g>
+   <rect x="10" y="58" width="120" height="8" class="sub"/><rect x="40" y="66" width="60" height="16" class="si"/><rect x="0" y="82" width="140" height="10" class="sub"/>
+   <text x="0" y="140" class="tb">PoP · SiP · MCP</text><text x="0" y="158" class="tm">패키지 위 패키지,</text><text x="0" y="174" class="tm">한 패키지에 여러 칩</text>
+  </g>
+  <g transform="translate(730,30)">
+   <rect x="0" y="80" width="160" height="10" class="si"/><text x="166" y="90" class="tn">인터포저</text>
+   <rect x="10" y="40" width="30" height="40" class="sid"/><rect x="44" y="40" width="70" height="40" class="cu" opacity=".8"/><rect x="118" y="40" width="30" height="40" class="sid"/>
+   <g class="edge"><line x1="10" y1="50" x2="40" y2="50"/><line x1="10" y1="60" x2="40" y2="60"/><line x1="10" y1="70" x2="40" y2="70"/><line x1="118" y1="50" x2="148" y2="50"/><line x1="118" y1="60" x2="148" y2="60"/><line x1="118" y1="70" x2="148" y2="70"/></g>
+   <rect x="-6" y="90" width="172" height="10" class="sub"/>
+   <text x="0" y="140" class="tb">2.5D · 3D</text><text x="0" y="158" class="tm">HBM + GPU, 칩 적층</text><text x="0" y="174" class="tm">TSV·하이브리드 본딩</text>
+  </g>
+  <path d="M10 14 H880" class="lncu" marker-end="url(#arcu)"/><text x="12" y="8" class="tc">연결 수 · 밀도 · 성능 ↑, 연결 길이 ↓</text>
+</svg></div>
+<figcaption><b>그림 7-1. 패키지 진화.</b> 왼쪽일수록 싸고 단순하고, 오른쪽일수록 연결이 촘촘하고 짧습니다. 지금도 모든 방식이 용도에 맞게 함께 쓰입니다.</figcaption></figure>
+<div class="terms">
+<details><summary>PoP <small>Package on Package</small></summary><p>완성된 패키지 위에 다른 패키지를 솔더볼로 쌓는 방식. 보통 아래 AP, 위 메모리(LPDDR). 면적 절약, 따로 테스트한 뒤 조립 가능. 위·아래 패키지의 휨이 안 맞으면 오픈·브리지 불량.</p></details>
+<details><summary>SiP / MCP</summary><p>SiP(System in Package)는 서로 다른 칩·부품을 한 패키지에 넣어 시스템처럼 동작하게 한 것, MCP(Multi-Chip Package)는 여러 메모리 칩을 한 패키지에 넣은 것입니다.</p></details>
+<details><summary>WLP / WLCSP</summary><p>Wafer Level Package. 웨이퍼 상태에서 재배선·범프·보호막까지 다 만든 뒤 자르는 방식. 패키지 크기가 칩 크기와 같아집니다.</p></details>
+<details><summary>FOWLP / FOPLP <small>Fan-Out</small></summary><p>칩 바깥까지 배선을 넓혀(팬아웃) 기판 없이 재배선층(RDL)으로 연결하는 방식. 웨이퍼 대신 큰 사각 패널에서 만들면 FOPLP(패널 레벨)라 부르며 면적 효율이 좋습니다.</p></details>
+<details><summary>인터포저 <small>Interposer</small></summary><p>칩과 기판 사이의 '중간 배선판'. 실리콘으로 만들면 아주 미세한 배선이 가능해 HBM과 GPU를 수천 개 선으로 잇습니다.</p></details>
+<details><summary>칩렛 <small>Chiplet</small></summary><p>큰 칩 하나를 기능별 작은 칩 여러 개로 나눠 만든 뒤 패키지에서 합치는 설계. 수율이 좋아지고, 기능마다 다른 공정을 쓸 수 있습니다. 칩끼리 잇는 표준으로 UCIe가 있습니다.</p></details>
+</div>
+</section>
+
+<!-- ========== 8장 ========== -->
+<section class="chap" id="c8">
+<div class="chap-h"><span class="no">08</span><h2>첨단 패키징 최신 기술: 이제 성능은 패키지에서 나온다</h2></div>
+<p class="lead">삼성 반도체 기술 블로그는 첨단 패키징을 "더 이상 단순한 후공정 조립 단계가 아니라, 차세대 컴퓨팅 시스템을 좌우하는 <b>핵심 아키텍처 계층</b>"이라고 표현합니다. 이 장은 그 말이 무슨 뜻인지 하나씩 풉니다.</p>
+
+<h3><span class="k">8.1</span>왜 지금 패키징인가: 메모리 월</h3>
+<div class="analogy"><span class="ic">비유 (삼성 공식)</span><p>연산 장치는 <b>공장</b>, 메모리는 옆의 <b>창고</b>입니다. <b>대역폭</b>은 창고에서 공장으로 가는 도로의 운송 능력(차선 수), <b>용량</b>은 창고 크기입니다. 공장이 아무리 빨라도 도로가 막히면 기계가 놉니다. 이것이 <b>메모리 월(Memory Wall)</b>입니다. (삼성 뉴스룸 「인공지능의 발전과 AI Chip, 이를 뒷받침하는 HBM」 2026.10.28)</p></div>
+<p>AI가 긴 문서를 읽고 추론(Reasoning)을 길게 할수록, 모델 가중치와 <b>KV 캐시</b>(앞에서 계산한 값을 저장해 다시 쓰는 메모리)를 계속 읽어와야 합니다. 그래서 해법은 세 가지로 모입니다. <b>① 도로를 넓힌다(I/O 수↑) ② 창고를 공장 옆으로 붙인다(거리↓) ③ 창고를 위로 쌓는다(적층)</b>. 세 가지 모두 패키징 기술입니다.</p>
+
+<h3><span class="k">8.2</span>HBM: 첨단 패키징 기술이 가장 집약된 제품</h3>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 880 320" role="img" aria-label="HBM과 GPU 2.5D 패키지 단면">
+  <g transform="translate(20,20)">
+   <rect x="0" y="250" width="840" height="24" class="sub"/><text x="10" y="266" class="tw">패키지 기판 (유기)</text>
+   <g class="sol"><circle cx="40" cy="282" r="7"/><circle cx="120" cy="282" r="7"/><circle cx="200" cy="282" r="7"/><circle cx="280" cy="282" r="7"/><circle cx="360" cy="282" r="7"/><circle cx="440" cy="282" r="7"/><circle cx="520" cy="282" r="7"/><circle cx="600" cy="282" r="7"/><circle cx="680" cy="282" r="7"/><circle cx="760" cy="282" r="7"/></g>
+   <rect x="40" y="222" width="760" height="20" class="si"/><text x="50" y="237" class="t">실리콘 인터포저 (미세 배선)</text>
+   <g class="sol"><circle cx="70" cy="246" r="3"/><circle cx="160" cy="246" r="3"/><circle cx="250" cy="246" r="3"/><circle cx="340" cy="246" r="3"/><circle cx="430" cy="246" r="3"/><circle cx="520" cy="246" r="3"/><circle cx="610" cy="246" r="3"/><circle cx="700" cy="246" r="3"/><circle cx="780" cy="246" r="3"/></g>
+   <!-- HBM stack left -->
+   <g transform="translate(70,40)">
+    <rect y="160" width="150" height="20" class="cu" opacity=".85"/><text x="75" y="174" text-anchor="middle" class="tw">베이스(로직) 다이</text>
+    <g class="si"><rect y="140" width="150" height="16"/><rect y="120" width="150" height="16"/><rect y="100" width="150" height="16"/><rect y="80" width="150" height="16"/><rect y="60" width="150" height="16"/><rect y="40" width="150" height="16"/><rect y="20" width="150" height="16"/><rect y="0" width="150" height="16"/></g>
+    <g class="vif" opacity=".5"><rect y="156" width="150" height="4"/><rect y="136" width="150" height="4"/><rect y="116" width="150" height="4"/><rect y="96" width="150" height="4"/><rect y="76" width="150" height="4"/><rect y="56" width="150" height="4"/><rect y="36" width="150" height="4"/><rect y="16" width="150" height="4"/></g>
+    <g class="cu"><rect x="30" y="0" width="3" height="160"/><rect x="60" y="0" width="3" height="160"/><rect x="90" y="0" width="3" height="160"/><rect x="120" y="0" width="3" height="160"/></g>
+    <text x="-6" y="-8" class="t">HBM 스택 (코어 DRAM 8~16단)</text>
+   </g>
+   <!-- GPU -->
+   <g transform="translate(320,130)"><rect width="220" height="90" rx="3" class="emc"/><text x="110" y="42" text-anchor="middle" class="tw">GPU / AI 가속기</text><text x="110" y="62" text-anchor="middle" class="tw" style="font-weight:400">(로직, 파운드리 공정)</text></g>
+   <!-- HBM right (simplified) -->
+   <g transform="translate(620,40)"><rect y="160" width="150" height="20" class="cu" opacity=".85"/><rect y="0" width="150" height="156" class="si"/><g class="edge"><line x1="0" y1="20" x2="150" y2="20"/><line x1="0" y1="40" x2="150" y2="40"/><line x1="0" y1="60" x2="150" y2="60"/><line x1="0" y1="80" x2="150" y2="80"/><line x1="0" y1="100" x2="150" y2="100"/><line x1="0" y1="120" x2="150" y2="120"/><line x1="0" y1="140" x2="150" y2="140"/></g><text x="0" y="-8" class="t">HBM 스택</text></g>
+   <path d="M222 205 H318" class="lncu" style="stroke-width:5"/><path d="M542 205 H618" class="lncu" style="stroke-width:5"/>
+   <text x="228" y="196" class="tc">수천 개 배선</text>
+   <text x="236" y="112" class="tm">TSV</text><path d="M232 108 l-40 -12" class="lnm"/>
+  </g>
+</svg></div>
+<figcaption><b>그림 8-1. HBM + GPU 2.5D 패키지 단면(개념도).</b> HBM은 DRAM 칩을 TSV로 수직 연결하고, GPU 바로 옆 인터포저 위에 놓습니다. 이 한 그림에 TSV, 박막화, CoW 본딩, 마이크로범프, 인터포저, 2.5D 조립, 방열이 모두 들어 있습니다.</figcaption></figure>
+
+<div class="tw-wrap"><table>
+<tr><th>세대</th><th>I/O 폭 (스택당)</th><th>적층</th><th>포인트</th></tr>
+<tr><td>HBM · HBM2 · HBM2E</td><td class="num">1,024-bit</td><td>4~8단</td><td>2015년 전후 GPU에 처음 탑재되며 시작</td></tr>
+<tr><td>HBM3 · HBM3E</td><td class="num">1,024-bit</td><td>8~12단</td><td>AI 붐과 함께 수요 폭증. 핀당 속도↑</td></tr>
+<tr><td><b>HBM4</b></td><td class="num"><b>2,048-bit</b></td><td>12~16단</td><td>통로 2배. 베이스 다이를 <b>파운드리 로직 공정</b>으로 만들기 시작</td></tr>
+<tr><td>HBM4E</td><td class="num">2,048-bit</td><td>12~16단</td><td>삼성 SEDEX 2026 실물 전시(베이스·코어 다이 웨이퍼), 3분기 실적에서 양산 계획 언급</td></tr>
+</table></div>
+<p class="small">세대별 범위는 JEDEC 규격과 업계 공개 자료 기준의 대략값입니다.</p>
+
+<div class="kpis">
+<div class="kpi"><div class="v">36GB</div><div class="d">삼성 HBM4 12단 용량</div></div>
+<div class="kpi"><div class="v">11.7Gbps</div><div class="d">핀당 속도 (최대 13Gbps)</div></div>
+<div class="kpi"><div class="v">4nm</div><div class="d">로직 베이스 다이 공정 + 1c DRAM</div></div>
+<div class="kpi"><div class="v">~40%↑</div><div class="d">전력 효율 개선 (회사 발표)</div></div>
+</div>
+<p class="small">출처: 삼성전자 HBM4 양산 출하 발표(2026년 2월). 열 저항 약 10%·방열 약 30% 개선도 함께 발표했습니다.</p>
+
+<div class="box neck"><span class="lab">HBM의 병목 5가지</span><ol>
+<li><b>높이</b>: 층이 늘어도 JEDEC 높이 규격 안에 들어가야 함 → 칩을 더 얇게, 접합층을 더 얇게</li>
+<li><b>휨</b>: 수십 ㎛ 칩 여러 장 + 재료별 CTE 차이 → 상층으로 갈수록 접합 불량</li>
+<li><b>열</b>: 가운데 층에 열이 갇힘 + 옆의 GPU가 수백 W 발열</li>
+<li><b>수율</b>: 칩 하나 불량이면 스택 전체 불량 (곱셈 수율) → KGD·중간 테스트</li>
+<li><b>생산성</b>: TC-NCF는 층마다 가열·가압 → 본딩 시간이 길어 장비 대수·UPH가 병목</li>
+</ol></div>
+<div class="box mech"><span class="lab">기계 연결</span><p>5가지 병목이 전부 <b>기계공학 문제</b>입니다. 높이·휨은 재료역학, 열은 열전달, 수율은 공정 안정성(통계), 생산성은 장비·제어. "기계공학 전공자가 왜 HBM 공정에 필요한가"에 대한 가장 강한 답입니다.</p></div>
+
+<h3><span class="k">8.3</span>2.5D: 무엇을 '다리'로 쓰느냐</h3>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 880 210" role="img" aria-label="2.5D 인터포저 3종 비교">
+  <g transform="translate(20,20)">
+   <text x="0" y="0" class="tb">Cube-S · 실리콘 인터포저</text>
+   <rect x="0" y="110" width="250" height="16" class="sub"/><rect x="10" y="90" width="230" height="20" class="si"/>
+   <rect x="20" y="40" width="60" height="50" class="sid"/><rect x="90" y="40" width="80" height="50" class="emc"/><rect x="180" y="40" width="50" height="50" class="sid"/>
+   <text x="0" y="150" class="tm">가장 미세한 배선, 고성능</text><text x="0" y="166" class="tm">인터포저가 크고 비쌈</text>
+  </g>
+  <g transform="translate(310,20)">
+   <text x="0" y="0" class="tb">Cube-E · 실리콘 브리지</text>
+   <rect x="0" y="110" width="250" height="16" class="sub"/><rect x="10" y="90" width="230" height="20" class="vif" opacity=".25"/>
+   <rect x="60" y="96" width="40" height="10" class="si"/><rect x="150" y="96" width="40" height="10" class="si"/>
+   <rect x="20" y="40" width="60" height="50" class="sid"/><rect x="90" y="40" width="80" height="50" class="emc"/><rect x="180" y="40" width="50" height="50" class="sid"/>
+   <text x="0" y="150" class="tm">칩이 만나는 곳에만 작은 실리콘</text><text x="0" y="166" class="tm">조각을 묻음 → 비용·크기 유리</text>
+  </g>
+  <g transform="translate(600,20)">
+   <text x="0" y="0" class="tb">Cube-R · RDL 인터포저</text>
+   <rect x="0" y="110" width="250" height="16" class="sub"/><rect x="10" y="90" width="230" height="20" class="vif" opacity=".45"/>
+   <g class="edge"><line x1="10" y1="96" x2="240" y2="96"/><line x1="10" y1="102" x2="240" y2="102"/></g>
+   <rect x="20" y="40" width="60" height="50" class="sid"/><rect x="90" y="40" width="80" height="50" class="emc"/><rect x="180" y="40" width="50" height="50" class="sid"/>
+   <text x="0" y="150" class="tm">유기 재배선층으로 연결</text><text x="0" y="166" class="tm">설계 유연, 저비용</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 8-2.</b> 삼성 반도체 글로벌 기술 블로그의 현재 명칭은 <b>2.5D Cube-S</b>(실리콘 인터포저), <b>2.3D Cube-E</b>(임베디드 실리콘 브리지), <b>2.3D Cube-R</b>(RDL 인터포저)입니다. 예전 이름 I-CubeS·I-CubeE와 이어집니다.</figcaption></figure>
+<div class="tw-wrap"><table>
+<tr><th>삼성 발표</th><th>연도</th><th>내용</th></tr>
+<tr><td>I-Cube4</td><td class="num">2021</td><td>로직 1개 + HBM 4개. 약 100㎛ 두께 인터포저의 휨 제어, 몰드 없는 구조로 방열 개선, 공정 중간 테스트로 수율 향상</td></tr>
+<tr><td>H-Cube</td><td class="num">2021</td><td>고집적 기판 + 보조 기판의 하이브리드 구조로 HBM 6개 이상 대면적 패키지를 저비용으로</td></tr>
+<tr><td>X-Cube → 3D Packaging</td><td class="num">2019~</td><td>칩 수직 적층. 현재 3D Cube-T(TCB 기반 CoW), 3D Cube-H(하이브리드 구리 본딩)</td></tr>
+</table></div>
+<div class="box neck"><span class="lab">병목</span><p>GPU와 HBM을 여러 개 올리면 인터포저가 노광 한 번에 찍을 수 있는 면적보다 커집니다. 큰 실리콘은 비싸고 휘기 쉽습니다. 그래서 <b>브리지·RDL·유리기판·패널</b> 같은 대안이 나옵니다. 대면적일수록 <b>휨과 평탄도</b>가 조립 수율을 좌우합니다.</p></div>
+
+<h3><span class="k">8.4</span>하이브리드 본딩: 범프를 없애다</h3>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 880 250" role="img" aria-label="범프 접합과 하이브리드 본딩 비교">
+  <g transform="translate(30,20)">
+   <text x="0" y="0" class="tb">기존: 마이크로범프 + NCF</text>
+   <rect x="0" y="20" width="340" height="40" class="si"/><rect x="0" y="100" width="340" height="40" class="si"/>
+   <rect x="0" y="60" width="340" height="40" class="vif" opacity=".22"/>
+   <g class="cu"><rect x="40" y="60" width="20" height="12"/><rect x="120" y="60" width="20" height="12"/><rect x="200" y="60" width="20" height="12"/><rect x="280" y="60" width="20" height="12"/><rect x="40" y="88" width="20" height="12"/><rect x="120" y="88" width="20" height="12"/><rect x="200" y="88" width="20" height="12"/><rect x="280" y="88" width="20" height="12"/></g>
+   <g class="sol"><rect x="40" y="72" width="20" height="16"/><rect x="120" y="72" width="20" height="16"/><rect x="200" y="72" width="20" height="16"/><rect x="280" y="72" width="20" height="16"/></g>
+   <path d="M350 60 V100" class="ln" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="356" y="84" class="tm">틈 수십 ㎛</text>
+   <text x="0" y="172" class="tm">피치 수십 ㎛ · 솔더가 녹아 붙음 · 틈을 필름이 채움</text>
+  </g>
+  <g transform="translate(480,20)">
+   <text x="0" y="0" class="tb">하이브리드 본딩 (HCB)</text>
+   <rect x="0" y="40" width="340" height="40" class="si"/><rect x="0" y="80" width="340" height="40" class="si"/>
+   <rect x="0" y="74" width="340" height="12" class="bg2"/>
+   <g class="cu"><rect x="20" y="74" width="10" height="12"/><rect x="60" y="74" width="10" height="12"/><rect x="100" y="74" width="10" height="12"/><rect x="140" y="74" width="10" height="12"/><rect x="180" y="74" width="10" height="12"/><rect x="220" y="74" width="10" height="12"/><rect x="260" y="74" width="10" height="12"/><rect x="300" y="74" width="10" height="12"/></g>
+   <circle cx="120" cy="80" r="4" class="badf"/><text x="132" y="112" class="tbad">입자 하나 = 보이드</text>
+   <text x="0" y="152" class="tm">틈 0 · 피치 수 ㎛ 이하 · Cu–Cu, 절연막–절연막 직접 결합</text>
+   <text x="0" y="172" class="tm">순서: CMP 평탄화 → 표면 활성화 → 정렬·접합 → 열처리(어닐)</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 8-3.</b> 하이브리드 본딩은 상온에서 절연막끼리 먼저 붙이고, 열처리하면 구리가 팽창하며 맞닿아 금속 결합이 됩니다. 삼성이 주도한 IEEE 논문에서 HBM에 적용 시 스택 높이 약 15% 감소와 열 특성 개선이 보고됐습니다(보도 기준).</figcaption></figure>
+<div class="tw-wrap"><table>
+<tr><th>요구 조건</th><th>왜</th><th>관련 공정·기술</th></tr>
+<tr><td><b>초청정</b></td><td>범프가 없어 입자 하나가 그대로 빈 공간이 됨</td><td>플라즈마·레이저 다이싱, 세정, 클린룸 등급 상향</td></tr>
+<tr><td><b>초평탄</b></td><td>구리 패드가 절연막보다 너무 들어가거나 튀어나오면 접합 안 됨 (nm 단위)</td><td>CMP (구리 리세스 제어)</td></tr>
+<tr><td><b>초정밀 정렬</b></td><td>피치가 줄수록 허용 오차가 ㎛ 이하</td><td>하이브리드 본더(D2W·W2W), 정렬 보정</td></tr>
+<tr><td><b>열처리 관리</b></td><td>구리 팽창으로 접합을 완성하지만 응력·휨도 생김</td><td>어닐 조건, 재료 설계</td></tr>
+</table></div>
+<div class="box news"><span class="lab">공식·보도</span><ul>
+<li>삼성 3D Cube-H: "하이브리드 구리 본딩으로 더 미세한 피치, 레이아웃 유연성, 전기적 성능 향상"(삼성 반도체 기술 블로그).</li>
+<li>보도 기준: 세메스·한화세미텍은 하이브리드 본더를 개발 중이고, 천안에 세메스 하이브리드 본더 도입, 본격 양산은 2029~30년 전망.</li>
+</ul></div>
+<div class="box mech"><span class="lab">기계 연결</span><p>CMP = <b>마찰·마모·접촉역학</b>, 정렬 = <b>정밀 위치 제어·열변형 보정</b>, 어닐 = <b>열응력</b>, 청정도 = <b>유동(파티클 거동)</b>. 후공정이 전공정 수준의 기계 정밀도를 요구하게 된 대표 사례입니다.</p></div>
+
+<h3><span class="k">8.5</span>zHBM: HBM을 GPU 위에 쌓는다</h3>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 880 250" role="img" aria-label="HBM 옆 배치와 zHBM 위 적층 비교">
+  <g transform="translate(30,20)">
+   <text x="0" y="0" class="tb">지금: 옆에 놓기 (2.5D)</text>
+   <rect x="0" y="170" width="360" height="14" class="si"/>
+   <rect x="20" y="70" width="80" height="100" class="sid"/><rect x="130" y="110" width="120" height="60" class="emc"/><rect x="270" y="70" width="80" height="100" class="sid"/>
+   <path d="M100 150 H130" class="lncu" style="stroke-width:4"/><path d="M250 150 H270" class="lncu" style="stroke-width:4"/>
+   <text x="0" y="210" class="tm">수 mm를 옆으로 이동</text>
+  </g>
+  <g transform="translate(480,20)">
+   <text x="0" y="0" class="tb">zHBM: 위에 쌓기 (3D)</text>
+   <rect x="60" y="150" width="240" height="40" class="emc"/><text x="180" y="176" text-anchor="middle" class="tw">AI 칩</text>
+   <g class="si"><rect x="90" y="126" width="180" height="22"/><rect x="90" y="102" width="180" height="22"/><rect x="90" y="78" width="180" height="22"/></g>
+   <g class="cu"><rect x="110" y="78" width="3" height="72"/><rect x="140" y="78" width="3" height="72"/><rect x="170" y="78" width="3" height="72"/><rect x="200" y="78" width="3" height="72"/><rect x="230" y="78" width="3" height="72"/><rect x="250" y="78" width="3" height="72"/></g>
+   <path d="M180 74 V30" class="lnbad" marker-end="url(#arbad)" style="stroke-width:3"/><text x="190" y="42" class="tbad">열이 메모리를 지나 위로</text>
+   <text x="0" y="214" class="tm">수직으로 바로 연결 · 분산 I/O · 짧고 촘촘</text>
+  </g>
+</svg></div>
+<figcaption><b>그림 8-4. zHBM 개념도.</b> 삼성 뉴스룸(2026.10.29) 설명: 메모리를 연산 장치 위에 직접 적층하고, <b>Wafer-on-Wafer와 하이브리드 구리 본딩</b>, 더 작고 촘촘한 TSV로 연결 밀도를 높입니다. AI 칩의 열이 메모리 스택을 통과해야 하므로 <b>스택 높이를 열 성능에 맞춰 최적화</b>합니다.</figcaption></figure>
+<ul>
+<li><b>장점</b>: 경로가 짧아 신호 드라이버를 작게 설계 → 데이터 전송 에너지↓, 대역폭↑</li>
+<li><b>과제</b>: 열 관리, 고객 AI 칩과의 <b>공동 설계(Co-design)</b> 필수</li>
+<li><b>삼성 표현</b>: "세계에서 유일하게 메모리부터 첨단 패키징을 아우르는 IDM 반도체 회사" → 지원동기에 그대로 쓸 수 있는 공식 문장</li>
+</ul>
+
+<h3><span class="k">8.6</span>기판의 변화: 유리기판과 패널 레벨</h3>
+<div class="tw-wrap"><table>
+<tr><th>기술</th><th>무엇</th><th>장점</th><th>과제</th></tr>
+<tr><td><b>유리 코어 기판</b></td><td>유기 수지 코어 대신 유리 판을 쓰고, 유리에 구멍(TGV)을 뚫어 배선</td><td>매우 평평함, CTE를 실리콘에 가깝게 조절 가능, 미세 배선</td><td>잘 깨짐(취성), 구멍 가공·금속 증착, 핸들링</td></tr>
+<tr><td><b>패널 레벨 패키징 (PLP)</b></td><td>둥근 웨이퍼 대신 큰 사각 패널 위에서 한꺼번에 공정</td><td>면적 효율↑, 대형 패키지 원가↓</td><td>대면적 휨·평탄도, 장비 새로 개발</td></tr>
+</table></div>
+<div class="box news"><span class="lab">공식·보도</span><p>이재용 회장이 2026년 11월 1일 일본 요코하마 <b>Advanced Package Lab(APL)</b>을 점검했습니다(삼성 뉴스룸). APL은 2023년 설립, 2024년부터 5년간 400억 엔(약 3,500억 원) 투자, 2026년 9월 8일 공식 개소. 앞으로 <b>웨이퍼 본딩부터 유리기판</b>까지 차세대 공정·소재 개발로 역할을 넓힐 계획입니다. 일본 소재·장비 업계와의 협력 거점입니다.</p></div>
+<div class="box mech"><span class="lab">기계 연결</span><p>유리 = <b>취성 파괴</b>(크랙 진전, 엣지 강도), 대면적 패널 = <b>판의 휨·처짐</b>, 핸들링 = <b>이송 설계</b>. 재료역학 강점이 그대로 드러나는 주제입니다.</p></div>
+
+<h3><span class="k">8.7</span>그 밖의 키워드</h3>
+<div class="terms">
+<details><summary>CPO <small>Co-Packaged Optics</small></summary><p>전기 신호를 빛으로 바꿔 보내는 광 부품을 칩과 한 패키지에 넣는 기술. 데이터센터 내 칩 간 통신의 전력·속도 한계를 넘기 위한 것. 삼성 SEDEX 2026 '차세대 기술' 존에 목업 전시.</p></details>
+<details><summary>zNAND-O</summary><p>여러 V낸드 칩을 수직으로 쌓는 3D 패키징 기술을 적용한 차세대 솔루션(SEDEX 2026 전시). 온디바이스 AI용 고밀도·저전력 저장.</p></details>
+<details><summary>열 관리 <small>Thermal Management</small></summary><p>TIM(열전달 소재), 히트스프레더, 몰드 없는 구조, 얇은 칩, 하이브리드 본딩(간격 0)이 모두 방열 수단입니다. TSP 현직자는 방열 시뮬레이션으로 개발 방향을 먼저 제시한다고 소개했습니다.</p></details>
+<details><summary>UCIe</summary><p>칩렛끼리 패키지 안에서 연결하는 산업 표준 인터페이스. 서로 다른 회사의 칩렛을 섞어 쓸 수 있게 하려는 목적.</p></details>
+<details><summary>SoCAMM · LPCAMM</summary><p>LPDDR 메모리를 교체 가능한 모듈로 만든 폼팩터. 서버(SoCAMM2)·노트북(LPCAMM2)용. 모듈 조립·테스트도 후공정 영역.</p></details>
+<details><summary>D2W / W2W</summary><p>Die-to-Wafer(칩을 웨이퍼에)와 Wafer-to-Wafer(웨이퍼를 웨이퍼에) 하이브리드 본딩. W2W는 빠르지만 불량 칩도 함께 붙고, D2W는 KGD만 골라 붙일 수 있지만 느립니다.</p></details>
+</div>
+
+<h3><span class="k">8.8</span>장비 생태계와 삼성의 투자</h3>
+<div class="tw-wrap"><table>
+<tr><th>HBM용 TC 본더 점유율</th><th class="num">%</th><th>비고 (보도 기준)</th></tr>
+<tr><td>한미반도체</td><td class="num">71.2</td><td>NCF·MR-MUF용 모두 보유, Wide TC 본더 2027 목표</td></tr>
+<tr><td>세메스 (삼성 자회사)</td><td class="num">13.1</td><td>삼성 HBM 라인에 NCF용 TC 본더 공급, 하이브리드 본더 개발</td></tr>
+<tr><td>ASMPT</td><td class="num">5.6</td><td>삼성이 TC 본더 평가 중이라는 보도(2026.04)</td></tr>
+<tr><td>야마하 로보틱스(신카와)</td><td class="num">5.6</td><td>과거 삼성 주요 공급사</td></tr>
+<tr><td>한화세미텍 · K&amp;S · BESI</td><td class="num">3.2 · 1.1 · 0.3</td><td>BESI는 하이브리드 본더 선도</td></tr>
+</table></div>
+<p class="small">TechInsights 2025 자료 인용 보도(시사저널e). 삼성–한미반도체 공급 논의 보도(아주경제 2026.02). 장비 공급망 다변화는 공정기술 입장에서 <b>"서로 다른 장비로 같은 품질을 내야 하는"</b> 과제입니다.</p>
+<div class="box news"><span class="lab">공식·보도</span><ul>
+<li>삼성전자 2026년 3분기: DS부문 매출 147.1조 원, 영업이익 106.5조 원(역대 최대), HBM4 판매 대폭 확대, HBM4E 양산 계획(삼성 뉴스룸).</li>
+<li>온양 사업장 첨단 패키지 라인 투자: 클린룸 약 9,400평, 2026년 하반기 착공, 2029년 5월 양산 목표(보도 기준).</li>
+</ul></div>
+
+<div class="sum"><span class="lab">8장 한 장 요약</span><ul>
+<li>메모리 월 → 도로 넓히기(I/O) · 창고 붙이기(2.5D) · 창고 쌓기(3D) = 전부 패키징</li>
+<li>HBM4: 2,048-bit, 로직 베이스 다이. 병목은 높이·휨·열·수율·생산성</li>
+<li>2.5D: Cube-S/E/R(인터포저 종류) / 3D: Cube-T(TCB) · Cube-H(하이브리드 본딩)</li>
+<li>하이브리드 본딩 = 초청정·초평탄(CMP)·초정밀 정렬 / zHBM = GPU 위 적층 + 열 관리</li>
+<li>다음 키워드: 유리기판, 패널 레벨, CPO, 요코하마 APL</li>
+</ul></div>
+<div class="photo">
+<a href="https://news.samsungsemiconductor.com/kr/%ec%9d%b8%ea%b3%b5%ec%a7%80%eb%8a%a5%ec%9d%98-%eb%b0%9c%ec%a0%84%ea%b3%bc-ai-chip-%ec%9d%b4%eb%a5%bc-%eb%92%b7%eb%b0%9b%ec%b9%a8%ed%95%98%eb%8a%94-hbm/" target="_blank" rel="noopener">HBM 해설 1편</a>
+<a href="https://news.samsungsemiconductor.com/kr/data-movement-%ec%8b%9c%eb%8c%80%eb%a5%bc-%ec%97%ac%eb%8a%94-%ec%b0%a8%ec%84%b8%eb%8c%80-%eb%a9%94%eb%aa%a8%eb%a6%ac-zhbm/" target="_blank" rel="noopener">zHBM 해설 2편</a>
+<a href="https://news.samsungsemiconductor.com/kr/%ec%b9%a9%ec%8a%a4%ec%bc%80%ec%b9%98-ai-%ec%8b%9c%eb%8c%80%ec%9d%98-%ec%a4%91%ec%8b%ac%ec%97%90-%ec%84%a0-%eb%b0%98%eb%8f%84%ec%b2%b4-%ec%82%bc%ec%84%b1%ec%a0%84%ec%9e%90%ea%b0%80-sedex-20/" target="_blank" rel="noopener">SEDEX 2026 (HBM4E·zHBM 실물)</a>
+<a href="https://news.samsungsemiconductor.com/kr/%ec%9d%b4%ec%9e%ac%ec%9a%a9-%ec%82%bc%ec%84%b1%ec%a0%84%ec%9e%90-%ed%9a%8c%ec%9e%a5-%eb%af%b8%eb%9e%98-%eb%b0%98%eb%8f%84%ec%b2%b4-%ed%8c%a8%ed%82%a4%ec%a7%95-%ea%b8%b0%ec%88%a0-%ec%9d%bc%eb%b3%b8/" target="_blank" rel="noopener">요코하마 APL 점검</a>
+<a href="https://semiconductor.samsung.com/news-events/tech-blog/advanced-packaging-and-the-shift-to-system-level-semiconductor-innovation" target="_blank" rel="noopener">삼성 기술 블로그 · Advanced Packaging</a>
+<a href="https://news.samsungsemiconductor.com/kr/%eb%b0%98%eb%8f%84chat-ep-7-%eb%af%b8%ec%84%b8-%ea%b3%b5%ec%a0%95%ec%9d%98-%ed%95%9c%ea%b3%84%eb%a5%bc-%eb%9b%b0%ec%96%b4%eb%84%98%eb%8a%94-%ec%b2%a8%eb%8b%a8-%ed%8c%a8%ed%82%a4%ec%a7%80-%ea%b8%b0/" target="_blank" rel="noopener">반도Chat Ep.7 · Advanced Package</a>
+<a href="https://news.samsungsemiconductor.com/kr/%ec%82%bc%ec%84%b1%ec%a0%84%ec%9e%90-%ec%b0%a8%ec%84%b8%eb%8c%80-%eb%b0%98%eb%8f%84%ec%b2%b4-%ed%8c%a8%ed%82%a4%ec%a7%80-%ea%b8%b0%ec%88%a0-i-cube4-%ea%b0%9c%eb%b0%9c/" target="_blank" rel="noopener">I-Cube4 개발 발표</a>
+</div>
+</section>
+
+<!-- ========== 9장 ========== -->
+<section class="chap" id="c9">
+<div class="chap-h"><span class="no">09</span><h2>TSP 공정기술과 나: 무엇을 하고, 무엇으로 기여하나</h2></div>
+<p class="lead">공정기술 엔지니어의 일은 세 가지입니다. <b>정해진 공정을 매일 같은 품질로 돌리고(양산 관리), 문제가 생기면 원인을 찾아 고치고(불량 분석·개선), 새 장비·소재를 검증해 들여오는 것(신규 도입)</b>.</p>
+
+<div class="tw-wrap"><table>
+<tr><th>일</th><th>구체적으로</th><th>쓰는 도구</th></tr>
+<tr><td>양산 관리</td><td>공정 조건(레시피) 유지, SPC 관리도 감시, 장비 간 편차 맞추기</td><td>SPC, Cpk, 장비 로그</td></tr>
+<tr><td>불량 분석·개선</td><td>BIN·검사 데이터에서 이상 발견 → 원인 → 대책 → 재발 방지</td><td>4M 층별, X-ray·SAT·단면, DOE</td></tr>
+<tr><td>신규 도입</td><td>새 장비·소재 평가(Eval) → 양산 적용 판단 → 조건 확립</td><td>Cpk, UPH, MTBF/MTTR, 재현성</td></tr>
+<tr><td>자동화</td><td>계측·검사 자동 판정, 데이터 기반 공정 관리</td><td>비전, 데이터 분석, AI 보조</td></tr>
+</table></div>
+
+<h3><span class="k">9.1</span>내 경험 → TSP 공정 연결 지도</h3>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 880 300" role="img" aria-label="경험과 공정 연결 지도">
+  <g>
+   <rect x="20" y="30" width="250" height="64" rx="8" class="sub" opacity=".3"/><text x="34" y="56" class="tb">로봇팔 정밀도 46→97점</text><text x="34" y="78" class="tm">기구·제어·측정 변수 분리, 반복 성능</text>
+   <rect x="20" y="118" width="250" height="64" rx="8" class="sub" opacity=".3"/><text x="34" y="144" class="tb">AGV 리프트 약 20% 축소</text><text x="34" y="166" class="tm">CATIA, 간섭·체결, 정적 하중 해석</text>
+   <rect x="20" y="206" width="250" height="64" rx="8" class="sub" opacity=".3"/><text x="34" y="232" class="tb">열화상 탐지율 약 40→70%</text><text x="34" y="254" class="tm">측정 환경 통제, 데이터 특성 분석</text>
+   <rect x="600" y="20" width="260" height="50" rx="8" class="cus"/><text x="614" y="50" class="t">CoW·다이 본더 정렬/평행도</text>
+   <rect x="600" y="80" width="260" height="50" rx="8" class="cus"/><text x="614" y="110" class="t">테스트 핸들러·이송 로봇</text>
+   <rect x="600" y="140" width="260" height="50" rx="8" class="cus"/><text x="614" y="170" class="t">휨 해석·지그·캐리어 설계</text>
+   <rect x="600" y="200" width="260" height="50" rx="8" class="cus"/><text x="614" y="230" class="t">AOI·자동 검사, 테스트 수율 분석</text>
+   <rect x="600" y="258" width="260" height="36" rx="8" class="bg2"/><text x="614" y="282" class="tm">방열 시뮬레이션 (열역학)</text>
+   <path d="M272 62 C440 62 440 45 596 45" class="lncu"/><path d="M272 62 C440 70 440 105 596 105" class="lncu"/>
+   <path d="M272 150 C440 150 440 165 596 165" class="lncu"/><path d="M272 150 C440 150 440 110 596 110" class="lnd"/>
+   <path d="M272 238 C440 238 440 225 596 225" class="lncu"/><path d="M272 238 C440 250 440 276 596 276" class="lnd"/>
+  </g>
+</svg></div>
+<figcaption><b>그림 9-1.</b> 실선은 직접 연결, 점선은 간접 연결입니다. 면접에서 "어떻게 기여하겠냐"는 질문에 공정 이름을 붙여 답하면 구체성이 생깁니다.</figcaption></figure>
+
+<h3><span class="k">9.2</span>공정별 병목 지도: 어디가 막혀 있나</h3>
+<div class="tw-wrap"><table>
+<tr><th>공정</th><th>지금의 병목</th><th>업계의 해법 방향</th><th>내가 말할 수 있는 기계공학 키워드</th></tr>
+<tr><td>Back Grinding</td><td>수십 ㎛ 박막의 휨·깨짐·핸들링</td><td>DBG/SDBG, 임시 접합 캐리어</td><td>잔류응력, 좌굴, 진공 흡착</td></tr>
+<tr><td>Dicing</td><td>치핑·입자 → 하이브리드 본딩 불량</td><td>레이저 그루빙, 플라즈마 다이싱</td><td>파괴역학, 진동</td></tr>
+<tr><td>CoW Bonding</td><td>TC-NCF 생산성(UPH), 층 누적 휨</td><td>멀티 헤드, 필름 박막화, 하이브리드 본딩</td><td>열전달, 평행도, 정밀 제어</td></tr>
+<tr><td>Hybrid Bonding</td><td>청정도·평탄도·정렬</td><td>CMP, 플라즈마 활성화, D2W 본더</td><td>마찰·마모, 열변형 보정</td></tr>
+<tr><td>Mold</td><td>대면적·박형 휨, 좁은 틈 충전</td><td>저CTE EMC, 컴프레션 몰딩, MUF</td><td>사출성형, CAE</td></tr>
+<tr><td>Test</td><td>고속·다핀 테스트 시간, 비용</td><td>Parallelism↑, MBT, 무인화</td><td>핸들러 기구 신뢰성, 열 챔버</td></tr>
+<tr><td>Substrate</td><td>대형 패키지 휨, 미세 배선</td><td>유리기판, 패널 레벨</td><td>취성 파괴, 판 처짐</td></tr>
+</table></div>
+
+<div class="box iv"><span class="lab">면접 핵심 문장 세 개</span><ol>
+<li>"후공정의 난제(휨·크랙·접합·열·정렬)는 대부분 재료역학·열전달·제어의 문제라서, 기계공학 전공자가 원인을 물리적으로 해석하고 개선할 수 있는 영역이라고 생각합니다."</li>
+<li>"장비가 한 번 잘 동작하는 것과 같은 성능을 반복해서 내는 것은 다르다는 걸 로봇팔 개선에서 배웠고, 그 반복 성능이 양산 공정기술의 본질이라고 이해합니다."</li>
+<li>"삼성은 메모리·로직·패키징을 모두 가진 IDM이라 HBM 베이스 다이부터 적층까지 한 회사 안에서 최적화할 수 있고, 그 접점이 TSP라고 봤습니다."</li>
+</ol></div>
+</section>
+
+<!-- ========== 10장 ========== -->
+<section class="chap" id="c10">
+<div class="chap-h"><span class="no">10</span><h2>부록: 용어 검색 · 숫자 · 퀴즈 · PT 연습 · 5일 계획</h2></div>
+
+<h3 id="glossary"><span class="k">10.1</span>용어 검색</h3>
+<label for="q" class="small">한글·영문 아무거나 입력하세요 (예: 휨, CTE, 본딩)</label>
+<input type="search" id="q" placeholder="용어 검색" autocomplete="off">
+<p class="small" id="qcount" style="margin-top:6px"></p>
+<div class="tw-wrap"><table id="gl"><thead><tr><th>용어</th><th>뜻</th><th>장</th></tr></thead><tbody></tbody></table></div>
+
+<h3><span class="k">10.2</span>숫자 감각표</h3>
+<div class="tw-wrap"><table>
+<tr><th>항목</th><th>값 (대략)</th><th>쓰는 곳</th></tr>
+<tr><td>웨이퍼 지름 / 두께</td><td class="num">300mm / 약 775㎛</td><td>BG의 출발점</td></tr>
+<tr><td>HBM 코어 다이 두께</td><td class="num">수십 ㎛</td><td>BG·적층 병목</td></tr>
+<tr><td>HBM I/O 폭</td><td class="num">1,024-bit → 2,048-bit(HBM4)</td><td>대역폭</td></tr>
+<tr><td>삼성 HBM4</td><td class="num">12단 36GB, 11.7Gbps</td><td>최신 제품</td></tr>
+<tr><td>CTE</td><td class="num">Si≈3, Cu≈17, 유기기판≈15~17 ppm/℃</td><td>휨·언더필</td></tr>
+<tr><td>무연 솔더 녹는점 / 리플로우 피크</td><td class="num">약 217℃ / 약 240~250℃</td><td>Reflow</td></tr>
+<tr><td>와이어 굵기</td><td class="num">약 15~25㎛</td><td>Wire bond</td></tr>
+<tr><td>TSV 지름</td><td class="num">수 ㎛ ~ 10㎛ 안팎</td><td>HBM</td></tr>
+<tr><td>범프 피치</td><td class="num">플립칩 C4 수백 ㎛ / 마이크로범프 수십 ㎛ / HB 수 ㎛ 이하</td><td>미세화 흐름</td></tr>
+<tr><td>솔더볼 피치</td><td class="num">0.4 ~ 1.0mm</td><td>SBA</td></tr>
+<tr><td>적층 수율 (칩당 99%)</td><td class="num">12단 88.6% / 16단 85.1%</td><td>KGD 중요성</td></tr>
+<tr><td>Cpk 양호 기준</td><td class="num">≥ 1.33</td><td>공정 능력</td></tr>
+<tr><td>요코하마 APL 투자</td><td class="num">5년간 400억 엔</td><td>2026.09 개소</td></tr>
+</table></div>
+<p class="small">업계 일반 범위와 공개 자료 기준입니다. 면접에서는 "대략", "수십 ㎛ 수준으로 알고 있다"처럼 말하세요.</p>
+
+<h3><span class="k">10.3</span>자가 점검 퀴즈 (눌러서 답 확인)</h3>
+<div class="quiz">
+<details><summary>Q1. 백그라인딩을 하는 이유 두 가지는?</summary><p>패키지 두께 규격을 맞추기 위해(특히 HBM 적층 높이), 그리고 얇을수록 열이 잘 빠지기 때문. 부작용은 휨·크랙·핸들링 난이도.</p></details>
+<details><summary>Q2. 하이브리드 본딩에서 다이싱 방식을 바꾸려는 이유는?</summary><p>범프가 없어 입자 하나가 보이드가 되므로, 입자·치핑이 적은 레이저·플라즈마 다이싱이 필요.</p></details>
+<details><summary>Q3. 언더필의 역할을 CTE로 설명하면?</summary><p>칩(약 3ppm/℃)과 기판(약 15~17)의 열팽창 차이로 생기는 응력을 범프만 버티지 않도록 칩–기판 사이를 채워 응력을 분산, 피로 수명을 늘림.</p></details>
+<details><summary>Q4. TC-NCF와 MR-MUF의 차이를 한 문장으로?</summary><p>NCF는 필름을 넣고 한 층씩 열압착(휨 억제 유리, 생산성 과제), MR-MUF는 한꺼번에 리플로우 후 액상 수지 충전(생산성·방열 유리, 고단 휨 과제).</p></details>
+<details><summary>Q5. 번인은 욕조 곡선의 어느 구간을 다루나?</summary><p>초기 고장 구간. 출하 전에 약한 칩을 걸러냄.</p></details>
+<details><summary>Q6. SAT가 특히 잘 찾는 불량은?</summary><p>박리(Delamination), 몰드·언더필 보이드, 내부 크랙. 초음파가 경계면에서 반사되는 원리.</p></details>
+<details><summary>Q7. HBM4에서 달라진 두 가지는?</summary><p>I/O 폭 2배(2,048-bit), 베이스 다이를 파운드리 로직 공정(삼성은 4나노)으로 제작.</p></details>
+<details><summary>Q8. zHBM과 기존 HBM의 배치 차이와 핵심 과제는?</summary><p>기존은 GPU 옆(2.5D), zHBM은 연산 칩 위(3D). 핵심 과제는 열이 메모리 스택을 통과해야 하는 열 관리와 고객 칩과의 공동 설계.</p></details>
+<details><summary>Q9. 스트립 한쪽 끝에서만 접합 불량이 많다면 먼저 의심할 것은?</summary><p>위치 의존 → 장비 측: 헤드–스테이지 평행도, 스테이지 온도 분포, 기판 휨(가장자리 들림), 진공 흡착 불균일.</p></details>
+<details><summary>Q10. Cube-S, Cube-E, Cube-R의 차이는?</summary><p>각각 실리콘 인터포저, 임베디드 실리콘 브리지, RDL(유기) 인터포저. 성능↔비용·유연성 트레이드오프.</p></details>
+<details><summary>Q11. 유리기판이 주목받는 이유와 약점은?</summary><p>평탄도·CTE 조절·미세 배선에 유리. 약점은 잘 깨지는 취성, TGV 가공, 핸들링.</p></details>
+<details><summary>Q12. 요코하마 APL은 무엇이고 왜 일본인가?</summary><p>삼성의 패키지 소재·공정 요소기술 연구거점(2026.09 개소). 일본의 소재·부품·장비 생태계와 협력하기 위해.</p></details>
+</div>
+
+<h3><span class="k">10.4</span>PT 연습 문제 (후기 형식: 대주제 1 + 소문제 3)</h3>
+<div class="box iv"><span class="lab">연습 1 · 패키지 휨</span><ol>
+<li>패키지 휨이 생기는 원인 세 가지를 쓰시오.</li>
+<li>휨이 리플로우에서 어떤 불량으로 이어지는지 쓰시오.</li>
+<li>휨을 줄이기 위한 공정·재료·설계 측면의 대책과 그 부작용을 쓰시오.</li></ol>
+<p class="small">풀이 방향: CTE 차이·경화 수축·두께 비대칭 → Non-wet·Bridge·볼 오픈 → 저CTE EMC(점도↑ 충전 불량), 두께 비율 조정, 경화 프로파일, 캐리어·지그, FEM 사전 예측. 4.5절, 6.3절.</p></div>
+<div class="box iv"><span class="lab">연습 2 · HBM 적층</span><ol>
+<li>HBM에서 TSV와 백그라인딩이 필요한 이유를 쓰시오.</li>
+<li>적층 수가 8단에서 16단으로 늘 때 생기는 공정 문제를 쓰시오.</li>
+<li>하이브리드 본딩을 도입할 때 앞 공정(다이싱·CMP)에서 바뀌어야 할 점을 쓰시오.</li></ol>
+<p class="small">풀이 방향: 수직 연결·높이 규격 → 높이·휨·열·곱셈 수율·UPH → 입자 관리(플라즈마·레이저), 구리 리세스 nm 제어, 정렬. 8.2절, 8.4절.</p></div>
+<div class="box iv"><span class="lab">연습 3 · 테스트 수율</span><ol>
+<li>어느 날 패키지 테스트 수율이 3%p 떨어졌다. 가장 먼저 확인할 것은?</li>
+<li>재테스트 시 양품이 되는 비율이 높다면 원인은?</li>
+<li>재발 방지를 위해 무엇을 바꾸겠는가?</li></ol>
+<p class="small">풀이 방향: 장비·소켓별 층별, 로트·자재 변경 이력, BIN 유형 → 소켓 접촉 불량(오염·마모) → 세정·교체 주기, 접촉 저항 SPC, 인터락. 5.1절, 6.2절.</p></div>
+
+<h3><span class="k">10.5</span>면접까지 5일 계획</h3>
+<ul class="chk" id="plan">
+<li><input type="checkbox" id="d1"><label for="d1"><b>11/8 (토)</b> 0~2장 + 1장 용어. 전체 지도를 백지에 그려 보기</label></li>
+<li><input type="checkbox" id="d2"><label for="d2"><b>11/9 (일)</b> 3~4장 (EDS·조립). 공정마다 불량 2개씩 말로 설명</label></li>
+<li><input type="checkbox" id="d3"><label for="d3"><b>11/10 (월)</b> 5~7장 + 불량 도감. 6.2절 6단계로 시나리오 3개 말하기</label></li>
+<li><input type="checkbox" id="d4"><label for="d4"><b>11/11 (화)</b> 8장 최신 기술 + 뉴스 링크 읽기. HBM 그림 손으로 그리기</label></li>
+<li><input type="checkbox" id="d5"><label for="d5"><b>11/12 (수)</b> 9장 + PT 연습 3개를 10분 발표로 칠판 연습. 퀴즈 전부 맞히기</label></li>
+<li><input type="checkbox" id="d6"><label for="d6"><b>11/13 (목)</b> 아침에 1·4·8장 요약 박스와 숫자 감각표만 훑기</label></li>
+</ul>
+<p class="small">체크 표시는 이 브라우저에만 저장됩니다.</p>
+
+<h3><span class="k">10.6</span>출처와 신뢰도</h3>
+<div class="tw-wrap"><table>
+<tr><th>구분</th><th>자료</th></tr>
+<tr><td>삼성 공식</td><td>반도체 뉴스룸: 8대 공정 8탄(EDS)·9탄(패키징), 반도체 백과사전 Ep.15, 반도Chat Ep.7, 나는 신입사원입니다 시즌2 Ep.4(기계공학), 거인의 도구들(시료 트레이), HBM 해설 1·2편(HBM, zHBM), SEDEX 2026, 요코하마 APL 점검, 2026년 3분기 실적, I-Cube4·H-Cube·HBM4 발표 / 삼성 반도체 글로벌 기술 블로그(Advanced Packaging) / DS 채용 직무 소개</td></tr>
+<tr><td>보도</td><td>시사저널e(2025.02.18: 하이브리드 본딩용 다이싱·CMP, TC 본더 점유율), 아주경제(2026.02), 지디넷코리아(2026.04·06), 이코노미리뷰(SEDEX 2026), 온양 투자·하이브리드 본더 관련 보도</td></tr>
+<tr><td>비교 자료</td><td>SK하이닉스 뉴스룸(다이 본딩, 패키징 순서)</td></tr>
+<tr><td>일반 지식</td><td>공정별 불량·관리 변수, 신뢰성 시험(JEDEC), 재료 물성 범위, 기계공학 연결은 교과서·공개 학술 수준의 일반 지식. 삼성 실제 라인 조건·장비 구성은 비공개라 다루지 않음</td></tr>
+</table></div>
+</section>
+</main>
+</div>
+<footer>반도체 후공정 아틀라스 · 손예찬 면접 준비용 개인 학습 자료 · 2026년 11월 작성. 그림은 모두 원리를 설명하기 위한 개념도이며 실제 치수·구조와 다를 수 있습니다.</footer>
+</div>
+
+<script>
+(function(){
+  // 웨이퍼 맵 예시
+  var g=document.getElementById('wm');
+  if(g){var ns='http://www.w3.org/2000/svg',s=17,cx=120,cy=110,R=100,seed=7;
+    function rnd(){seed=(seed*9301+49297)%233280;return seed/233280;}
+    for(var y=cy-R;y<cy+R;y+=s){for(var x=cx-R;x<cx+R;x+=s){
+      var mx=x+s/2-cx,my=y+s/2-cy,d=Math.sqrt(mx*mx+my*my); if(d>R-6) continue;
+      var r=document.createElementNS(ns,'rect'); r.setAttribute('x',x+1); r.setAttribute('y',y+1); r.setAttribute('width',s-2); r.setAttribute('height',s-2);
+      var v=rnd(), edge=d>R-30; var c=(edge&&v<0.35)?'badf':(v<0.05?'badf':(v<0.14?'wnf':'okf'));
+      r.setAttribute('class',c); r.setAttribute('opacity','.85'); g.appendChild(r);}}}
+  // 용어 사전
+  var G=[
+  ["웨이퍼 (Wafer)","실리콘 원판. 300mm, 두께 약 775㎛","1"],["다이 (Die)","웨이퍼 위 칩 하나","1"],["스크라이브 라인","다이 사이 절단용 길","1"],["패드 (Pad)","칩 표면 금속 단자","1"],["범프 (Bump)","패드 위 금속 돌기. 플립칩·HBM 연결","1·4"],["기판 (Substrate)","칩을 올리는 회로판. 유기·유리","1·8"],["수율 (Yield)","투입 대비 양품 비율","1"],
+  ["FEOL / BEOL","전공정 안의 트랜지스터 형성 / 금속배선 단계","2"],["CMP","화학적 기계 연마. 평탄화. 하이브리드 본딩 핵심","2·8"],["Low-k","약한 저유전율 절연막. 다이싱 박리 원인","2·4"],["EUV / High-NA","극자외선 노광 / 개구수 0.55 차세대","2"],["GAA (MBCFET)","게이트가 채널 4면을 감싸는 트랜지스터","2"],["BSPDN","후면 전력 공급. 웨이퍼 박막화 필요","2"],["1c DRAM","6세대 10나노급 DRAM. 삼성 HBM4 코어","2·8"],
+  ["EDS","웨이퍼 상태 전기 검사·분류","3"],["ATE","자동 테스트 장비","3·5"],["프로브 카드","테스터와 칩 패드를 잇는 바늘판","3"],["프로버","웨이퍼 이송·정렬 장비","3"],["오버드라이브","바늘을 패드에 더 눌러 접촉시키는 거리","3"],["BIN","테스트 결과 분류 번호","3"],["Repair / Redundancy","불량 셀을 예비 셀로 대체","3"],["KGD","검증된 양품 다이","3·8"],["WBI","웨이퍼 번인","3"],
+  ["Back Grinding / Back-Lap","웨이퍼 뒷면 연삭","4"],["TTV","웨이퍼 두께 편차","4"],["DBG / SDBG","갈기 전 반절단 / 스텔스 후 연삭","4"],["임시 접합·분리","얇은 웨이퍼를 캐리어에 붙였다 떼기","4"],["Stress Relief","연삭 손상층 제거","4"],["블레이드 다이싱","다이아몬드 톱날 절단","4"],["레이저 그루빙","배선층을 레이저로 먼저 홈파기","4"],["스텔스 다이싱","내부 개질 후 확장 분리","4"],["플라즈마 다이싱","건식 식각으로 동시 절단","4"],["치핑 (Chipping)","칩 가장자리 이빨 빠짐","4·6"],["커프 (Kerf)","절단 폭","4"],
+  ["Die Attach","칩을 기판에 붙이기","4"],["CoW / WoW / CoC","칩-웨이퍼 / 웨이퍼-웨이퍼 / 칩-칩 접합","4·8"],["TC 본더","열압착 본딩 장비","4·8"],["TC-NCF","비전도성 필름 + 한 층씩 열압착 (삼성)","4·8"],["MR-MUF","일괄 리플로우 + 액상 몰드 언더필","4·8"],["NCF","비전도성 접착 필름","4"],["DAF","다이 접착 필름","4"],["콜렛 / 이젝터","흡착 노즐 / 밀어올림 핀","4"],["UPH","시간당 생산량","4·5"],["TSV","실리콘 관통 전극","4·8"],
+  ["와이어 본딩","금·구리선으로 칩-기판 연결","4"],["볼 본드 / 스티치","와이어 1차 / 2차 접합","4"],["플립칩","칩을 뒤집어 범프로 직결","4·7"],["리플로우 (Reflow)","솔더를 녹였다 굳혀 접합","4"],["TAL","녹는점 이상 유지 시간","4"],["IMC","금속간화합물","4·6"],["언더필 (Underfill)","칩-기판 틈 충전, 응력 분산","4"],["CUF / MUF","모세관 언더필 / 몰드 언더필","4"],["Non-wet","솔더 미접합(오픈)","4·6"],["Bridge","이웃 범프 붙음(쇼트)","4·6"],["CTE","열팽창계수","4·6"],
+  ["EMC","에폭시 몰딩 컴파운드","4"],["트랜스퍼 / 컴프레션 몰딩","옆에서 주입 / 위에서 압축","4"],["Tg","유리전이온도","4"],["경화 수축","굳으며 부피 감소","4"],["PMC","후경화","4"],["와이어 스위핑","몰드 흐름에 와이어가 휨","4·6"],["휨 (Warpage)","CTE 차이 등으로 패키지가 휨","4·6"],["마킹","레이저 각인","4"],["SBA","솔더볼 부착","4"],["Coplanarity","볼 높이 균일도","4"],["Singulation","스트립을 낱개로 절단","4"],["BGA","볼 그리드 어레이","4·7"],
+  ["번인 (Burn-in)","고온·고전압 가속으로 초기 불량 제거","5"],["MBT","모니터링 번인 테스트","5"],["핸들러","테스트용 이송·분류 로봇","5"],["소켓 / 포고 핀","패키지-테스트 보드 접점","5"],["Parallelism","동시 측정 수","5"],["욕조 곡선","초기·우발·마모 고장","5"],["TC 시험","온도 사이클 신뢰성 시험","5"],["HTS / THB / HAST","고온 보관 / 고온고습 바이어스 / 가속","5"],["MSL / 팝콘 크랙","흡습 민감도 / 수분 증기 폭발 크랙","5·6"],
+  ["AOI","자동 광학 검사","6"],["X-ray","투과 검사","6"],["SAT / SAM","초음파 검사","6"],["단면 분석","잘라서 보는 파괴 분석","6"],["SEM / EDS(성분)","전자현미경 / 성분분석","6"],["Shadow Moiré","휨 측정","6"],["박리 (Delamination)","층간 분리","6"],["보이드 (Void)","빈 공간","6"],["4M","Man·Machine·Material·Method","6"],["DOE","실험계획법","6"],["SPC / Cpk","통계적 공정 관리 / 공정 능력 지수","6·9"],["MTBF / MTTR","평균 고장 간격 / 평균 복구 시간","9"],
+  ["PoP","패키지 위 패키지","7"],["SiP / MCP","시스템 인 패키지 / 멀티칩 패키지","7"],["WLCSP","웨이퍼 레벨 칩 스케일 패키지","7"],["FOWLP / FOPLP","팬아웃 웨이퍼 / 패널 레벨","7·8"],["인터포저","중간 배선판","7·8"],["RDL","재배선층","7·8"],["칩렛 / UCIe","기능별 분할 칩 / 연결 표준","7·8"],
+  ["HBM","TSV 적층 고대역폭 메모리","8"],["베이스 다이 / 코어 다이","HBM 맨 아래 로직 / 위 DRAM","8"],["메모리 월","연산 대비 메모리 공급 병목","8"],["KV 캐시","이전 토큰 계산값 저장 메모리","8"],["I-Cube / Cube-S·E·R","삼성 2.5D (실리콘 / 브리지 / RDL)","8"],["H-Cube","삼성 하이브리드 기판 2.5D","8"],["X-Cube / 3D Cube-T·H","삼성 3D (TCB / 하이브리드 본딩)","8"],["하이브리드 본딩 (HCB)","범프 없는 Cu-Cu 직접 접합","8"],["D2W / W2W","다이-웨이퍼 / 웨이퍼-웨이퍼 본딩","8"],["zHBM","연산 칩 위에 HBM 직접 적층 (삼성 개발 중)","8"],["유리기판 / TGV","유리 코어 기판 / 유리 관통 비아","8"],["CPO","광 부품 동시 패키징","8"],["zNAND-O","V낸드 수직 적층 패키징","8"],["APL","삼성 요코하마 패키지 연구거점","8"],["TIM","열전달 소재","8"],["JEDEC","반도체 표준 기구","5·8"]
+  ];
+  var tb=document.querySelector('#gl tbody'),q=document.getElementById('q'),qc=document.getElementById('qcount');
+  function esc(t){return t.replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+  function draw(){var k=(q.value||'').trim().toLowerCase(),n=0,h='';
+    G.forEach(function(r){ if(!k||(r[0]+' '+r[1]).toLowerCase().indexOf(k)>-1){n++;h+='<tr><td><b>'+esc(r[0])+'</b></td><td>'+esc(r[1])+'</td><td class="num"><a href="#c'+r[2].split('·')[0]+'">'+r[2]+'장</a></td></tr>';}});
+    tb.innerHTML=h||'<tr><td colspan="3">찾는 용어가 없습니다. 다른 표기(한글/영문)로 검색해 보세요.</td></tr>'; qc.textContent='용어 '+n+'개 / 전체 '+G.length+'개';}
+  if(tb&&q){q.addEventListener('input',draw);draw();}
+  // 체크리스트 저장
+  var K='atlas-plan';var st={};try{st=JSON.parse(localStorage.getItem(K)||'{}')||{};}catch(e){st={};}
+  document.querySelectorAll('#plan input').forEach(function(c){c.checked=!!st[c.id];c.addEventListener('change',function(){st[c.id]=c.checked;try{localStorage.setItem(K,JSON.stringify(st));}catch(e){}});});
+  // 현재 장 표시
+  var secs=[].slice.call(document.querySelectorAll('section.chap')),links=[].slice.call(document.querySelectorAll('#toc a, #chips a'));
+  function mark(id){links.forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+id);});
+    var c=document.querySelector('#chips a.on');if(c&&c.scrollIntoView){var p=c.parentNode;p.scrollLeft=(c.getBoundingClientRect().left-p.getBoundingClientRect().left)+p.scrollLeft-p.clientWidth/2+c.clientWidth/2;}}
+  if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)mark(e.target.id);});},{rootMargin:'-30% 0px -60% 0px'});secs.forEach(function(s){io.observe(s);});}
+})();
+</script>
