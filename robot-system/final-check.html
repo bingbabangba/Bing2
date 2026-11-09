@@ -1,0 +1,200 @@
+<title>로봇시스템 최종 점검</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: 시험 직전 한 장 요약. 위에 진행률, 그 아래 단원별 카드(체크 가능한 항목 + 공식 상자), 함정 목록, 5분 테스트, 자료 링크. */
+:root{
+  --bg:#f5f6f8; --paper:#ffffff; --fg:#1b2230; --muted:#5b6577; --line:#d9dee7;
+  --accent:#1f5fbf; --accent-soft:#e6eefb; --ok:#1f7a4d; --ok-soft:#e8f5ee; --warn:#c2570c; --warn-soft:#fdf0e6;
+  --f-body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161d; --paper:#1a2029; --fg:#e4e8ef; --muted:#9aa4b5; --line:#2e3644;
+  --accent:#78a6f0; --accent-soft:#1e2c44; --ok:#6cc896; --ok-soft:#173326; --warn:#f0995a; --warn-soft:#3a2617; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161d; --paper:#1a2029; --fg:#e4e8ef; --muted:#9aa4b5; --line:#2e3644;
+  --accent:#78a6f0; --accent-soft:#1e2c44; --ok:#6cc896; --ok-soft:#173326; --warn:#f0995a; --warn-soft:#3a2617; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.65;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+main{max-width:1120px;margin:0 auto;padding-block:26px 64px}
+h1{font-size:clamp(26px,4vw,34px);line-height:1.25;margin:0 0 4px}
+.lede{color:var(--muted);margin:0 0 12px}
+.prog{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:8px 0 10px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);margin-bottom:16px;flex-wrap:wrap}
+.track{flex:1 1 200px;height:8px;background:var(--line);border-radius:99px;overflow:hidden;min-width:120px}
+.fill{height:100%;background:var(--ok);width:0;transition:width .25s}
+.prog b{font-variant-numeric:tabular-nums}
+.prog button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:999px;padding:2px 10px;cursor:pointer}
+.cols{columns:2 480px;column-gap:16px}
+.card{break-inside:avoid;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:0 0 16px;display:inline-block;width:100%}
+.card h2{font-size:17px;margin:0 0 8px;color:var(--accent);display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.card h2 small{font-size:12px;color:var(--muted);font-weight:500}
+ul.ck{list-style:none;margin:0;padding:0}
+ul.ck li{display:flex;gap:8px;align-items:flex-start;padding:3px 0;border-bottom:1px dashed var(--line)}
+ul.ck li:last-child{border-bottom:0}
+ul.ck input{margin-top:5px;accent-color:var(--ok);flex:none;width:15px;height:15px}
+ul.ck label{cursor:pointer;min-width:0}
+ul.ck input:checked + label{color:var(--muted)}
+.f{font-family:var(--f-mono);font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:8px 0 2px;white-space:pre;overflow-x:auto;line-height:1.6}
+.m{font-family:var(--f-mono);font-size:.92em}
+.warn{background:var(--warn-soft)}
+.warn h2{color:var(--warn)}
+ol.traps{margin:0;padding-left:1.3em}
+ol.traps li{margin:4px 0}
+ol.traps b{color:var(--warn)}
+details{border-bottom:1px dashed var(--line);padding:5px 0}
+details:last-child{border-bottom:0}
+details summary{cursor:pointer}
+details summary:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+details p{margin:4px 0 2px;background:var(--ok-soft);border-radius:6px;padding:5px 9px}
+.links{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.links a{display:block;border:1px solid var(--line);border-radius:8px;padding:8px 12px;text-decoration:none;color:var(--fg);background:var(--paper)}
+.links a:hover,.links a:focus-visible{border-color:var(--accent)}
+.links a span{display:block;font-size:12.5px;color:var(--muted)}
+h2.sec{font-size:19px;margin:8px 0 10px}
+</style>
+
+<main>
+  <h1>로봇시스템 최종 점검</h1>
+  <p class="lede">중간고사 범위(Week 1~6) 핵심만 한 장에. 외운 항목은 체크하세요. 체크 상태는 이 브라우저에만 저장됩니다.</p>
+  <div class="prog"><span>점검</span><div class="track"><div class="fill" id="fill"></div></div><b id="cnt">0 / 0</b><button type="button" id="reset">체크 초기화</button></div>
+
+  <div class="cols">
+    <div class="card"><h2>1. 개론·시스템 <small>Week 1–2</small></h2><ul class="ck">
+      <li>로봇 정의: 감지(sensing) → 계산(판단) → 행동(action)하는 자율 기계</li>
+      <li>흐름: Automation → Autonomy → Popularization → Collaboration → Intelligence</li>
+      <li>Cartesian PPP · Cylindrical RPP · SCARA(평면 유연, 수직 강성) · Articulated(회전 ≥3) · Delta(병렬, 고속, 고가)</li>
+      <li>Open chain = 경로 1개(직렬) / Closed chain = 경로 2개 이상(병렬)</li>
+      <li>병렬: 강성↑ 정밀↑ 하중↑, 작업공간↓, 해석·제어 복잡</li>
+      <li>Kinematics = 힘 무시(위치·속도) / Dynamics = 힘·토크 ↔ 가속도</li>
+      <li>Reachable(한 자세라도) ⊃ Dexterous(모든 자세)</li>
+      <li>DOF = 변수 수 − 독립 구속식 수. 6 = 일반, 6 초과 = Redundant, 6 미만 = Deficient</li>
+      <li>FK·IK·Jacobian·동역학·궤적·제어의 Given / Compute 구분</li>
+      <li>Joint space ↔ Cartesian(Task) space: FK는 →, IK는 ←</li>
+      <li>센서: 엔코더(증분=상대, 절대=절대 위치), 타코(속도), F/T(힘·모멘트), LiDAR(거리·3D)</li>
+    </ul></div>
+
+    <div class="card"><h2>2. 좌표변환 <small>Week 3</small></h2><ul class="ck">
+      <li><span class="m">ᴬR_B</span>의 각 열 = {B}의 x, y, z 축을 {A}에서 본 것</li>
+      <li><span class="m">R⁻¹ = Rᵀ</span> (직교, det = 1)</li>
+      <li>R_X, R_Y, R_Z 기본행렬. R_Y만 −s가 왼쪽 아래</li>
+      <li>움직이는 축(Euler) = 오른쪽 곱 R1R2R3 / 고정 축 = 왼쪽 곱 R3R2R1</li>
+      <li>Z-Y-X Euler = X-Y-Z Fixed (같은 행렬)</li>
+      <li>동차변환 역: 위치부는 <b>−Rᵀ·P</b></li>
+      <li>T의 세 해석: 프레임 기술 · 좌표 매핑 · 연산자</li>
+    </ul>
+    <div class="f">ᴬP = ᴬR_B·ᴮP + ᴬP_B = ᴬT_B·ᴮP
+ᴮT_A = [ Rᵀ  −RᵀP ; 0 0 0 1 ]
+ᴬP = ᴬT_B · ᴮT_C · ᶜP</div></div>
+
+    <div class="card"><h2>3. DH (Craig) <small>Week 4–5</small></h2><ul class="ck">
+      <li>a<sub>i−1</sub>: Z<sub>i−1</sub>→Z<sub>i</sub> 거리, <b>X<sub>i−1</sub></b> 따라 · α<sub>i−1</sub>: 같은 축 기준 비틀림</li>
+      <li>d<sub>i</sub>: X<sub>i−1</sub>→X<sub>i</sub> 거리, <b>Z<sub>i</sub></b> 따라 · θ<sub>i</sub>: 같은 축 기준 회전</li>
+      <li>회전 관절이면 θ가 변수, 직선 관절이면 d가 변수</li>
+      <li>{i}는 관절 i에 붙음(Craig). Standard는 링크 끝(다음 관절)에 붙음</li>
+      <li>Craig 2R: L1은 <b>2번 줄</b>, 끝단까지 가려면 E 줄 추가</li>
+      <li>평행 축 → α = 0, 수직 축 → α = ±90°, 축이 만나면 a = 0</li>
+      <li>PUMA 560 표 형태(α: 0, −90, 0, −90, 90, −90)</li>
+    </ul>
+    <div class="f">ⁱ⁻¹T_i = Rx(α_{i−1}) Tx(a_{i−1}) Rz(θ_i) Tz(d_i)
+α = 0이면  [ c −s 0 a ]
+           [ s  c 0 0 ]
+           [ 0  0 1 d ]
+⁰T_N = ⁰T₁ ¹T₂ ⋯ ᴺ⁻¹T_N</div></div>
+
+    <div class="card"><h2>4. 정기구학 <small>Week 4–5</small></h2><ul class="ck">
+      <li>2R: x = L1c1 + L2c12, y = L1s1 + L2s12, φ = θ1+θ2</li>
+      <li>3R: 항이 L3c123, L3s123 하나씩 추가, φ = θ1+θ2+θ3</li>
+      <li>숫자 대입 후 검산 습관(그림으로 끝단 위치 확인)</li>
+    </ul>
+    <div class="f">⁰T₃ = [ c123 −s123 0  L1c1+L2c12 ]
+       [ s123  c123 0  L1s1+L2s12 ]
+       [ 0     0    1  0          ]</div></div>
+
+    <div class="card"><h2>5. 역기구학 <small>Week 6-1</small></h2><ul class="ck">
+      <li>존재: |L1−L2| ≤ r ≤ L1+L2 (|c2| ≤ 1)</li>
+      <li>다중해: ± → elbow-up/down, 경계에서는 해 1개</li>
+      <li>해석적(대수/기하, 모든 해) vs 수치적(반복, 초기값, 보통 해 1개)</li>
+      <li>θ1 = (원점에서 본 끝단 각) − (링크1 기준 끝단 각)</li>
+      <li>k1 = L1 + L2c2, <b>k2 = L2s2</b> (슬라이드 오타 주의)</li>
+      <li>3R: 손목점 (x − L3cφ, y − L3sφ)에 2R 공식, θ3 = φ − θ1 − θ2</li>
+      <li>FK에 다시 넣어 검산</li>
+    </ul>
+    <div class="f">c2 = (x² + y² − L1² − L2²) / (2L1L2)
+θ2 = Atan2(±√(1−c2²), c2)
+θ1 = Atan2(y, x) − Atan2(L2s2, L1 + L2c2)</div></div>
+
+    <div class="card"><h2>6. 자코비안 <small>Week 6-2</small></h2><ul class="ck">
+      <li>ẋ = Jθ̇, J는 6×n (선속도 3 + 각속도 3)</li>
+      <li>J의 i열 = 관절 i만 돌릴 때 끝단 속도 (관절→끝단에 수직, 크기 = 거리)</li>
+      <li>평면 지름길: 관절→끝단 (X, Y) → 열 (−Y, X)</li>
+      <li>열 공식: R → [z × (p_e − p); z], P → [z; 0]</li>
+      <li>2R·3R 평면: det J = L1L2·sin θ2 → θ2 = 0°, 180° 특이점</li>
+      <li>특이점: 두 열이 나란, J⁻¹ 없음, 팔 길이 방향으로 못 움직임</li>
+      <li>τ = JᵀF (힘 × 작용선까지 수직 거리)</li>
+      <li>Ṙ = S(ω)R, S(ω)r = ω × r (반대칭 행렬)</li>
+      <li>2×2 역행렬: 1/(ad−bc)·[d −b; −c a]</li>
+    </ul>
+    <div class="f">J_2R = [ −L1s1−L2s12   −L2s12 ]
+       [  L1c1+L2c12    L2c12 ]
+J_3R = 1열(L1,L2,L3 항) | 2열(L2,L3) | 3열(L3), 마지막 줄 [1 1 1]</div></div>
+  </div>
+
+  <div class="card warn"><h2>자주 틀리는 것 TOP 10</h2><ol class="traps">
+    <li>역변환 위치부를 −P로 씀 → <b>−Rᵀ·P</b></li>
+    <li>R_Y의 sin 부호 위치 → −s가 <b>왼쪽 아래</b></li>
+    <li>Euler(움직이는 축)를 왼쪽에 곱함 → <b>오른쪽</b>에 곱함</li>
+    <li>Craig 표에 L1을 1번 줄에 넣음 → <b>a₁ = L1은 2번 줄</b></li>
+    <li>d를 X축 따라 잼 → <b>d, θ는 Z<sub>i</sub> 따라</b></li>
+    <li>직선 관절의 변수를 θ로 씀 → <b>d가 변수</b></li>
+    <li>k2 = L2로 씀 → <b>k2 = L2·s2</b></li>
+    <li>±해 중 하나만 구함 → <b>두 해 모두</b> (경계면 1개)</li>
+    <li>Atan2(x, y)로 순서 뒤집음 → <b>Atan2(y, x)</b></li>
+    <li>τ = J F로 씀 → <b>τ = JᵀF</b> (전치)</li>
+  </ol></div>
+
+  <div class="card"><h2>5분 셀프 테스트 <small>눌러서 답 확인</small></h2>
+    <details><summary>R_Z(90°)·(1, 0, 0) = ?</summary><p>(0, 1, 0)</p></details>
+    <details><summary>z 90° 회전 + (1, 2, 0) 이동, ᴮP = (0, 1, 0) → ᴬP = ?</summary><p>(−1, 0, 0) + (1, 2, 0) = (0, 2, 0)</p></details>
+    <details><summary>2R, L=1, θ1 = 90°, θ2 = −90° → 끝단?</summary><p>(0 + 1, 1 + 0) = (1, 1)</p></details>
+    <details><summary>2R, L=1, 목표 (1, 1)의 두 해?</summary><p>(0°, 90°), (90°, −90°)</p></details>
+    <details><summary>2R, L1 = 3, L2 = 1이 (1, 0)에 닿나?</summary><p>아니오. 2 ≤ r ≤ 4 밖</p></details>
+    <details><summary>2R, L=1, θ1 = 0°, θ2 = 90°의 J?</summary><p>[−1 −1; 1 0], det = 1</p></details>
+    <details><summary>위 자세에서 v = (0, 1)을 내는 θ̇?</summary><p>(1, −1)</p></details>
+    <details><summary>위 자세에서 F = (0, 1)일 때 τ?</summary><p>JᵀF = (1, 0)</p></details>
+    <details><summary>Craig DH 링크 변환 곱 순서?</summary><p>Rx(α) → Tx(a) → Rz(θ) → Tz(d)</p></details>
+    <details><summary>평면 3R의 특이점 조건?</summary><p>sin θ2 = 0 (θ3, L3와 무관)</p></details>
+  </div>
+
+  <h2 class="sec">더 자세히 보기</h2>
+  <div class="links">
+    <a href="https://claude.ai/artifact/UB61ugqcGQPy2L8HKfnN8B">중간고사 정리<span>전체 개념 + 예제</span></a>
+    <a href="https://claude.ai/artifact/X4qavdxW56oEfxueuGnxjR">연습문제 25<span>정답·풀이 포함</span></a>
+    <a href="https://claude.ai/artifact/DFZsQhS7Hx9GhuZrp8Qn7L">움직이는 축 vs 고정 축<span>회전 순서 그림</span></a>
+    <a href="https://claude.ai/artifact/PCFXjPmJiCyyi6DTsNd2gW">Standard vs Craig DH<span>좌표계 위치 비교</span></a>
+    <a href="https://claude.ai/artifact/WdCf5aYNkK2VKCasvhVGKu">DH 예제 그림 풀이<span>3R, RPR, PUMA 등</span></a>
+    <a href="https://claude.ai/artifact/RGav9iLrDLRcxbjT8z8uof">역기구학 θ1 그림 풀이<span>k1, k2, Atan2</span></a>
+    <a href="https://claude.ai/artifact/AzPZn2kKQVcnUQdQsGKcJf">자코비안 그림 풀이<span>열·특이점·힘</span></a>
+    <a href="https://claude.ai/artifact/R8yf7ZYaZxQG6RcZuWnK27">자코비안 그림 예제<span>8문제</span></a>
+  </div>
+</main>
+
+<script>
+(function(){
+  const KEY='finalCheck.v1';
+  let saved={}; try{saved=JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){}
+  const items=[...document.querySelectorAll('ul.ck li')];
+  items.forEach((li,i)=>{
+    const id='ck'+i, cb=document.createElement('input'); cb.type='checkbox'; cb.id=id; cb.checked=!!saved[id];
+    const lab=document.createElement('label'); lab.htmlFor=id; while(li.firstChild) lab.appendChild(li.firstChild);
+    li.append(cb,lab);
+    cb.addEventListener('change',()=>{saved[id]=cb.checked; try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){} upd();});
+  });
+  function upd(){const n=items.length, c=items.filter(li=>li.querySelector('input').checked).length;
+    document.getElementById('cnt').textContent=c+' / '+n; document.getElementById('fill').style.width=(c/n*100)+'%';}
+  document.getElementById('reset').addEventListener('click',()=>{saved={}; try{localStorage.removeItem(KEY);}catch(e){} items.forEach(li=>li.querySelector('input').checked=false); upd();});
+  upd();
+})();
+</script>
