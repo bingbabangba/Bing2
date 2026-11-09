@@ -1,0 +1,855 @@
+<title>TSP PT 연습장</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Gowun+Batang:wght@700&display=swap">
+<style>
+/* Layout: 단면도(cross-section)를 읽듯 위에서 아래로 내려가는 한 줄 칼럼 + 데스크톱에서는 왼쪽 고정 목차. 색은 실리콘(회청)·구리·PCB 녹색·EMC 흑색 등 실제 패키지 재료색에서 가져옴 */
+:root{
+  --bg:#f2f4f6; --surface:#ffffff; --surface2:#e9edf1; --ink:#15202b; --mute:#566472; --line:#d3dae1;
+  --cu:#a85a1c; --cu-soft:#f5e6d8; --si:#a9bccf; --si-d:#7f97ae; --sub:#3c7a58; --sub-soft:#dcefe3;
+  --emc:#2a2f37; --sol:#b6bcc4; --bad:#b83227; --bad-soft:#f8e4e1; --warn:#9a6411; --warn-soft:#f6ecd9;
+  --blue:#245f9e; --blue-soft:#e1ecf7; --ok:#2c7a4f; --vio:#5b4bb3; --vio-soft:#ebe8f8;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --disp:"Gowun Batang","IBM Plex Sans KR","Apple SD Gothic Neo",serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --r:10px; --ondark:#ffffff;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1317; --surface:#151c22; --surface2:#1b242c; --ink:#e4eaf0; --mute:#9aa8b5; --line:#2b3640;
+  --cu:#e39a62; --cu-soft:#3a281a; --si:#5f7894; --si-d:#8aa3bd; --sub:#58a87c; --sub-soft:#183226;
+  --emc:#3d444e; --sol:#7d858f; --bad:#ef7b6f; --bad-soft:#3a1d1a; --warn:#e2ad55; --warn-soft:#352812;
+  --blue:#78aee8; --blue-soft:#172a3d; --ok:#67c08d; --vio:#a99cf0; --vio-soft:#251f42; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1317; --surface:#151c22; --surface2:#1b242c; --ink:#e4eaf0; --mute:#9aa8b5; --line:#2b3640;
+  --cu:#e39a62; --cu-soft:#3a281a; --si:#5f7894; --si-d:#8aa3bd; --sub:#58a87c; --sub-soft:#183226;
+  --emc:#3d444e; --sol:#7d858f; --bad:#ef7b6f; --bad-soft:#3a1d1a; --warn:#e2ad55; --warn-soft:#352812;
+  --blue:#78aee8; --blue-soft:#172a3d; --ok:#67c08d; --vio:#a99cf0; --vio-soft:#251f42; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.75;word-break:keep-all;overflow-wrap:break-word}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+a{color:var(--blue)} a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--cu);outline-offset:2px}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:8px}
+.topbar .in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.brand{font-family:var(--disp);font-size:17px;white-space:nowrap}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.chips::-webkit-scrollbar{display:none}
+.chips a{flex:none;font:500 12.5px/1 var(--body);padding:7px 10px;border-radius:999px;background:var(--surface2);color:var(--ink);text-decoration:none}
+.chips a.on{background:var(--cu);color:var(--surface)}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 80px}
+.grid{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:40px}
+@media(min-width:1040px){.grid{grid-template-columns:230px minmax(0,1fr)}}
+.side{display:none}
+@media(min-width:1040px){.side{display:block;position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);align-self:start;max-height:calc(100vh - 90px);overflow:auto;padding-top:28px;font-size:13.5px}}
+.side ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.side a{display:block;padding:5px 10px;border-radius:6px;color:var(--mute);text-decoration:none;line-height:1.4}
+.side a.on{background:var(--cu-soft);color:var(--cu);font-weight:600}
+.side .n{font-family:var(--mono);font-size:11.5px;margin-right:6px}
+main{min-width:0;max-width:820px}
+.hero{padding-block:36px 8px}
+.eyebrow{font:600 12px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--cu)}
+h1{font-family:var(--disp);font-size:clamp(30px,6vw,46px);line-height:1.2;margin:.3em 0 .4em;text-wrap:balance}
+.hero p{font-size:17px;color:var(--mute);max-width:62ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.tag{font:500 12.5px/1 var(--body);padding:6px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--line);color:var(--mute)}
+section.chap{padding-top:56px}
+.chap-h{display:flex;align-items:baseline;gap:14px;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:18px}
+.chap-h .no{font:600 14px var(--mono);color:var(--cu)}
+h2{font-family:var(--disp);font-size:clamp(24px,4.2vw,32px);line-height:1.3;margin:0;text-wrap:balance}
+h3{font-size:20px;line-height:1.45;margin:40px 0 10px;text-wrap:balance}
+h3 .k{font:600 12.5px var(--mono);color:var(--cu);margin-right:8px;vertical-align:2px}
+h4{font-size:16px;margin:24px 0 6px}
+p{margin:0 0 14px;max-width:68ch}
+ul,ol{padding-left:1.25em;margin:0 0 14px;max-width:68ch} li{margin:3px 0}
+.lead{font-size:17px;color:var(--ink);border-left:3px solid var(--cu);padding:4px 0 4px 14px;margin:0 0 18px}
+.analogy{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin:16px 0;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.analogy .ic{font:600 11px var(--mono);letter-spacing:.08em;color:var(--surface);background:var(--ink);padding:4px 7px;border-radius:4px;margin-top:3px}
+.analogy p{margin:0}
+b,strong{font-weight:600}
+mark{background:var(--cu-soft);color:inherit;padding:0 3px;border-radius:3px}
+code,.mono{font-family:var(--mono);font-size:.9em}
+.fig{margin:20px 0 22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.fig .sc{overflow-x:auto;padding:14px 12px 6px}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+.fig.narrow svg{min-width:0}
+.fig figcaption{font-size:13.5px;color:var(--mute);padding:8px 14px 12px;border-top:1px dashed var(--line);line-height:1.6}
+.fig figcaption b{color:var(--ink)}
+/* SVG 재료색 */
+.si{fill:var(--si)} .sid{fill:var(--si-d)} .cu{fill:var(--cu)} .sub{fill:var(--sub)} .subs{fill:var(--sub-soft)} .emc{fill:var(--emc)} .sol{fill:var(--sol)}
+.bg2{fill:var(--surface2)} .sf{fill:var(--surface)} .inkf{fill:var(--ink)} .badf{fill:var(--bad)} .blf{fill:var(--blue)} .okf{fill:var(--ok)} .vif{fill:var(--vio)} .cus{fill:var(--cu-soft)} .wnf{fill:var(--warn)}
+.ln{stroke:var(--ink);fill:none;stroke-width:1.4} .lnm{stroke:var(--mute);fill:none;stroke-width:1.2} .lnd{stroke:var(--mute);fill:none;stroke-width:1.2;stroke-dasharray:4 4}
+.lncu{stroke:var(--cu);fill:none;stroke-width:2} .lnbad{stroke:var(--bad);fill:none;stroke-width:2} .lnbl{stroke:var(--blue);fill:none;stroke-width:1.8}
+.edge{stroke:var(--ink);stroke-width:1;stroke-opacity:.35}
+.t{fill:var(--ink);font:500 12.5px var(--body)} .tm{fill:var(--mute);font:400 11.5px var(--body)} .tn{fill:var(--mute);font:400 11px var(--mono)}
+.tb{fill:var(--ink);font:700 14px var(--body)} .tc{fill:var(--cu);font:600 12px var(--body)} .tbad{fill:var(--bad);font:600 12px var(--body)} .tw{fill:var(--ondark);font:600 12px var(--body)} .tbl{fill:var(--blue);font:600 12px var(--body)}
+/* 박스 */
+.box{border-radius:var(--r);padding:14px 16px 4px;margin:16px 0;border:1px solid var(--line);background:var(--surface)}
+.box>.lab{display:inline-block;font:600 11.5px/1 var(--mono);letter-spacing:.06em;padding:5px 8px;border-radius:4px;margin-bottom:8px}
+.box p,.box ul{max-width:none}
+.box.bad{border-color:color-mix(in srgb,var(--bad) 35%,var(--line))} .box.bad>.lab{background:var(--bad-soft);color:var(--bad)}
+.box.neck{border-color:color-mix(in srgb,var(--warn) 40%,var(--line))} .box.neck>.lab{background:var(--warn-soft);color:var(--warn)}
+.box.mech{border-color:color-mix(in srgb,var(--sub) 40%,var(--line))} .box.mech>.lab{background:var(--sub-soft);color:var(--sub)}
+.box.iv{border-color:color-mix(in srgb,var(--blue) 40%,var(--line))} .box.iv>.lab{background:var(--blue-soft);color:var(--blue)}
+.box.news{border-color:color-mix(in srgb,var(--vio) 40%,var(--line))} .box.news>.lab{background:var(--vio-soft);color:var(--vio)}
+.duo{display:grid;grid-template-columns:1fr;gap:0 14px}
+@media(min-width:700px){.duo{grid-template-columns:1fr 1fr}.duo>.box{margin:8px 0}}
+.terms{display:grid;grid-template-columns:1fr;gap:8px;margin:14px 0 18px}
+@media(min-width:640px){.terms{grid-template-columns:1fr 1fr}}
+.terms details{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+.terms summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:10px}
+.terms summary::-webkit-details-marker{display:none}
+.terms summary::after{content:"+";font-family:var(--mono);color:var(--cu)} .terms details[open] summary::after{content:"−"}
+.terms summary small{font:400 12px var(--mono);color:var(--mute);margin-left:6px}
+.terms details p{margin:6px 0 2px;font-size:14.5px;color:var(--mute)}
+.tw-wrap{overflow-x:auto;margin:14px 0 18px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:560px}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.55}
+th{background:var(--surface2);font-weight:600;font-size:13.5px;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.photo{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 18px}
+.photo a{font-size:13.5px;text-decoration:none;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.photo a::before{content:"사진·원문 ↗ ";font:600 11px var(--mono);color:var(--cu)}
+.steps{counter-reset:s;list-style:none;padding:0;display:grid;gap:8px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;margin:0}
+.steps li::before{content:counter(s);font:600 13px/28px var(--mono);text-align:center;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface)}
+.sum{background:var(--ink);color:var(--surface);border-radius:var(--r);padding:16px 18px 6px;margin:26px 0 8px}
+.sum .lab{font:600 11.5px var(--mono);letter-spacing:.1em;color:var(--cu-soft);display:block;margin-bottom:6px}
+.sum ul{max-width:none} .sum li{margin:4px 0}
+.small{font-size:13.5px;color:var(--mute)}
+hr.sep{border:0;border-top:1px dashed var(--line);margin:30px 0}
+input[type=search]{width:100%;font:inherit;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.chk{list-style:none;padding:0} .chk li{display:flex;gap:10px;align-items:flex-start}
+.chk input{margin-top:6px;accent-color:var(--cu);width:17px;height:17px;flex:none}
+.quiz details{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0}
+.quiz summary{cursor:pointer;font-weight:600}
+.quiz details p{margin:8px 0 2px;color:var(--mute)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0 18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.kpi .v{font:600 22px/1.2 var(--mono);color:var(--cu);font-variant-numeric:tabular-nums}
+.kpi .d{font-size:13px;color:var(--mute);line-height:1.5;margin-top:4px}
+footer{max-width:1180px;margin:60px auto 0;color:var(--mute);font-size:13px;border-top:1px solid var(--line);padding-top:18px}
+/* PT 문제집 추가 스타일 */
+.prob{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 20px 8px;margin:28px 0}
+@media(max-width:560px){.prob{padding:16px 14px 6px}}
+.prob-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin-bottom:6px}
+.prob-h .pid{font:600 13px var(--mono);color:var(--surface);background:var(--ink);padding:4px 8px;border-radius:5px}
+.prob-h h3{margin:0;font-size:21px}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px}
+.pill{font:500 12px/1 var(--body);padding:5px 9px;border-radius:999px;background:var(--surface2);color:var(--mute)}
+.pill.lv{background:var(--cu-soft);color:var(--cu)}
+.scene{background:var(--surface2);border-radius:10px;padding:12px 14px;margin:0 0 14px}
+.scene p{margin:0;max-width:none}
+.qs{counter-reset:q;list-style:none;padding:0;margin:14px 0;display:grid;gap:8px;max-width:none}
+.qs li{counter-increment:q;display:grid;grid-template-columns:auto 1fr;gap:10px;margin:0;align-items:start}
+.qs li::before{content:"소문제 " counter(q);font:600 12px/1 var(--mono);background:var(--blue-soft);color:var(--blue);padding:6px 8px;border-radius:5px;white-space:nowrap;margin-top:3px}
+details.sol{border-top:1px dashed var(--line);margin:10px -20px 0;padding:0 20px}
+@media(max-width:560px){details.sol{margin:10px -14px 0;padding:0 14px}}
+details.sol>summary{cursor:pointer;list-style:none;padding:14px 0;font-weight:600;color:var(--cu);display:flex;justify-content:space-between}
+details.sol>summary::-webkit-details-marker{display:none}
+details.sol>summary::after{content:"펼치기 +";font:500 13px var(--mono)} details.sol[open]>summary::after{content:"접기 −"}
+.sol h4{font-size:15px;margin:18px 0 8px;color:var(--ink)}
+.sol h4 .k{font:600 11.5px var(--mono);color:var(--surface);background:var(--cu);padding:3px 6px;border-radius:4px;margin-right:6px;vertical-align:1px}
+.flow{list-style:none;padding:0;margin:8px 0 14px;display:grid;gap:6px;max-width:none}
+.flow li{display:grid;grid-template-columns:88px 1fr;gap:10px;margin:0;font-size:15px}
+.flow li b{font:600 12.5px/1.9 var(--mono);color:var(--cu)}
+.fq{display:grid;gap:8px;margin:8px 0 14px}
+.fq div{background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:15px}
+.fq div b{display:block;margin-bottom:3px}
+.mine{background:var(--sub-soft);border-radius:8px;padding:10px 12px;font-size:15px;margin:8px 0 16px}
+.mine b{color:var(--sub)}
+.virt{font:500 11px var(--mono);color:var(--mute);letter-spacing:.04em}
+.timer{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:18px 0}
+.timer .clock{font:600 30px/1 var(--mono);font-variant-numeric:tabular-nums;min-width:110px}
+.timer button{font:600 14px var(--body);padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);cursor:pointer}
+.timer button.go{background:var(--cu);border-color:var(--cu);color:var(--surface)}
+.timer .st{font-size:13px;color:var(--mute);flex-basis:100%}
+.timer.done .clock{color:var(--bad)}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.filters button{font:500 13px var(--body);padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.filters button.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+</style>
+
+<header class="topbar"><div class="in">
+  <span class="brand">TSP PT 연습장</span>
+  <nav class="chips" id="chips" aria-label="문제 이동">
+    <a href="#how">공통 틀</a><a href="#p1">P1 휨</a><a href="#p2">P2 HBM 층</a><a href="#p3">P3 웨이퍼 맵</a><a href="#p4">P4 치핑</a><a href="#p5">P5 몰드</a><a href="#p6">P6 테스트 수율</a><a href="#p7">P7 신뢰성</a><a href="#p8">P8 하이브리드</a><a href="#p9">P9 장비 평가</a><a href="#p10">P10 방열</a><a href="#bank">해결 레버</a>
+  </nav>
+</div></header>
+
+<div class="wrap"><div class="grid">
+<aside class="side" aria-label="목차"><ol id="toc">
+  <li><a href="#how"><span class="n">00</span>PT 공통 틀</a></li>
+  <li><a href="#p1"><span class="n">P1</span>패키지 휨과 리플로우</a></li>
+  <li><a href="#p2"><span class="n">P2</span>HBM 상층 접합 불량</a></li>
+  <li><a href="#p3"><span class="n">P3</span>CoW 웨이퍼 맵 패턴</a></li>
+  <li><a href="#p4"><span class="n">P4</span>다이싱 치핑 증가</a></li>
+  <li><a href="#p5"><span class="n">P5</span>몰드 보이드·스위핑</a></li>
+  <li><a href="#p6"><span class="n">P6</span>테스트 수율 하락</a></li>
+  <li><a href="#p7"><span class="n">P7</span>온도 사이클 범프 크랙</a></li>
+  <li><a href="#p8"><span class="n">P8</span>하이브리드 본딩 보이드</a></li>
+  <li><a href="#p9"><span class="n">P9</span>신규 TC 본더 평가</a></li>
+  <li><a href="#p10"><span class="n">P10</span>HBM 방열</a></li>
+  <li><a href="#bank"><span class="n">∑</span>해결 레버 총정리</a></li>
+</ol></aside>
+
+<main>
+<div class="hero">
+  <div class="eyebrow">삼성전자 DS · TSP총괄 공정기술 직무면접 대비</div>
+  <h1>PT 연습 문제 10선과 해결법 후보</h1>
+  <p>후기에 나온 형식(대주제 하나 + 소문제 셋, 그림이나 데이터 해석 포함, 풀이 후 발표와 꼬리질문)을 그대로 따라 만든 연습 문제입니다. 먼저 타이머를 켜고 직접 풀어 본 뒤 풀이를 펼쳐 비교하세요.</p>
+  <div class="meta"><span class="tag">그림 속 수치는 연습용 가상 데이터</span><span class="tag">원리·대책은 공개 학술·업계 일반 지식 기준</span><span class="tag">짝꿍 자료: 반도체 후공정 아틀라스</span></div>
+</div>
+
+<div class="timer" id="timer">
+  <span class="clock" id="clock">15:00</span>
+  <button type="button" class="go" id="t15">풀이 15분 시작</button>
+  <button type="button" id="t10">발표 10분 시작</button>
+  <button type="button" id="tstop">정지·초기화</button>
+  <span class="st" id="tst">후기 기준: 문제지에 15분 정도 풀고, 면접장에서 10분 내외 발표 + 질의응답 (2026 하반기 TSP 가이드: 풀이 내용 10분 내외 발표)</span>
+</div>
+
+<div class="filters" id="filters" aria-label="문제 유형 걸러 보기">
+  <button type="button" class="on" data-f="all">전체</button>
+  <button type="button" data-f="scen">공정 시나리오형</button>
+  <button type="button" data-f="data">데이터·그래프 해석형</button>
+  <button type="button" data-f="topic">직무 주제형</button>
+</div>
+
+<!-- ===== 공통 틀 ===== -->
+<section class="chap" id="how">
+<div class="chap-h"><span class="no">00</span><h2>PT 공통 틀: 어떤 문제든 이 순서로</h2></div>
+<p class="lead">현직자 답변(코멘토 2025-11)에 따르면 문제는 <b>공정 시나리오형 · 데이터·그래프 해석형 · 직무 주제형</b> 세 가지이고, 난이도는 "전공 시험 1~2번 문제", "기사 자격증 수준"입니다. 정답보다 <b>논리적으로 풀어 가는 과정</b>을 본다는 답변이 많습니다.</p>
+
+<h3><span class="k">0.1</span>발표 10분 구조</h3>
+<ol class="flow">
+<li><b>0:00 결론</b><span>"이 문제의 핵심은 OO이고, 원인은 A로 판단했으며, B로 개선하겠습니다." 한 문장으로 먼저.</span></li>
+<li><b>0:40 그림</b><span>칠판에 단면도나 흐름도를 크게 하나 그림. 그림이 있으면 꼬리질문도 그림 위에서 받게 됨.</span></li>
+<li><b>1:30 소문제1</b><span>개념·원리: 이 공정을 왜 하는가, 무엇이 일어나는가.</span></li>
+<li><b>3:30 소문제2</b><span>원인: 후보를 2~4개 나열 → 데이터로 좁히기 → 확인 방법(비파괴→파괴, DOE).</span></li>
+<li><b>6:00 소문제3</b><span>대책: 재료 · 공정 조건 · 장비 · 설계 · 관리 다섯 갈래에서 2~3개 + 각각의 부작용(트레이드오프).</span></li>
+<li><b>8:30 재발 방지</b><span>SPC 관리 항목, 인터락, 표준화. 마지막에 내 경험 한 줄 연결.</span></li>
+</ol>
+
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 300" role="img" aria-label="칠판 레이아웃 예시">
+  <rect x="10" y="10" width="840" height="280" rx="8" class="emc"/>
+  <rect x="24" y="24" width="812" height="34" rx="4" class="sf" opacity=".12"/>
+  <text x="36" y="47" class="tw">결론 한 줄: 휨 → 코너 Non-wet. 원인 = CTE 차 + 경화수축. 대책 = 저CTE EMC + 프로파일</text>
+  <rect x="24" y="70" width="300" height="206" rx="4" class="sf" opacity=".08"/><text x="36" y="92" class="tw">① 그림 (단면도·그래프)</text>
+  <rect x="50" y="200" width="250" height="14" class="sub"/><rect x="80" y="170" width="190" height="30" class="si"/><path d="M50 196 Q175 160 300 196" class="lnbad"/>
+  <rect x="336" y="70" width="240" height="206" rx="4" class="sf" opacity=".08"/><text x="348" y="92" class="tw">② 원인 후보 → 확인</text>
+  <text x="348" y="122" class="tw" style="font-weight:400">• 재료 CTE 차  → Moiré</text><text x="348" y="146" class="tw" style="font-weight:400">• 경화 수축    → 경화 전후</text><text x="348" y="170" class="tw" style="font-weight:400">• 두께 비대칭  → 단면</text><text x="348" y="194" class="tw" style="font-weight:400">• 조건 변경    → 이력</text>
+  <rect x="588" y="70" width="248" height="206" rx="4" class="sf" opacity=".08"/><text x="600" y="92" class="tw">③ 대책 (효과 / 부작용)</text>
+  <text x="600" y="122" class="tw" style="font-weight:400">재료: 저CTE EMC / 점도↑</text><text x="600" y="146" class="tw" style="font-weight:400">조건: 경화·냉각 / 시간↑</text><text x="600" y="170" class="tw" style="font-weight:400">설계: 두께 비율 / 높이</text><text x="600" y="194" class="tw" style="font-weight:400">관리: SPC·인터락</text>
+  <text x="600" y="248" class="tw">④ 재발 방지 + 내 경험</text>
+</svg></div>
+<figcaption><b>그림 0-1. 칠판 레이아웃.</b> 맨 위에 결론, 왼쪽에 그림, 가운데 원인, 오른쪽에 대책. 후기에서 "칠판에 쓰면서 설명하는 연습이 실전에 도움이 됐다"는 말이 반복됩니다.</figcaption></figure>
+
+<h3><span class="k">0.2</span>원인 후보를 빠뜨리지 않는 4M + 1</h3>
+<div class="tw-wrap"><table>
+<tr><th>갈래</th><th>질문</th><th>후공정 예시</th></tr>
+<tr><td><b>Machine</b> 설비</td><td>특정 장비·헤드·챔버·소켓에서만?</td><td>본딩 헤드 평행도, 스테이지 온도 분포, 블레이드 마모, 소켓 오염</td></tr>
+<tr><td><b>Material</b> 자재</td><td>특정 로트·공급사로 바뀐 뒤부터?</td><td>EMC·NCF·언더필 로트, 기판 휨, 웨이퍼 두께</td></tr>
+<tr><td><b>Method</b> 방법·조건</td><td>레시피·프로파일이 바뀌었나?</td><td>리플로우 프로파일, 본딩 압력·시간, 경화 조건</td></tr>
+<tr><td><b>Man</b> 사람</td><td>교대조·작업자별 차이?</td><td>셋업·캘리브레이션 절차, 자재 보관(흡습)</td></tr>
+<tr><td><b>+ Measurement</b> 측정</td><td>측정이 맞나? (계측 장비·판정 기준)</td><td>테스터 과검, 검사 장비 보정, 판정 임계값</td></tr>
+</table></div>
+
+<div class="box iv"><span class="lab">모를 때 쓰는 문장</span><ul>
+<li>"정확한 수치는 모르지만, 원리상 A가 커지면 B가 나빠지므로 이 방향이라고 판단합니다."</li>
+<li>"제가 아는 범위는 여기까지이고, 실제로는 데이터로 확인한 뒤 결정하겠습니다. 확인 방법은 X입니다."</li>
+<li>"그 부분은 공부가 부족했습니다. 입사 후 보완하겠습니다." (후기상 솔직하게 말하고 합격한 사례 다수)</li>
+</ul></div>
+</section>
+
+<!-- ===== P1 ===== -->
+<article class="prob" id="p1" data-t="data">
+<div class="prob-h"><span class="pid">P1</span><h3>패키지 휨과 리플로우 접합 불량</h3></div>
+<div class="pills"><span class="pill lv">빈출 ★★★</span><span class="pill">데이터 해석형</span><span class="pill">Mold · Reflow · SBA</span></div>
+<div class="scene"><p>신규 박형 BGA 패키지를 고객사 보드에 실장했더니 <b>패키지 네 모서리 솔더볼에서 접합 불량(Non-wet)</b>이 집중 발생했다. Shadow Moiré로 온도별 휨을 측정한 결과가 아래와 같다. (+는 가운데가 아래로 처진 '웃는' 형태, −는 가운데가 위로 솟은 '우는' 형태로 정의)</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 280" role="img" aria-label="온도별 휨 그래프">
+  <g class="lnm"><line x1="70" y1="30" x2="70" y2="230"/><line x1="70" y1="130" x2="540" y2="130"/></g>
+  <rect x="70" y="67.5" width="460" height="125" class="okf" opacity=".08"/>
+  <line x1="70" y1="67.5" x2="530" y2="67.5" class="lnd"/><line x1="70" y1="192.5" x2="530" y2="192.5" class="lnd"/>
+  <text x="474" y="62" class="tn">규격 +50</text><text x="474" y="206" class="tn">규격 −50</text>
+  <g class="tn" text-anchor="end"><text x="62" y="34">+80</text><text x="62" y="84">+40</text><text x="62" y="134">0</text><text x="62" y="184">−40</text><text x="62" y="234">−80</text></g>
+  <text x="14" y="20" class="tn">휨(㎛)</text>
+  <g class="tn" text-anchor="middle"><text x="70" y="250">25</text><text x="217" y="250">100</text><text x="315" y="250">150</text><text x="412" y="250">200</text><text x="530" y="250">260℃</text></g>
+  <line x1="446" y1="30" x2="446" y2="230" class="lncu" stroke-dasharray="3 3"/><text x="372" y="44" class="tc">솔더 용융 ~217℃</text>
+  <path d="M70 55 L217 80 L315 124 L412 167.5 L446 180 L530 198.75" class="lnbad" style="stroke-width:3"/>
+  <g class="badf"><circle cx="70" cy="55" r="4"/><circle cx="217" cy="80" r="4"/><circle cx="315" cy="124" r="4"/><circle cx="412" cy="167.5" r="4"/><circle cx="530" cy="198.75" r="4"/></g>
+  <text x="80" y="48" class="tbad">+60</text><text x="500" y="222" class="tbad">−55</text>
+  <g transform="translate(590,40)">
+   <text x="0" y="0" class="t">상온 (+): 웃는 모양</text>
+   <path d="M0 30 Q110 60 220 30 L220 46 Q110 76 0 46 Z" class="emc"/>
+   <text x="0" y="104" class="t">피크 (−): 우는 모양</text>
+   <path d="M0 150 Q110 120 220 150 L220 166 Q110 136 0 166 Z" class="emc"/>
+   <rect x="-10" y="182" width="240" height="8" class="sub"/>
+   <g class="sol"><circle cx="110" cy="146" r="6"/><circle cx="60" cy="158" r="6"/><circle cx="160" cy="158" r="6"/></g>
+   <circle cx="10" cy="174" r="6" class="lnbad"/><circle cx="210" cy="174" r="6" class="lnbad"/><text x="44" y="212" class="tbad">모서리 볼이 보드에서 뜸</text>
+  </g>
+</svg></div>
+<figcaption><span class="virt">가상 데이터</span> · 상온에서는 +60㎛, 솔더가 녹는 구간에서는 −50㎛ 이하로 방향이 뒤집힌다.</figcaption></figure>
+<ol class="qs">
+<li>휨이 생기는 원인을 재료·구조 관점에서 설명하시오.</li>
+<li>온도가 오르면서 휨 방향이 바뀌는 이유와, 그것이 모서리 Non-wet으로 이어지는 과정을 설명하시오.</li>
+<li>휨을 줄이기 위한 대책을 2가지 이상 제시하고 각각의 부작용을 쓰시오.</li>
+</ol>
+<details class="sol"><summary>풀이와 해결법 후보</summary>
+<h4><span class="k">1</span>원인 후보</h4>
+<div class="tw-wrap"><table>
+<tr><th>후보</th><th>메커니즘</th><th>확인 방법</th></tr>
+<tr><td>재료 간 CTE 차이</td><td>칩(Si≈3ppm/℃), 기판(≈15~17), EMC가 서로 다르게 늘고 줄어 바이메탈처럼 휨</td><td>재료 물성표, 온도별 Moiré</td></tr>
+<tr><td>EMC Tg 통과</td><td>Tg 위에서 EMC의 CTE가 몇 배로 커져 휨 방향이 뒤집힐 수 있음</td><td>DMA/TMA로 Tg·CTE 측정, 그래프 변곡점과 비교</td></tr>
+<tr><td>경화 수축</td><td>몰드가 굳으며 줄어 상온 휨을 만듦</td><td>성형·PMC 전후 휨 비교</td></tr>
+<tr><td>상하 두께 비대칭</td><td>박형화로 칩·몰드·기판 두께 비율이 바뀜</td><td>단면 측정, 설계 변경 이력</td></tr>
+<tr><td>기판 로트·흡습</td><td>기판 자체 휨, 흡습 후 가열 시 팽윤</td><td>로트별 층별, 베이킹 전후 비교</td></tr>
+</table></div>
+<h4><span class="k">2</span>Non-wet까지의 연결</h4>
+<p>솔더가 녹는 217℃ 이상에서 패키지가 −55㎛로 '우는' 모양이 되면 <b>모서리가 보드에서 들려</b> 모서리 볼이 패드에 닿지 못한 채 녹습니다. 냉각되며 다시 평평해질 때는 솔더가 이미 굳어 붙지 않은 상태로 남습니다(Non-wet, 또는 볼이 패드 위에 얹힌 채 굳는 Head-in-Pillow). 반대로 가운데가 눌리면 가운데 볼끼리 붙는 Bridge가 생깁니다.</p>
+<h4><span class="k">3</span>해결법 후보</h4>
+<div class="tw-wrap"><table>
+<tr><th>갈래</th><th>대책</th><th>기대 효과</th><th>부작용·트레이드오프</th></tr>
+<tr><td>재료</td><td>저CTE·고Tg EMC (필러 함량↑)</td><td>고온 휨 감소</td><td>점도↑ → 미충전·와이어 스위핑, 모듈러스↑ → 응력↑</td></tr>
+<tr><td>재료</td><td>기판 코어 CTE 조정, 두꺼운 코어</td><td>기판 측 휨 감소</td><td>두께·원가 상승</td></tr>
+<tr><td>설계</td><td>몰드 두께/칩 두께 비율 최적화(중립면 맞추기)</td><td>상하 대칭에 가까워짐</td><td>패키지 높이 규격</td></tr>
+<tr><td>공정 조건</td><td>경화·PMC 프로파일, 냉각 속도 조정</td><td>잔류응력·수축 감소</td><td>공정 시간↑</td></tr>
+<tr><td>공정 조건</td><td>고객 리플로우 프로파일 협의(피크·TAL)</td><td>고온 구간 휨 노출 감소</td><td>고객 조건이라 변경 어려움</td></tr>
+<tr><td>장비·지그</td><td>공정 중 캐리어·클램프로 구속</td><td>공정 내 휨 억제</td><td>떼고 나면 스프링백</td></tr>
+<tr><td>사전 예측</td><td>FEM 열변형 해석으로 재료·두께 조합 선별</td><td>시행착오 감소</td><td>물성(점탄성) 정확도에 좌우</td></tr>
+<tr><td>관리</td><td>온도별 휨을 출하 검사 항목·SPC로</td><td>재발 조기 감지</td><td>검사 시간</td></tr>
+</table></div>
+<h4><span class="k">4</span>발표 흐름</h4>
+<ol class="flow"><li><b>결론</b><span>"모서리 Non-wet은 리플로우 고온에서 패키지가 −방향으로 휘어 생긴 것이고, 핵심 원인은 Tg 이상에서 커지는 EMC의 CTE입니다."</span></li><li><b>그림</b><span>상온·피크 두 단면을 그려 모서리 들림 표시</span></li><li><b>원인</b><span>CTE·Tg·경화수축·두께 비대칭 → Moiré 변곡점과 Tg 비교로 좁힘</span></li><li><b>대책</b><span>저CTE EMC + 두께 비율 + FEM 사전 검증, 각 부작용</span></li><li><b>재발 방지</b><span>온도별 휨 SPC, 신규 자재 도입 시 Moiré 필수 평가</span></li></ol>
+<h4><span class="k">5</span>예상 꼬리질문</h4>
+<div class="fq"><div><b>Q. 필러를 늘리면 왜 CTE가 줄어드나?</b>실리카 필러는 CTE가 매우 낮아(약 0.5ppm/℃) 혼합물 전체 CTE를 끌어내립니다. 대신 점도가 올라 흐름성이 나빠집니다.</div><div><b>Q. 상온 휨은 규격 안인데 왜 문제인가?</b>실장은 고온에서 일어나므로 '접합 순간의 휨'이 중요합니다. 그래서 상온 한 점이 아니라 온도별 프로파일로 관리해야 합니다.</div><div><b>Q. 휨을 0으로 만들면 끝인가?</b>보드도 휘므로 패키지와 보드의 휨 차이(상대 휨)를 줄이는 게 목표입니다.</div></div>
+<div class="mine"><b>내 경험 연결</b> · AGV 리프트 설계 때 정적 하중 해석으로 변형을 미리 확인했던 것처럼, 재료 조합을 바꾸기 전에 해석으로 휨 방향을 먼저 예측하겠다고 말할 수 있습니다.</div>
+</details>
+</article>
+
+<!-- ===== P2 ===== -->
+<article class="prob" id="p2" data-t="data">
+<div class="prob-h"><span class="pid">P2</span><h3>HBM 12단 적층, 위층으로 갈수록 늘어나는 접합 불량</h3></div>
+<div class="pills"><span class="pill lv">빈출 ★★★</span><span class="pill">데이터 해석형</span><span class="pill">CoW Bonding · TC-NCF</span></div>
+<div class="scene"><p>TC-NCF 방식으로 12단 HBM을 적층한 뒤 X-ray와 전기 테스트로 층별 접합 불량을 집계했다. 아래층은 안정적인데 <b>9층 이상에서 불량이 급증</b>한다. 고객은 16단 제품을 요청하고 있다.</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 280" role="img" aria-label="층별 접합 불량 막대그래프">
+  <g class="lnm"><line x1="60" y1="30" x2="60" y2="230"/><line x1="60" y1="230" x2="560" y2="230"/></g>
+  <g class="tn" text-anchor="end"><text x="54" y="234">0</text><text x="54" y="171">10</text><text x="54" y="109">20</text><text x="54" y="46">30</text></g>
+  <text x="10" y="20" class="tn">불량 (상대값)</text>
+  <g class="si">
+   <rect x="70" y="217.5" width="30" height="12.5"/><rect x="110" y="217.5" width="30" height="12.5"/><rect x="150" y="211.25" width="30" height="18.75"/><rect x="190" y="211.25" width="30" height="18.75"/><rect x="230" y="205" width="30" height="25"/><rect x="270" y="198.75" width="30" height="31.25"/><rect x="310" y="192.5" width="30" height="37.5"/><rect x="350" y="180" width="30" height="50"/></g>
+  <g class="badf"><rect x="390" y="161.25" width="30" height="68.75"/><rect x="430" y="136.25" width="30" height="93.75"/><rect x="470" y="98.75" width="30" height="131.25"/><rect x="510" y="42.5" width="30" height="187.5"/></g>
+  <g class="tn" text-anchor="middle"><text x="85" y="248">1</text><text x="125" y="248">2</text><text x="165" y="248">3</text><text x="205" y="248">4</text><text x="245" y="248">5</text><text x="285" y="248">6</text><text x="325" y="248">7</text><text x="365" y="248">8</text><text x="405" y="248">9</text><text x="445" y="248">10</text><text x="485" y="248">11</text><text x="525" y="248">12층</text></g>
+  <g transform="translate(610,30)">
+   <text x="0" y="0" class="t">층마다 쌓이는 것</text>
+   <g class="si"><rect y="180" width="200" height="14"/><rect y="162" width="200" height="14"/><rect y="144" width="200" height="14"/><rect y="126" width="200" height="14"/><rect x="4" y="108" width="200" height="14"/><rect x="9" y="90" width="200" height="14"/><rect x="15" y="72" width="200" height="14" class="badf" opacity=".8"/></g>
+   <text x="0" y="40" class="tm">① 누적 정렬 오차·기울기</text><text x="0" y="58" class="tm">② 아래층의 반복 가열 이력</text>
+   <path d="M215 76 L232 66" class="lnbad"/><text x="160" y="230" class="tbad">위로 갈수록 어긋남</text>
+  </g>
+</svg></div>
+<figcaption><span class="virt">가상 데이터</span> · 1~8층은 완만, 9층부터 급증. 막대는 상대 불량 수.</figcaption></figure>
+<ol class="qs">
+<li>층이 올라갈수록 불량이 늘어나는 원인 후보를 제시하시오.</li>
+<li>원인을 가려내기 위한 분석·실험 방법을 제시하시오.</li>
+<li>개선안과 16단으로 확장할 때의 추가 과제를 제시하시오.</li>
+</ol>
+<details class="sol"><summary>풀이와 해결법 후보</summary>
+<h4><span class="k">1</span>원인 후보</h4>
+<div class="tw-wrap"><table>
+<tr><th>후보</th><th>메커니즘</th><th>확인 방법</th></tr>
+<tr><td>누적 기울기·정렬 오차</td><td>층마다 미세한 기울기·위치 오차가 더해져 위층에서 범프가 어긋남</td><td>층별 높이·기울기 측정, X-ray로 범프 오프셋</td></tr>
+<tr><td>스택 휨 증가</td><td>층이 쌓일수록 NCF·Si 적층체의 휨이 커져 위층 접합 간격 불균일</td><td>층수별 휨 측정, 단면</td></tr>
+<tr><td>열 전달 저하</td><td>위층은 헤드에서 가깝지만 아래로 열이 빠지는 경로가 길어져 NCF·솔더 온도 분포가 달라짐</td><td>열전대·시뮬레이션으로 층별 접합부 온도</td></tr>
+<tr><td>NCF 흐름 불균일</td><td>필름이 덜 녹아 범프 사이에 끼거나(트랩) 과하게 흘러 넘침(필렛)</td><td>단면에서 NCF 트랩, 보이드</td></tr>
+<tr><td>칩 두께 편차(TTV)</td><td>얇은 칩의 두께 편차가 누적</td><td>입고 칩 두께 분포</td></tr>
+<tr><td>측정 쪽 문제</td><td>위층 범프가 X-ray에서 겹쳐 보여 과검</td><td>단면으로 교차 검증</td></tr>
+</table></div>
+<h4><span class="k">2</span>검증 실험</h4>
+<ul><li><b>층별 단면 분석</b>으로 불량 유형 분리: 오프셋(정렬)인지, 간격 벌어짐(휨)인지, NCF 트랩인지</li><li><b>DOE</b>: 본딩 온도·압력·시간 × 층 위치. 위층만 조건을 바꿔도 개선되는지</li><li><b>더미 스택</b>으로 층수(8/10/12)만 바꿔 같은 조건 비교 → 누적 효과 확인</li><li>헤드 평탄도·평행도 측정, 온도 분포 매핑</li></ul>
+<h4><span class="k">3</span>해결법 후보</h4>
+<div class="tw-wrap"><table>
+<tr><th>갈래</th><th>대책</th><th>효과</th><th>부작용</th></tr>
+<tr><td>공정 조건</td><td>층별 맞춤 프로파일(위층 온도·압력 보정)</td><td>층별 접합 균일화</td><td>레시피 복잡, 관리 항목↑</td></tr>
+<tr><td>장비</td><td>층마다 높이·기울기 측정 후 보정(피드백 제어)</td><td>누적 오차 차단</td><td>UPH 감소</td></tr>
+<tr><td>재료</td><td>NCF 박막화, 유동 특성 개선</td><td>트랩 감소, 스택 높이↓</td><td>충전 부족 위험</td></tr>
+<tr><td>방식</td><td>일정 층마다 묶어 가접합 후 일괄 본딩</td><td>반복 가열 이력 감소</td><td>공정 재설계</td></tr>
+<tr><td>방식 전환</td><td>하이브리드 본딩</td><td>간격 0, 높이·방열 개선</td><td>청정도·CMP·설비 투자</td></tr>
+<tr><td>입고 관리</td><td>칩 두께·휨 선별(KGD에 기계적 항목 포함)</td><td>누적 편차 감소</td><td>선별 손실</td></tr>
+</table></div>
+<p><b>16단 확장 과제:</b> 같은 높이 규격에 4층 더 → 칩·접합층 모두 더 얇게(휨·핸들링 악화), 곱셈 수율(칩당 99%면 85% 수준), 층당 본딩 시간 누적으로 생산성 저하, 가운데 층 열 정체.</p>
+<h4><span class="k">4</span>예상 꼬리질문</h4>
+<div class="fq"><div><b>Q. TC-NCF와 MR-MUF 중 위층 불량에 더 강한 건?</b>NCF는 한 층씩 눌러 휨을 억제하는 데 유리하고, MR-MUF는 일괄 리플로우라 반복 가열이 적습니다. 어느 쪽이 낫다기보다 휨과 열 이력 중 무엇이 지배적인지에 따라 다릅니다.</div><div><b>Q. 왜 아래층부터가 아니라 위층에서 문제가 생기나?</b>오차와 휨이 쌓이는 구조라서 마지막 층이 가장 큰 누적값을 받습니다. 공차 누적(Stack-up) 개념입니다.</div></div>
+<div class="mine"><b>내 경험 연결</b> · 로봇팔 정밀도 개선 때 관절 오차가 끝단에서 커지는 누적 문제를 다뤘다면 그대로 비유할 수 있습니다. "끝단 오차는 각 관절 오차의 누적이라 단계별 측정·보정이 필요했다."</div>
+</details>
+</article>
+
+<!-- ===== P3 ===== -->
+<article class="prob" id="p3" data-t="scen">
+<div class="prob-h"><span class="pid">P3</span><h3>CoW 본딩 후 웨이퍼 맵에 나타난 패턴</h3></div>
+<div class="pills"><span class="pill lv">빈출 ★★</span><span class="pill">공정 시나리오형</span><span class="pill">CoW Bonding · Test</span></div>
+<div class="scene"><p>베이스 다이 웨이퍼 위에 코어 칩을 본딩한 뒤 전기 테스트 결과를 웨이퍼 맵으로 그렸다. <b>가장자리, 특히 왼쪽에 불량이 몰려 있다.</b> 같은 장비 2대 중 A호기 웨이퍼에서만 이 패턴이 보인다.</p></div>
+<figure class="fig narrow"><div class="sc" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+<svg viewBox="0 0 280 270" role="img" aria-label="A호기 웨이퍼 맵"><text x="10" y="18" class="t">A호기</text><circle cx="140" cy="140" r="118" class="bg2"/><g id="wmA"></g></svg>
+<svg viewBox="0 0 280 270" role="img" aria-label="B호기 웨이퍼 맵"><text x="10" y="18" class="t">B호기</text><circle cx="140" cy="140" r="118" class="bg2"/><g id="wmB"></g></svg>
+</div>
+<figcaption><span class="virt">가상 데이터</span> · 초록 양품, 빨강 불량. A호기는 가장자리와 왼쪽 치우침, B호기는 무작위 소수.</figcaption></figure>
+<ol class="qs">
+<li>이 맵 패턴에서 읽을 수 있는 정보를 쓰시오.</li>
+<li>A호기에서만 나타나는 원인 후보와 확인 방법을 쓰시오.</li>
+<li>개선 및 재발 방지 방안을 쓰시오.</li>
+</ol>
+<details class="sol"><summary>풀이와 해결법 후보</summary>
+<h4><span class="k">1</span>맵 읽기</h4>
+<ul><li><b>무작위 분포</b> → 자재·입자 같은 확률적 원인 / <b>공간 패턴</b>(가장자리·한쪽) → 장비·공정의 물리적 분포 원인</li><li>A호기에서만 → 장비 요인이 1순위, 자재는 2순위(같은 자재를 두 장비가 나눠 썼다면)</li><li>가장자리 + 한쪽 치우침 = <b>원형 대칭 요인(온도·휨)</b>과 <b>방향성 요인(기울기·흡착)</b>이 겹친 것으로 해석</li></ul>
+<h4><span class="k">2</span>원인 후보</h4>
+<div class="tw-wrap"><table>
+<tr><th>후보</th><th>왜 이런 패턴이 되나</th><th>확인 방법</th></tr>
+<tr><td>스테이지(척) 온도 분포</td><td>가장자리가 식어 접합 온도 부족</td><td>열전대 웨이퍼로 온도 매핑, B호기와 비교</td></tr>
+<tr><td>헤드–스테이지 평행도</td><td>한쪽으로 기울어 왼쪽이 덜 눌림</td><td>압력 감지 필름, 평행도 측정</td></tr>
+<tr><td>웨이퍼 휨 + 진공 흡착 불균일</td><td>가장자리가 들려 칩 높이·간격이 다름</td><td>흡착 상태 휨 측정, 진공 라인 누설 점검</td></tr>
+<tr><td>정렬 보정 오차</td><td>웨이퍼 회전·스케일 보정이 틀어지면 가장자리로 갈수록 오차 증가</td><td>X-ray 오프셋을 위치별로 벡터 맵</td></tr>
+<tr><td>최근 정비 이력</td><td>PM 후 캘리브레이션 누락</td><td>장비 이력, 패턴 시작 시점 대조</td></tr>
+</table></div>
+<h4><span class="k">3</span>해결법 후보</h4>
+<ul><li><b>즉시</b>: A호기 생산 보류(인터락), 해당 기간 로트 추적·추가 검사</li><li><b>원인 조치</b>: 온도 균일도 보정(히터 존 튜닝), 평행도 재조정, 진공 라인 수리, 정렬 보정 재캘리브레이션</li><li><b>재발 방지</b>: 장비 간 매칭(Tool matching) 기준 설정, 주기적 온도·평행도 모니터링을 SPC에 추가, PM 후 검증 체크리스트, 맵 패턴 자동 분류(패턴 인식)로 조기 경보</li></ul>
+<h4><span class="k">4</span>예상 꼬리질문</h4>
+<div class="fq"><div><b>Q. B호기에도 소수 불량이 있는데 그건?</b>무작위 분포라 입자·자재 같은 확률적 원인. A호기 문제와 분리해서 기본 불량률(베이스라인)로 관리합니다.</div><div><b>Q. 장비 문제라고 확신하려면?</b>같은 자재 로트를 A·B호기에 나눠 투입(교차 실험)해서 장비만 바꿨을 때 패턴이 따라가는지 봅니다.</div></div>
+<div class="mine"><b>내 경험 연결</b> · 열화상 연구에서 같은 대상이라도 촬영 거리·각도(측정 환경)에 따라 결과가 달라지는 걸 통제했던 경험 → "조건을 하나씩 고정하고 비교해 원인을 분리했다."</div>
+</details>
+</article>
+
+<!-- ===== P4 ===== -->
+<article class="prob" id="p4" data-t="data">
+<div class="prob-h"><span class="pid">P4</span><h3>다이싱 치핑 불량률 추이</h3></div>
+<div class="pills"><span class="pill lv">빈출 ★★</span><span class="pill">데이터 해석형</span><span class="pill">Back Grinding · Saw</span></div>
+<div class="scene"><p>블레이드 다이싱 라인의 치핑 불량률을 누적 절단 거리에 따라 그렸다. 블레이드는 10km마다 교체한다. 15km 지점부터 <b>두께 100㎛ → 50㎛로 얇아진 신제품 웨이퍼</b>가 투입되었다. 관리 기준은 0.5%다.</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 270" role="img" aria-label="치핑률 추이 그래프">
+  <g class="lnm"><line x1="70" y1="30" x2="70" y2="230"/><line x1="70" y1="230" x2="540" y2="230"/></g>
+  <g class="tn" text-anchor="end"><text x="62" y="234">0</text><text x="62" y="171">0.5</text><text x="62" y="109">1.0</text><text x="62" y="46">1.5%</text></g>
+  <g class="tn" text-anchor="middle"><text x="70" y="248">0</text><text x="223" y="248">10</text><text x="377" y="248">20</text><text x="530" y="248">30km</text></g>
+  <line x1="70" y1="167.5" x2="530" y2="167.5" class="lncu" stroke-dasharray="5 4"/><text x="474" y="182" class="tc">기준 0.5%</text>
+  <line x1="223" y1="30" x2="223" y2="230" class="lnd"/><line x1="377" y1="30" x2="377" y2="230" class="lnd"/>
+  <text x="228" y="44" class="tn">블레이드 교체</text><text x="382" y="44" class="tn">블레이드 교체</text>
+  <rect x="300" y="30" width="230" height="200" class="badf" opacity=".06"/><text x="306" y="62" class="tbad">50㎛ 웨이퍼 투입</text>
+  <path d="M70 205 L223 155" class="lnbl" style="stroke-width:3"/><path d="M223 205 L300 180" class="lnbl" style="stroke-width:3"/>
+  <path d="M300 130 L377 92.5" class="lnbad" style="stroke-width:3"/><path d="M377 155 L530 55" class="lnbad" style="stroke-width:3"/>
+  <g transform="translate(590,40)">
+   <text x="0" y="0" class="t">치핑 단면</text>
+   <rect x="0" y="40" width="90" height="26" class="si"/><rect x="120" y="40" width="90" height="26" class="si"/>
+   <path d="M90 40 l-8 6 l4 8 l-6 6 l10 6 Z" class="sf"/><path d="M120 66 l10 -5 l-3 -8 l6 -4 l-13 -3 Z" class="sf"/>
+   <text x="0" y="96" class="tm">앞면 치핑(FSC) / 뒷면 치핑(BSC)</text>
+   <text x="0" y="122" class="tm">얇을수록 뒷면 치핑·크랙 증가</text>
+   <text x="0" y="148" class="tm">블레이드 끝 마모 → 절삭력↑</text>
+  </g>
+</svg></div>
+<figcaption><span class="virt">가상 데이터</span> · 톱니 모양(블레이드 수명 따라 증가)에, 15km 이후 기준선 자체가 올라감.</figcaption></figure>
+<ol class="qs">
+<li>그래프에서 읽히는 두 가지 경향과 각각의 원인을 쓰시오.</li>
+<li>50㎛ 웨이퍼의 치핑을 줄이기 위한 공정 대안을 쓰시오.</li>
+<li>향후 하이브리드 본딩 제품에 적용한다면 다이싱 방식을 어떻게 바꿔야 하는지 쓰시오.</li>
+</ol>
+<details class="sol"><summary>풀이와 해결법 후보</summary>
+<h4><span class="k">1</span>두 경향</h4>
+<ul><li><b>톱니형 증가</b>: 블레이드 마모 → 다이아몬드 입자 탈락·눈막힘(Loading) → 절삭력·진동 증가 → 치핑↑. 교체하면 원래로 돌아감 = <b>소모품 수명 문제</b></li><li><b>기준선 상승</b>: 얇은 웨이퍼는 강성이 낮아 절단 중 진동·휨에 약하고, 뒷면 치핑이 크랙으로 진전 = <b>제품 구조 변화 문제</b>. 현재 블레이드 수명 기준(10km)이 더 이상 맞지 않음</li></ul>
+<h4><span class="k">2</span>해결법 후보</h4>
+<div class="tw-wrap"><table>
+<tr><th>갈래</th><th>대책</th><th>효과</th><th>부작용</th></tr>
+<tr><td>관리</td><td>박형 제품은 블레이드 교체 주기 단축(예: 5km) 또는 치핑률 기반 교체</td><td>톱니 상단 억제</td><td>소모품 비용·교체 정지 시간</td></tr>
+<tr><td>조건</td><td>이송속도↓, 2단 절단(Step cut: 얕게 → 깊게), 회전수·냉각수 최적화</td><td>절삭 부하 분산</td><td>UPH 감소</td></tr>
+<tr><td>소모품</td><td>더 고운 입자·얇은 블레이드, 드레싱 주기 조정</td><td>치핑 크기 감소</td><td>마모 빨라짐</td></tr>
+<tr><td>공정 순서</td><td>DBG/SDBG: 먼저 자르고(또는 스텔스 개질) 나중에 갈아서 분리</td><td>얇은 상태에서 자를 일 없음</td><td>공정 재설계, 다이 이동(Die shift) 관리</td></tr>
+<tr><td>방식</td><td>스텔스 다이싱</td><td>입자·물·치핑 거의 없음</td><td>배선층·금속 패턴 위치에 따라 제약</td></tr>
+<tr><td>방식</td><td>레이저 그루빙 + 블레이드</td><td>Low-k 박리 방지</td><td>열영향부(HAZ)</td></tr>
+<tr><td>방식</td><td>플라즈마 다이싱</td><td>치핑 거의 없음, 칩 강도↑</td><td>마스크 공정·장비 투자</td></tr>
+<tr><td>보조</td><td>다이싱 테이프 점착력·두께 변경, 척 평탄도 관리</td><td>절단 중 칩 고정</td><td>픽업 시 떼기 어려움</td></tr>
+</table></div>
+<h4><span class="k">3</span>하이브리드 본딩이라면</h4>
+<p>범프가 없어 표면에 입자 하나만 있어도 접합되지 않는 영역(보이드)이 됩니다. 블레이드의 실리콘 가루·물·치핑 조각을 피하려면 <b>플라즈마 다이싱 또는 레이저 기반 방식</b>이 유리합니다. 삼성도 하이브리드 본딩 도입을 위해 레이저 그루빙·플라즈마 다이싱 전환을 검토한다고 발표했습니다(ITF Korea, 2025.02 보도). 다이싱 뒤 세정과 표면 보호(보호막 코팅)도 함께 바뀌어야 합니다.</p>
+<h4><span class="k">4</span>예상 꼬리질문</h4>
+<div class="fq"><div><b>Q. 치핑이 왜 수율 문제인가? 칩 가장자리일 뿐인데.</b>치핑에서 시작한 크랙이 열·기계 응력을 받으면 회로 쪽으로 진전합니다. 당장은 양품이어도 신뢰성 시험에서 터지는 잠재 불량이 됩니다.</div><div><b>Q. 교체 주기를 줄이면 비용이 느는데?</b>소모품 비용과 치핑 손실(수율·신뢰성)을 비교해 최적 교체점을 찾습니다. 데이터 기반 교체(치핑률·부하 전류 모니터링)가 정답에 가깝습니다.</div></div>
+<div class="mine"><b>내 경험 연결</b> · 파괴역학·기계가공 수업 내용(취성 재료 균열, 공구 마모)을 근거로 말하면 기계공학 강점이 드러납니다.</div>
+</details>
+</article>
+
+<!-- ===== P5 ===== -->
+<article class="prob" id="p5" data-t="scen">
+<div class="prob-h"><span class="pid">P5</span><h3>몰드 후 위치별로 다른 두 가지 불량</h3></div>
+<div class="pills"><span class="pill lv">빈출 ★★</span><span class="pill">공정 시나리오형</span><span class="pill">Mold · Wire Bond</span></div>
+<div class="scene"><p>와이어 본딩된 NAND 스트립을 트랜스퍼 몰딩했다. 수지가 들어오는 게이트 쪽(1번)에서는 <b>와이어 스위핑</b>이, 공기가 빠지는 벤트 쪽(8번)에서는 <b>몰드 보이드</b>가 많다.</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 300" role="img" aria-label="스트립 위치별 불량">
+  <g transform="translate(60,20)">
+   <rect x="0" y="40" width="640" height="56" class="emc" opacity=".25"/><rect x="0" y="96" width="640" height="10" class="sub"/>
+   <path d="M-40 68 H-4" class="lncu" marker-end="url(#arcu)" style="stroke-width:4"/><text x="-50" y="34" class="tc">게이트 (수지 유입)</text>
+   <path d="M644 68 H680" class="lnm" marker-end="url(#ar)"/><text x="590" y="34" class="tm">벤트 (공기 배출)</text>
+   <g class="si"><rect x="20" y="70" width="50" height="20"/><rect x="100" y="70" width="50" height="20"/><rect x="180" y="70" width="50" height="20"/><rect x="260" y="70" width="50" height="20"/><rect x="340" y="70" width="50" height="20"/><rect x="420" y="70" width="50" height="20"/><rect x="500" y="70" width="50" height="20"/><rect x="580" y="70" width="50" height="20"/></g>
+   <g class="tn" text-anchor="middle"><text x="45" y="124">1</text><text x="125" y="124">2</text><text x="205" y="124">3</text><text x="285" y="124">4</text><text x="365" y="124">5</text><text x="445" y="124">6</text><text x="525" y="124">7</text><text x="605" y="124">8</text></g>
+   <line x1="0" y1="250" x2="640" y2="250" class="lnm"/>
+   <g class="wnf"><rect x="22" y="166" width="20" height="84"/><rect x="102" y="190" width="20" height="60"/><rect x="182" y="214" width="20" height="36"/><rect x="262" y="226" width="20" height="24"/><rect x="342" y="238" width="20" height="12"/><rect x="422" y="238" width="20" height="12"/></g>
+   <g class="badf"><rect x="206" y="238" width="20" height="12"/><rect x="286" y="238" width="20" height="12"/><rect x="366" y="226" width="20" height="24"/><rect x="446" y="214" width="20" height="36"/><rect x="526" y="190" width="20" height="60"/><rect x="606" y="142" width="20" height="108"/></g>
+   <rect x="0" y="264" width="12" height="12" class="wnf"/><text x="18" y="275" class="tm">와이어 스위핑</text><rect x="130" y="264" width="12" height="12" class="badf"/><text x="148" y="275" class="tm">보이드</text>
+  </g>
+</svg></div>
+<figcaption><span class="virt">가상 데이터</span> · 게이트에서 멀어질수록 스위핑은 줄고 보이드는 늘어남.</figcaption></figure>
+<ol class="qs">
+<li>위치에 따라 불량 유형이 다른 이유를 수지 흐름으로 설명하시오.</li>
+<li>두 불량을 동시에 줄이기 위한 공정 조건 변경안을 쓰시오. (서로 충돌하는 점에 주의)</li>
+<li>컴프레션 몰딩으로 바꾸는 것이 해법이 될 수 있는지 판단하시오.</li>
+</ol>
+<details class="sol"><summary>풀이와 해결법 후보</summary>
+<h4><span class="k">1</span>메커니즘</h4>
+<ul><li><b>게이트 쪽 스위핑</b>: 수지가 막 들어온 곳은 속도가 빠르고, 와이어에 걸리는 항력(점도 × 속도)이 큼 → 와이어가 옆으로 쓰러짐</li><li><b>벤트 쪽 보이드</b>: 흐름의 끝은 수지가 식고 경화가 진행돼 점도가 오르고, 공기가 마지막에 몰려 갇힘 → 벤트가 막히거나 작으면 빠지지 못함</li><li>즉 <b>같은 흐름의 앞과 끝에서 생기는 정반대 문제</b>. 유속을 낮추면 스위핑은 줄지만 끝에서 충전이 늦어 보이드가 늘 수 있음 = 트레이드오프</li></ul>
+<h4><span class="k">2</span>해결법 후보</h4>
+<div class="tw-wrap"><table>
+<tr><th>대책</th><th>스위핑</th><th>보이드</th><th>메모</th></tr>
+<tr><td>주입 속도 다단 제어(초기 느리게 → 후반 빠르게)</td><td>개선</td><td>개선</td><td>두 문제를 동시에 노리는 대표 해법</td></tr>
+<tr><td>금형 진공(Vacuum molding)</td><td>영향 적음</td><td>크게 개선</td><td>설비 옵션 필요</td></tr>
+<tr><td>벤트 깊이·위치 개선, 벤트 청소 주기</td><td>-</td><td>개선</td><td>너무 깊으면 플래시(수지 넘침)</td></tr>
+<tr><td>저점도·빠른 흐름 EMC</td><td>개선</td><td>개선</td><td>CTE·휨 특성 함께 확인</td></tr>
+<tr><td>금형 온도 조정</td><td>온도↑ 점도↓ 개선</td><td>너무 높으면 조기 경화로 악화</td><td>최적점 DOE</td></tr>
+<tr><td>와이어 루프 낮게·짧게, 굵은 와이어</td><td>개선</td><td>-</td><td>설계 변경 필요</td></tr>
+<tr><td>EMC 보관·해동 관리(흡습 방지)</td><td>-</td><td>개선</td><td>가스 발생 보이드 방지</td></tr>
+</table></div>
+<h4><span class="k">3</span>컴프레션 몰딩 판단</h4>
+<p>수지를 미리 깔고 위에서 누르므로 <b>옆으로 흐르는 거리가 짧아</b> 스위핑이 크게 줄고, 진공과 함께 쓰면 보이드도 줄어듭니다. 웨이퍼·대형 패널, 와이어가 길고 많은 다단 NAND에 유리합니다. 단점은 장비 투자, 수지 정량 공급 정확도, 두께 균일도 관리입니다. 결론: <b>"조건 최적화로 한계가 보이면 전환을 검토할 가치가 있다"</b>가 균형 잡힌 답입니다.</p>
+<h4><span class="k">4</span>예상 꼬리질문</h4>
+<div class="fq"><div><b>Q. 보이드가 왜 문제인가?</b>보이드에 수분이 모이면 리플로우 때 팽창해 크랙(팝콘)이 되고, 열이 빠지는 경로도 막습니다.</div><div><b>Q. 스위핑은 어떻게 검사하나?</b>X-ray로 와이어 형상을 보고 이웃 와이어와의 간격(쇼트 위험)을 측정합니다.</div></div>
+<div class="mine"><b>내 경험 연결</b> · 사출성형과 같은 원리라는 점을 짚고, 유체역학의 항력(점도·속도)과 경화에 따른 점도 상승으로 설명하면 기계공학 전공자다운 답이 됩니다.</div>
+</details>
+</article>
+
+<!-- ===== P6 ===== -->
+<article class="prob" id="p6" data-t="data">
+<div class="prob-h"><span class="pid">P6</span><h3>패키지 테스트 수율이 하루아침에 떨어졌다</h3></div>
+<div class="pills"><span class="pill lv">빈출 ★★★</span><span class="pill">데이터 해석형</span><span class="pill">Final Test · 핸들러 · 소켓</span></div>
+<div class="scene"><p>14일간 패키지 최종 테스트 수율 추이다. <b>8일차부터 약 3%p 하락</b>했다. 8일차부터의 테스터별 불량률도 함께 집계했다. T3 테스터에서 불량 판정된 칩을 다시 테스트하면 약 70%가 양품으로 나온다.</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 260" role="img" aria-label="테스트 수율 추이와 테스터별 불량률">
+  <g class="lnm"><line x1="70" y1="40" x2="70" y2="220"/><line x1="70" y1="220" x2="510" y2="220"/></g>
+  <g class="tn" text-anchor="end"><text x="62" y="224">92</text><text x="62" y="164">94</text><text x="62" y="104">96</text><text x="62" y="44">98%</text></g>
+  <g class="tn" text-anchor="middle"><text x="70" y="238">1</text><text x="202" y="238">5</text><text x="302" y="238">8</text><text x="401" y="238">11</text><text x="500" y="238">14일</text></g>
+  <line x1="285" y1="40" x2="285" y2="220" class="lnd"/>
+  <path d="M70 67 L103 61 L136 70 L169 64 L202 67 L235 61 L268 64 L302 142 L335 151 L368 145 L401 154 L434 148 L467 151 L500 145" class="lnbl" style="stroke-width:3"/>
+  <g class="blf"><circle cx="70" cy="67" r="3.5"/><circle cx="103" cy="61" r="3.5"/><circle cx="136" cy="70" r="3.5"/><circle cx="169" cy="64" r="3.5"/><circle cx="202" cy="67" r="3.5"/><circle cx="235" cy="61" r="3.5"/><circle cx="268" cy="64" r="3.5"/></g>
+  <g class="badf"><circle cx="302" cy="142" r="3.5"/><circle cx="335" cy="151" r="3.5"/><circle cx="368" cy="145" r="3.5"/><circle cx="401" cy="154" r="3.5"/><circle cx="434" cy="148" r="3.5"/><circle cx="467" cy="151" r="3.5"/><circle cx="500" cy="145" r="3.5"/></g>
+  <text x="92" y="52" class="tn">평균 ≈ 97.2%</text><text x="390" y="132" class="tbad">≈ 94.4%</text>
+  <g transform="translate(580,40)">
+   <text x="0" y="0" class="t">8일차 이후 테스터별 불량률</text>
+   <line x1="0" y1="180" x2="240" y2="180" class="lnm"/>
+   <rect x="10" y="152.7" width="40" height="27.3" class="si"/><rect x="70" y="150.6" width="40" height="29.4" class="si"/><rect x="130" y="80.3" width="40" height="99.7" class="badf"/><rect x="190" y="151.7" width="40" height="28.3" class="si"/>
+   <g class="tn" text-anchor="middle"><text x="30" y="196">T1</text><text x="90" y="196">T2</text><text x="150" y="196">T3</text><text x="210" y="196">T4</text><text x="30" y="146">2.6</text><text x="90" y="144">2.8</text><text x="150" y="74">9.5%</text><text x="210" y="146">2.7</text></g>
+  </g>
+</svg></div>
+<figcaption><span class="virt">가상 데이터</span> · 하락은 계단형(서서히가 아니라 한 번에), 불량은 T3에 집중.</figcaption></figure>
+<ol class="qs">
+<li>가장 먼저 확인할 것과 그 이유를 쓰시오.</li>
+<li>재테스트 양품률 70%가 의미하는 바와 원인 후보를 쓰시오.</li>
+<li>조치와 재발 방지 방안을 쓰시오.</li>
+</ol>
+<details class="sol"><summary>풀이와 해결법 후보</summary>
+<h4><span class="k">1</span>첫 확인</h4>
+<ul><li><b>"제품이 나빠졌나, 측정이 나빠졌나"</b>부터 가른다. 계단형 하락 + 특정 테스터 집중 = 측정(장비) 쪽 가능성이 높음</li><li>8일차에 바뀐 것: 테스터·소켓 교체/정비, 테스트 프로그램 버전, 핸들러 온도 설정, 자재 로트 투입 이력</li><li>BIN 유형 확인: 접촉·오픈 계열(장비)인지, 기능·속도 계열(제품)인지</li></ul>
+<h4><span class="k">2</span>재테스트 70% 양품의 의미</h4>
+<p>진짜 불량 칩이라면 다시 테스트해도 불량이어야 합니다. 다시 하면 대부분 양품이라는 건 <b>칩이 아니라 접촉이 불안정</b>하다는 뜻입니다. 즉 <b>과검(양품을 버리는 것)</b>이고, 수율 손실이 그대로 돈 손실입니다.</p>
+<div class="tw-wrap"><table>
+<tr><th>원인 후보 (T3)</th><th>확인 방법</th></tr>
+<tr><td>소켓 포고 핀 오염(솔더 찌꺼기)·마모</td><td>소켓 사용 횟수, 핀 접촉 저항 측정, 현미경</td></tr>
+<tr><td>핸들러 누름(Plunger) 압력·평행도 이상</td><td>압력 측정, 칩 안착 위치 확인</td></tr>
+<tr><td>핸들러 온도 제어 이상(고온 테스트 시)</td><td>챔버 온도 로그</td></tr>
+<tr><td>테스터 채널·보드 불량</td><td>사이트(소켓 자리)별 불량 분포, 진단 프로그램</td></tr>
+<tr><td>새 로트 칩의 볼 높이·산화 (제품 쪽)</td><td>다른 테스터에서의 같은 로트 결과 비교 → T1·T2·T4는 정상이므로 우선순위 낮음</td></tr>
+</table></div>
+<h4><span class="k">3</span>해결법 후보</h4>
+<ul><li><b>즉시</b>: T3 정지, 소켓 세정·교체, 압력·평행도 재조정 후 골든 샘플(기준 양품)로 검증. T3에서 불량 판정된 칩은 다른 테스터로 재테스트해 회수</li><li><b>재발 방지</b>: 소켓 접촉 저항·재테스트율을 테스터별 SPC로 관리, 사용 횟수 기반 → 상태 기반 교체, 사이트별 불량률 차이가 기준을 넘으면 자동 정지(인터락), 골든 샘플 정기 측정</li><li><b>개선 효과 정량화</b>: 회복 수율 × 생산량으로 금액 환산해 보고</li></ul>
+<h4><span class="k">4</span>예상 꼬리질문</h4>
+<div class="fq"><div><b>Q. 반대로 미검(불량을 통과)은 어떻게 막나?</b>번인·샘플 신뢰성 시험, 고객 반품 데이터 피드백, 테스트 커버리지(항목) 점검. 과검보다 미검이 고객 신뢰에 더 치명적입니다.</div><div><b>Q. 재테스트를 늘리면 되지 않나?</b>테스트 시간·장비 비용이 늘고, 근본 원인을 덮습니다. 재테스트율 자체를 관리 지표로 둬야 합니다.</div></div>
+<div class="mine"><b>내 경험 연결 (자소서 문장과 동일)</b> · "검사 결과의 변화가 제품과 측정 환경 중 어디에서 비롯되는지 정확히 파악하는 역량" = 열화상 연구에서 촬영 조건을 통제해 데이터 문제와 환경 문제를 분리한 경험.</div>
+</details>
+</article>
+
+<!-- ===== P7 ===== -->
+<article class="prob" id="p7" data-t="data">
+<div class="prob-h"><span class="pid">P7</span><h3>온도 사이클 시험에서 코너 범프가 깨진다</h3></div>
+<div class="pills"><span class="pill lv">빈출 ★★</span><span class="pill">데이터 해석형</span><span class="pill">Flip Chip · Underfill · 신뢰성</span></div>
+<div class="scene"><p>플립칩 패키지의 언더필 후보 A·B로 온도 사이클(TC) 시험을 했다. 목표는 1,000회까지 불량 0이다. B는 값이 싸고 흐름성이 좋지만 일찍 고장 나기 시작했다. 고장 난 시료를 잘라 보니 <b>칩 모서리(코너) 범프에서 크랙</b>이 시작됐다.</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 280" role="img" aria-label="온도 사이클 누적 고장률과 코너 범프 크랙">
+  <g class="lnm"><line x1="70" y1="40" x2="70" y2="220"/><line x1="70" y1="220" x2="520" y2="220"/></g>
+  <g class="tn" text-anchor="end"><text x="62" y="224">0</text><text x="62" y="164">20</text><text x="62" y="104">40</text><text x="62" y="44">60%</text></g>
+  <g class="tn" text-anchor="middle"><text x="70" y="238">0</text><text x="180" y="238">500</text><text x="290" y="238">1,000</text><text x="400" y="238">1,500</text><text x="510" y="238">2,000회</text></g>
+  <text x="10" y="30" class="tn">누적 고장률</text>
+  <line x1="290" y1="40" x2="290" y2="220" class="lncu" stroke-dasharray="5 4"/><text x="296" y="54" class="tc">목표 1,000회</text>
+  <path d="M158 220 L202 205 L246 175 L290 136 L334 94 L400 46" class="lnbad" style="stroke-width:3"/><text x="404" y="44" class="tbad">언더필 B</text>
+  <path d="M290 220 L334 214 L400 202 L466 184 L510 160" class="lnbl" style="stroke-width:3"/><text x="452" y="152" class="tbl">언더필 A</text>
+  <g transform="translate(580,40)">
+   <text x="0" y="0" class="t">왜 코너인가</text>
+   <rect x="0" y="120" width="240" height="14" class="sub"/><rect x="30" y="80" width="180" height="22" class="si"/>
+   <g class="sol"><circle cx="40" cy="111" r="7"/><circle cx="80" cy="111" r="7"/><circle cx="120" cy="111" r="7"/><circle cx="160" cy="111" r="7"/><circle cx="200" cy="111" r="7"/></g>
+   <path d="M196 106 l10 6" class="lnbad" style="stroke-width:2.5"/>
+   <circle cx="120" cy="91" r="3" class="inkf"/><text x="96" y="74" class="tm">중심 (변형 0)</text>
+   <path d="M120 150 H200" class="ln" marker-end="url(#ar)"/><text x="122" y="168" class="tm">DNP: 중심에서 거리</text>
+   <text x="0" y="198" class="tm">Δ변형 ≈ Δα × ΔT × DNP</text><text x="0" y="216" class="tm">→ 가장 먼 코너가 가장 큰 전단</text>
+  </g>
+</svg></div>
+<div class="tw-wrap" style="margin:0;border:0;border-top:1px solid var(--line);border-radius:0"><table>
+<tr><th>언더필 물성 (가상)</th><th>Tg</th><th>CTE (Tg 아래)</th><th>탄성계수</th><th>흐름성</th><th>가격</th></tr>
+<tr><td>A</td><td class="num">140℃</td><td class="num">25 ppm/℃</td><td class="num">10 GPa</td><td>보통</td><td>높음</td></tr>
+<tr><td>B</td><td class="num">90℃</td><td class="num">40 ppm/℃</td><td class="num">5 GPa</td><td>좋음</td><td>낮음</td></tr>
+</table></div>
+<figcaption><span class="virt">가상 데이터</span> · B는 500회부터 고장, A는 1,000회 이후 서서히.</figcaption></figure>
+<ol class="qs">
+<li>코너 범프에서 크랙이 시작되는 이유를 설명하시오.</li>
+<li>물성표를 근거로 B가 일찍 고장 나는 이유를 설명하시오.</li>
+<li>언더필 선택 기준과, 선택 후 공정에서 관리할 항목을 쓰시오.</li>
+</ol>
+<details class="sol"><summary>풀이와 해결법 후보</summary>
+<h4><span class="k">1</span>코너인 이유</h4>
+<p>온도가 바뀌면 칩과 기판이 서로 다른 양만큼 늘어납니다. 그 차이는 <b>중심에서 0, 중심에서 멀수록(DNP) 커져</b> 코너 범프가 가장 큰 전단 변형을 반복해서 받습니다. 솔더는 반복 소성 변형에 약해 <b>저주기 피로</b>로 깨집니다(Coffin–Manson: 소성 변형 범위가 클수록 수명이 급격히 짧아짐).</p>
+<h4><span class="k">2</span>B가 일찍 고장 나는 이유</h4>
+<ul><li><b>Tg 90℃</b>: 시험 최고 온도(예: 125℃)보다 낮아 고온 구간에서 언더필이 말랑해짐 → 범프를 붙잡아 주지 못함</li><li><b>CTE 40</b>: 솔더(약 20~25)·기판과 차이가 커 언더필 자체가 응력을 만듦</li><li><b>탄성계수 5GPa</b>: 낮아서 칩–기판을 하나로 묶어 응력을 나누는 효과가 약함</li><li>정리: 언더필의 역할은 <b>칩·범프·기판을 한 덩어리로 묶어 범프 혼자 변형을 떠안지 않게 하는 것</b>인데, B는 그 역할을 고온에서 못 함</li></ul>
+<h4><span class="k">3</span>선택 기준과 공정 관리</h4>
+<div class="tw-wrap"><table>
+<tr><th>기준</th><th>방향</th><th>트레이드오프</th></tr>
+<tr><td>Tg</td><td>사용·시험 최고 온도보다 충분히 높게</td><td>경화 조건이 까다로워질 수 있음</td></tr>
+<tr><td>CTE</td><td>솔더에 가깝게(필러로 낮춤)</td><td>필러↑ → 점도↑ → 침투 느림·보이드</td></tr>
+<tr><td>탄성계수</td><td>적당히 높게(범프 보호)</td><td>너무 높으면 패키지 휨·칩 응력 증가</td></tr>
+<tr><td>흐름성</td><td>좁은 범프 간격을 다 채울 만큼</td><td>CTE·모듈러스와 상충</td></tr>
+<tr><td>접착력</td><td>칩·기판 계면 박리 방지</td><td>표면 처리(플라즈마 세정) 필요</td></tr>
+</table></div>
+<p><b>공정 관리:</b> 디스펜스 양·위치, 침투 시간과 기판 예열 온도(점도), 보이드(SAT 검사), 경화 프로파일, 자재 해동·보관(유효 기간), 필렛 형상.</p>
+<h4><span class="k">4</span>예상 꼬리질문</h4>
+<div class="fq"><div><b>Q. 시험은 수천 회인데 실제 사용은 몇 년이다. 어떻게 연결하나?</b>온도 범위를 넓혀 가속한 뒤 가속 계수(Coffin–Manson·Norris–Landzberg 같은 모델)로 실사용 수명을 추정합니다.</div><div><b>Q. 언더필 대신 쓸 방법은?</b>몰드가 언더필 역할까지 하는 MUF, 칩 사이 필름을 쓰는 NCF가 있고, 각각 생산성과 충전성이 다릅니다.</div></div>
+<div class="mine"><b>내 경험 연결</b> · 재료역학의 피로·응력 집중 개념으로 설명하면 됩니다. "응력이 가장 큰 곳에서 먼저 깨진다"는 설계 원칙은 AGV 구조 설계 때 하중 경로를 검토한 경험과도 이어집니다.</div>
+</details>
+</article>
+
+<!-- ===== P8 ===== -->
+<article class="prob" id="p8" data-t="topic">
+<div class="prob-h"><span class="pid">P8</span><h3>하이브리드 본딩 보이드와 청정도</h3></div>
+<div class="pills"><span class="pill lv">최신 기술 ★★★</span><span class="pill">직무 주제형</span><span class="pill">Hybrid Bonding · CMP · Dicing</span></div>
+<div class="scene"><p>차세대 HBM을 위해 다이–웨이퍼(D2W) 하이브리드 본딩을 평가 중이다. 초음파(SAT) 검사에서 <b>원형 보이드</b>가 보였고, 웨이퍼별 보이드 면적은 본딩 직전 표면 입자 수와 강한 상관을 보였다.</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 270" role="img" aria-label="SAT 이미지와 입자 수 대비 보이드 산점도">
+  <g transform="translate(30,30)">
+   <text x="0" y="0" class="t">SAT 이미지 (다이 1개)</text>
+   <rect x="0" y="14" width="200" height="200" class="emc"/>
+   <circle cx="62" cy="70" r="14" class="sf"/><circle cx="62" cy="70" r="3" class="badf"/>
+   <circle cx="150" cy="150" r="22" class="sf"/><circle cx="150" cy="150" r="3" class="badf"/>
+   <circle cx="120" cy="60" r="8" class="sf"/>
+   <path d="M0 214 L200 214" class="lnm"/>
+   <text x="0" y="236" class="tm">흰 원 = 접합 안 된 영역, 가운데 점 = 입자</text>
+  </g>
+  <g transform="translate(320,30)">
+   <text x="0" y="0" class="t">웨이퍼별: 본딩 전 입자 수 vs 보이드 면적</text>
+   <line x1="40" y1="20" x2="40" y2="200" class="lnm"/><line x1="40" y1="200" x2="480" y2="200" class="lnm"/>
+   <g class="tn" text-anchor="end"><text x="34" y="204">0</text><text x="34" y="144">1</text><text x="34" y="84">2</text><text x="34" y="24">3%</text></g>
+   <g class="tn" text-anchor="middle"><text x="40" y="218">0</text><text x="150" y="218">20</text><text x="260" y="218">40</text><text x="370" y="218">60</text><text x="480" y="218">80개</text></g>
+   <g class="cu"><circle cx="62" cy="194" r="4.5"/><circle cx="90" cy="188" r="4.5"/><circle cx="117" cy="182" r="4.5"/><circle cx="150" cy="170" r="4.5"/><circle cx="183" cy="167" r="4.5"/><circle cx="216" cy="146" r="4.5"/><circle cx="260" cy="140" r="4.5"/><circle cx="293" cy="122" r="4.5"/><circle cx="337" cy="110" r="4.5"/><circle cx="370" cy="98" r="4.5"/><circle cx="414" cy="80" r="4.5"/><circle cx="458" cy="62" r="4.5"/></g>
+   <path d="M40 200 L480 56" class="lnd"/>
+  </g>
+</svg></div>
+<figcaption><span class="virt">가상 데이터</span> · 입자 하나가 그 크기보다 훨씬 넓은 영역의 접합을 막는다(텐트 효과).</figcaption></figure>
+<ol class="qs">
+<li>하이브리드 본딩의 원리와, 입자 하나가 넓은 보이드를 만드는 이유를 설명하시오.</li>
+<li>입자를 줄이기 위해 앞 공정(다이싱·세정·CMP·핸들링)에서 바꿀 점을 쓰시오.</li>
+<li>입자 외에 보이드를 만드는 원인과 확인 방법을 쓰시오.</li>
+</ol>
+<details class="sol"><summary>풀이와 해결법 후보</summary>
+<h4><span class="k">1</span>원리와 텐트 효과</h4>
+<p>CMP로 표면을 nm 단위로 평평하게 한 뒤, 플라즈마로 표면을 활성화해 정렬·접촉하면 <b>절연막끼리 상온에서 먼저 붙고</b>, 열처리(어닐)에서 <b>구리가 팽창하며 맞닿아 금속 결합</b>이 됩니다. 범프와 필름이 없으니 틈을 메워 줄 것이 없습니다. 그래서 입자 하나가 끼면 그 주변이 <b>천막처럼 들려</b> 입자보다 수십~수백 배 넓은 영역이 붙지 않습니다.</p>
+<h4><span class="k">2</span>해결법 후보 (공정별)</h4>
+<div class="tw-wrap"><table>
+<tr><th>공정</th><th>대책</th><th>메모</th></tr>
+<tr><td>다이싱</td><td>블레이드 → 플라즈마·레이저 다이싱, 다이싱 전 보호막 코팅</td><td>삼성 검토 방향(보도 기준)</td></tr>
+<tr><td>세정</td><td>다이싱 후 세정 강화(메가소닉 등), 건조 방식 개선</td><td>물자국·잔류물도 보이드 원인</td></tr>
+<tr><td>CMP</td><td>구리 리세스(패드가 들어간 깊이)·표면 거칠기 nm 관리, 슬러리 잔류물 제거</td><td>평탄도가 곧 접합률</td></tr>
+<tr><td>표면 활성화</td><td>플라즈마 조건, 활성화 후 접합까지 대기 시간(Q-time) 제한</td><td>시간이 지나면 표면이 다시 오염</td></tr>
+<tr><td>핸들링·환경</td><td>클린룸 등급 상향, 미니 환경(국소 청정), 픽업 툴 접촉 최소화</td><td>후공정 라인이 전공정 수준 청정도 필요</td></tr>
+<tr><td>검사</td><td>본딩 직전 입자 검사 자동화, 기준 초과 시 재세정</td><td>그래프 같은 상관 데이터를 관리 기준으로</td></tr>
+</table></div>
+<h4><span class="k">3</span>입자 외 원인</h4>
+<ul><li><b>휨·평탄도</b>: 웨이퍼·다이가 휘면 가장자리부터 안 붙음 → 휨 측정, 위치별 보이드 분포</li><li><b>가스 발생</b>: 어닐 중 절연막·흡착 수분에서 가스 → 열처리 조건, 사전 탈가스</li><li><b>구리 리세스 과다</b>: 구리가 너무 들어가면 팽창해도 안 닿음 → 원자간력현미경(AFM) 단차 측정</li><li><b>정렬 오차</b>: 패드가 어긋나 일부만 접촉 → 적외선(IR) 정렬 검사</li></ul>
+<h4><span class="k">4</span>예상 꼬리질문</h4>
+<div class="fq"><div><b>Q. W2W와 D2W 중 무엇이 유리한가?</b>W2W는 빠르고 정렬이 쉽지만 불량 칩도 같이 붙습니다. D2W는 KGD만 골라 붙여 수율에 유리하지만 칩마다 정렬·다이싱 입자 문제가 큽니다. HBM처럼 칩 크기가 다르고 수율이 중요하면 D2W.</div><div><b>Q. 왜 후공정이 전공정 수준이 되어야 하나?</b>접합 간격이 사라지면서 오차를 흡수해 주던 솔더·필름이 없어졌기 때문입니다.</div></div>
+<div class="mine"><b>내 경험 연결</b> · 데이터 상관(입자 수 ↔ 보이드)을 관리 기준으로 바꾸는 사고는 열화상 전처리 조합을 같은 조건에서 비교해 탐지율과의 관계를 찾은 경험과 같은 방식입니다.</div>
+</details>
+</article>
+
+<!-- ===== P9 ===== -->
+<article class="prob" id="p9" data-t="topic">
+<div class="prob-h"><span class="pid">P9</span><h3>신규 TC 본더 A·B 중 무엇을 도입할까</h3></div>
+<div class="pills"><span class="pill lv">빈출 ★★</span><span class="pill">직무 주제형</span><span class="pill">장비 평가 · 양산 이관</span></div>
+<div class="scene"><p>HBM 증산을 위해 TC 본더를 추가 도입한다. 현행 장비와 후보 A·B를 평가한 결과가 아래와 같다. 목표 생산량을 맞추면서 품질을 유지해야 한다.</p></div>
+<div class="tw-wrap"><table>
+<tr><th>평가 항목 (가상)</th><th>현행</th><th>A</th><th>B</th></tr>
+<tr><td>정렬 정확도 (3σ)</td><td class="num">±2.0㎛</td><td class="num"><b>±1.2㎛</b></td><td class="num">±1.8㎛</td></tr>
+<tr><td>접합 높이 Cpk</td><td class="num">1.10</td><td class="num"><b>1.50</b></td><td class="num">1.30</td></tr>
+<tr><td>UPH (상대)</td><td class="num">100</td><td class="num">85</td><td class="num"><b>130</b></td></tr>
+<tr><td>MTBF (시간)</td><td class="num">300</td><td class="num">250</td><td class="num"><b>450</b></td></tr>
+<tr><td>장비 가격 (상대)</td><td class="num">1.0</td><td class="num">1.4</td><td class="num">1.2</td></tr>
+<tr><td>현행 레시피·소모품 호환</td><td>-</td><td>낮음</td><td>높음</td></tr>
+</table></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 200" role="img" aria-label="필요 장비 대수 계산">
+  <g transform="translate(20,20)">
+   <text x="0" y="0" class="tb">필요 장비 대수 = 목표 생산량 ÷ (UPH × 가동 시간 × 가동률 × 수율)</text>
+   <g transform="translate(0,30)">
+    <rect width="250" height="120" rx="8" class="bg2"/><text x="14" y="26" class="t">현행</text><text x="14" y="52" class="tm">UPH 100 · 가동률 85%</text><text x="14" y="76" class="tm">상대 생산성 = 100×0.85 = 85</text><text x="14" y="104" class="tb">필요 대수 지수 1.00</text>
+    <rect x="280" width="250" height="120" rx="8" class="blf" opacity=".12"/><text x="294" y="26" class="t">A</text><text x="294" y="52" class="tm">UPH 85 · 고장 잦음 → 가동률 82%</text><text x="294" y="76" class="tm">85×0.82 ≈ 70</text><text x="294" y="104" class="tb">필요 대수 지수 ≈ 1.22</text>
+    <rect x="560" width="250" height="120" rx="8" class="okf" opacity=".12"/><text x="574" y="26" class="t">B</text><text x="574" y="52" class="tm">UPH 130 · 가동률 90%</text><text x="574" y="76" class="tm">130×0.90 = 117</text><text x="574" y="104" class="tb">필요 대수 지수 ≈ 0.73</text>
+   </g>
+  </g>
+</svg></div>
+<figcaption><span class="virt">가상 계산</span> · 가동률은 MTBF·MTTR로 추정. 수율 차이는 별도 반영해야 함.</figcaption></figure>
+<ol class="qs">
+<li>장비 평가에서 봐야 할 항목을 품질·생산성·운영 관점으로 나눠 쓰시오.</li>
+<li>A와 B 중 어느 것을 선택할지 근거와 함께 쓰시오. (조건에 따라 답이 달라질 수 있음)</li>
+<li>선택한 장비를 양산 라인에 넣기까지의 절차를 쓰시오.</li>
+</ol>
+<details class="sol"><summary>풀이와 해결법 후보</summary>
+<h4><span class="k">1</span>평가 항목</h4>
+<div class="tw-wrap"><table>
+<tr><th>관점</th><th>항목</th></tr>
+<tr><td>품질</td><td>정렬 정확도·반복 정밀도, 접합 높이·기울기 Cpk, 온도·압력 균일도, 접합 불량률, 신뢰성 시험 통과</td></tr>
+<tr><td>생산성</td><td>UPH, 가동률(MTBF/MTTR), 셋업·제품 전환 시간, 필요 대수와 공간(풋프린트)</td></tr>
+<tr><td>운영·비용</td><td>가격, 소모품 비용, 기존 레시피·자재 호환, 공급사 기술 지원, 공급망 다변화 효과</td></tr>
+<tr><td>미래</td><td>16단·하이브리드 본딩 등 차세대 대응(업그레이드 가능성)</td></tr>
+</table></div>
+<h4><span class="k">2</span>선택 (조건부 답이 정답)</h4>
+<ul><li><b>지금 병목이 생산량이면 B</b>: 품질이 현행보다 좋고(Cpk 1.30), 대수 지수가 약 0.73이라 같은 생산량에 장비가 적게 듦. 호환성이 높아 이관이 빠름</li><li><b>차세대(16단·미세 피치)가 목표면 A</b>: 정렬 ±1.2㎛, Cpk 1.50으로 품질 여유가 큼. 대신 대수가 늘고 MTBF 개선을 공급사에 요구해야 함</li><li><b>현실적 제안</b>: 양산 증설은 B, 차세대 개발 라인에는 A를 소량 평가 → 두 공급사 확보로 공급망 리스크도 분산</li><li>근거 문장: "품질은 규격을 충분히 넘으면 되는 조건이고, 그 위에서는 생산성과 비용으로 고릅니다. 다만 차세대 규격이 정렬 ±1.5㎛ 이하라면 B는 탈락입니다."</li></ul>
+<h4><span class="k">3</span>양산 이관 절차</h4>
+<ol class="steps"><li><div><b>Eval (평가)</b>: 데모 장비로 핵심 항목 측정, 현행과 비교 (가능하면 같은 자재 로트로)</div></li><li><div><b>설치·셋업</b>: 레시피 이식, 장비 간 매칭(Tool matching)으로 현행과 결과 차이 확인</div></li><li><div><b>Qual (인증)</b>: 시험 로트 생산 → 전기 테스트·X-ray·단면·신뢰성 시험 통과, 필요 시 고객 승인</div></li><li><div><b>Ramp-up</b>: 소량 → 점진 증량, SPC 관리 항목 설정, 초기 불량 모니터링</div></li><li><div><b>안정화</b>: PM 주기·소모품 기준 확정, 표준 문서화, 작업자 교육</div></li></ol>
+<h4><span class="k">4</span>예상 꼬리질문</h4>
+<div class="fq"><div><b>Q. 같은 레시피인데 새 장비 결과가 다르면?</b>헤드 온도 실측값, 압력 보정, 평행도, 비전 보정 기준이 장비마다 다릅니다. 설정값이 아니라 '실제로 칩에 전달되는 조건'을 맞춰야 합니다.</div><div><b>Q. 공급망 다변화의 단점은?</b>장비마다 특성이 달라 관리 포인트가 늘고 매칭 부담이 커집니다. 대신 한 공급사 의존 리스크가 줄어듭니다.</div></div>
+<div class="mine"><b>내 경험 연결</b> · AGV 리프트 설계에서 액추에이터 스트로크만 늘리는 초기안 대신 복층 구조라는 대안을 비교해 고른 경험 = "한 방법에 매몰되지 않고 조건에 맞춰 대안을 비교·선택"(자소서 문장).</div>
+</details>
+</article>
+
+<!-- ===== P10 ===== -->
+<article class="prob" id="p10" data-t="topic">
+<div class="prob-h"><span class="pid">P10</span><h3>HBM 스택의 열을 어떻게 뺄 것인가</h3></div>
+<div class="pills"><span class="pill lv">최신 기술 ★★</span><span class="pill">직무 주제형</span><span class="pill">Thermal · 2.5D · zHBM</span></div>
+<div class="scene"><p>12단 HBM을 GPU 옆에 배치한 2.5D 패키지의 동작 중 층별 온도를 시뮬레이션했다. 16단으로 늘리면 가운데·아래층 온도가 더 오를 것으로 예상된다. DRAM은 온도가 높을수록 데이터 유지가 어려워(리프레시 증가) 성능·전력이 나빠진다.</p></div>
+<figure class="fig"><div class="sc">
+<svg viewBox="0 0 860 280" role="img" aria-label="HBM 층별 온도와 열 경로">
+  <g transform="translate(20,20)">
+   <text x="0" y="0" class="t">층별 온도 (℃)</text>
+   <line x1="90" y1="14" x2="90" y2="238" class="lnm"/>
+   <g class="tn" text-anchor="end"><text x="84" y="234">베이스</text><text x="84" y="216">1</text><text x="84" y="180">3</text><text x="84" y="144">5</text><text x="84" y="108">7</text><text x="84" y="72">9</text><text x="84" y="36">11</text></g>
+   <g class="cu">
+    <rect x="90" y="222" width="245" height="14"/><rect x="90" y="204" width="231" height="14" opacity=".95"/><rect x="90" y="186" width="224" height="14" opacity=".9"/><rect x="90" y="168" width="217" height="14" opacity=".9"/><rect x="90" y="150" width="203" height="14" opacity=".85"/><rect x="90" y="132" width="196" height="14" opacity=".85"/><rect x="90" y="114" width="182" height="14" opacity=".8"/><rect x="90" y="96" width="168" height="14" opacity=".8"/><rect x="90" y="78" width="154" height="14" opacity=".75"/><rect x="90" y="60" width="133" height="14" opacity=".75"/><rect x="90" y="42" width="112" height="14" opacity=".7"/><rect x="90" y="24" width="91" height="14" opacity=".7"/></g>
+   <g class="tn"><text x="341" y="234">95</text><text x="327" y="216">93</text><text x="263" y="108">84</text><text x="187" y="36">73</text></g>
+   <text x="90" y="262" class="tm">막대 길이 = 60℃ 위로 오른 온도 (베이스~11층, 가상 시뮬레이션)</text>
+  </g>
+  <g transform="translate(470,20)">
+   <text x="0" y="0" class="t">열 경로 (저항 직렬 연결)</text>
+   <rect x="20" y="20" width="280" height="22" class="bg2"/><text x="30" y="36" class="tm">히트싱크·냉각</text>
+   <rect x="20" y="44" width="280" height="10" class="wnf"/><text x="306" y="53" class="tn">TIM</text>
+   <rect x="40" y="56" width="110" height="130" class="si"/><g class="edge"><line x1="40" y1="72" x2="150" y2="72"/><line x1="40" y1="88" x2="150" y2="88"/><line x1="40" y1="104" x2="150" y2="104"/><line x1="40" y1="120" x2="150" y2="120"/><line x1="40" y1="136" x2="150" y2="136"/><line x1="40" y1="152" x2="150" y2="152"/><line x1="40" y1="168" x2="150" y2="168"/></g>
+   <rect x="170" y="110" width="130" height="76" class="emc"/><text x="235" y="152" text-anchor="middle" class="tw">GPU</text>
+   <rect x="20" y="188" width="280" height="12" class="si"/><text x="306" y="198" class="tn">인터포저</text>
+   <path d="M95 182 V60" class="lnbad" marker-end="url(#arbad)" style="stroke-width:3"/>
+   <path d="M168 150 H154" class="lnbad" marker-end="url(#arbad)"/><text x="160" y="104" class="tbad">GPU 열 유입</text>
+   <text x="0" y="230" class="tm">층마다: 실리콘 + 접합층(NCF·범프)</text><text x="0" y="248" class="tm">접합층의 열전도가 낮아 병목</text>
+  </g>
+</svg></div>
+<figcaption><span class="virt">가상 데이터</span> · 아래층(베이스 다이 쪽)은 GPU 열과 자체 발열이 겹치고, 위로 빠져나가려면 모든 층을 통과해야 한다.</figcaption></figure>
+<ol class="qs">
+<li>HBM 스택의 열 경로를 설명하고, 어디가 병목인지 쓰시오.</li>
+<li>패키지·공정 관점의 방열 개선안을 쓰시오.</li>
+<li>HBM을 GPU 위에 쌓는 zHBM에서는 열 문제가 어떻게 달라지는지 쓰시오.</li>
+</ol>
+<details class="sol"><summary>풀이와 해결법 후보</summary>
+<h4><span class="k">1</span>열 경로와 병목</h4>
+<p>열은 주로 <b>위쪽(히트싱크)</b>으로 빠집니다. 아래층 열은 위의 모든 층을 지나가야 하므로 <b>열저항이 직렬로 쌓입니다</b>(R_total = R_실리콘 × n + R_접합층 × n + R_TIM + …). 실리콘은 열을 잘 전달하지만 <b>NCF·언더필 같은 고분자 접합층은 열전도가 매우 낮아</b> 층이 늘수록 병목이 됩니다. 옆의 GPU 열이 인터포저와 몰드로 넘어오는 것도 아래층을 뜨겁게 합니다.</p>
+<h4><span class="k">2</span>해결법 후보</h4>
+<div class="tw-wrap"><table>
+<tr><th>대책</th><th>원리</th><th>과제</th></tr>
+<tr><td>접합층 박막화 / 열전도 높은 NCF·언더필</td><td>가장 큰 열저항 감소</td><td>충전성·신뢰성</td></tr>
+<tr><td>하이브리드 본딩</td><td>고분자 층 제거, 구리 직접 접합으로 열전도↑ (삼성 IEEE 논문 보도: 높이 약 15%↓, 열 특성 개선)</td><td>청정도·CMP·투자</td></tr>
+<tr><td>열 전달용 더미 범프·TSV 추가</td><td>전기 신호 없이 열만 위로 나르는 '열 기둥'</td><td>면적·설계</td></tr>
+<tr><td>최상층 다이 두껍게, 몰드 대신 노출형(몰드리스·노출 다이)</td><td>히트싱크까지 열저항 감소 (I-Cube4 발표: 몰드 없는 구조로 방열 개선)</td><td>보호·휨</td></tr>
+<tr><td>고성능 TIM, 리드(뚜껑)·스티프너 설계</td><td>패키지→냉각기 경로 개선</td><td>평탄도·두께</td></tr>
+<tr><td>GPU–HBM 간격·배치 최적화</td><td>측면 열 유입 감소</td><td>배선 길이(성능)와 상충</td></tr>
+<tr><td>베이스 다이 저전력화(로직 공정)</td><td>발열원 자체 감소 (삼성 HBM4: 4나노 베이스 다이, 전력 효율 약 40%↑ 발표)</td><td>파운드리 협업</td></tr>
+<tr><td>방열 시뮬레이션 선행</td><td>설계 단계에서 핫스팟 예측 (TSP 메모리PKG개발팀 업무 사례)</td><td>물성·경계조건 정확도</td></tr>
+</table></div>
+<h4><span class="k">3</span>zHBM이라면</h4>
+<p>삼성 뉴스룸 설명대로 zHBM은 메모리를 AI 칩 <b>위에</b> 쌓으므로, <b>AI 칩의 큰 열이 메모리 스택을 통과해 위로</b> 빠져야 합니다. 메모리는 뜨거워지고 칩은 열이 갇힙니다. 그래서 삼성은 <b>필요한 메모리 밀도와 열 성능 사이에서 스택 높이를 최적화</b>하는 접근을 제시합니다. 하이브리드 본딩·촘촘한 TSV가 열 경로 역할도 하고, 고객 칩과의 공동 설계(열·전력·배치 동시 최적화)가 필수입니다.</p>
+<h4><span class="k">4</span>예상 꼬리질문</h4>
+<div class="fq"><div><b>Q. 전기적 성능과 열이 충돌하는 예는?</b>GPU와 HBM을 가까이 붙이면 신호는 좋아지지만 열 간섭이 커집니다. 열용 더미 TSV는 면적을 차지해 신호 배선 공간을 줄입니다.</div><div><b>Q. 시뮬레이션은 어떻게 검증하나?</b>열전대·적외선 카메라로 실측한 온도와 비교해 물성·경계조건을 보정합니다.</div></div>
+<div class="mine"><b>내 경험 연결</b> · 열화상 카메라를 직접 다뤄 본 경험 → 방열 검증(적외선 측정)에 대한 이해. "열원이 강하면 주변 대비가 흐려지는 문제를 다뤄 봤다"는 점도 열 측정의 어려움으로 말할 수 있습니다.</div>
+</details>
+</article>
+
+<!-- ===== 해결 레버 총정리 ===== -->
+<section class="chap" id="bank">
+<div class="chap-h"><span class="no">∑</span><h2>해결 레버 총정리: 어떤 문제든 여기서 2~3개를 고른다</h2></div>
+<div class="tw-wrap"><table>
+<tr><th>레버</th><th>예시</th><th>흔한 트레이드오프</th></tr>
+<tr><td><b>재료</b></td><td>저CTE·고Tg EMC, 언더필·NCF 변경, 기판 코어, 솔더 조성, 열전도 소재</td><td>CTE↓ ↔ 점도↑·충전성↓ / 모듈러스↑ ↔ 응력↑ / 성능↑ ↔ 원가↑</td></tr>
+<tr><td><b>공정 조건</b></td><td>온도·압력·시간 프로파일, 이송·주입 속도, 경화·냉각 속도, 진공</td><td>품질↑ ↔ UPH↓ / 조건 범위가 좁아짐(공정 창)</td></tr>
+<tr><td><b>장비</b></td><td>평행도·온도 균일도 보정, 피드백 제어, 장비 매칭, 신규 장비 도입</td><td>투자비 / 정밀↑ ↔ 속도↓</td></tr>
+<tr><td><b>설계</b></td><td>두께 비율, 범프·볼 배치, 더미 범프·열 TSV, 와이어 루프</td><td>공간·전기 성능과 충돌, 고객 협의 필요</td></tr>
+<tr><td><b>방식 전환</b></td><td>스텔스·플라즈마 다이싱, 컴프레션 몰딩, MUF, 하이브리드 본딩, DBG</td><td>큰 투자·재검증, 새 불량 유형 등장</td></tr>
+<tr><td><b>검사·관리</b></td><td>SPC 관리 항목 추가, 인터락, 소모품 상태 기반 교체, 골든 샘플, 자동 패턴 분류</td><td>검사 시간·비용</td></tr>
+<tr><td><b>사전 예측</b></td><td>FEM·CFD·열 시뮬레이션, DOE</td><td>물성·모델 정확도</td></tr>
+</table></div>
+<div class="box iv"><span class="lab">트레이드오프를 말하는 문장 틀</span><ul>
+<li>"A를 하면 B가 좋아지지만 C가 나빠질 수 있어서, D로 확인하면서 최적점을 찾겠습니다."</li>
+<li>"단기적으로는 조건 조정으로 대응하고, 근본적으로는 재료(또는 방식) 변경을 검토하겠습니다."</li>
+<li>"품질 규격을 만족하는 범위 안에서 생산성과 비용이 가장 좋은 지점을 고르겠습니다."</li>
+</ul></div>
+<div class="sum"><span class="lab">마지막 점검</span><ul>
+<li>결론부터 말했나? 그림을 그렸나?</li>
+<li>원인 후보를 4M+측정으로 2개 이상 냈고, 확인 방법을 붙였나?</li>
+<li>대책마다 부작용을 말했나? 재발 방지(SPC·인터락·표준화)를 넣었나?</li>
+<li>내 경험 한 줄을 연결했나?</li>
+</ul></div>
+</section>
+</main>
+</div>
+<footer>TSP PT 연습장 · 면접 대비 개인 학습 자료 · 2026년 11월. 그림 속 수치는 모두 연습용 가상 데이터이며, 원리와 대책은 공개된 학술·업계 일반 지식과 삼성 공식 발표·보도를 근거로 했습니다.</footer>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+ <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="inkf"/></marker>
+ <marker id="arcu" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="cu"/></marker>
+ <marker id="arbad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="badf"/></marker>
+</defs></svg>
+
+<script>
+(function(){
+  // 웨이퍼 맵 (P3)
+  function map(id,mode){var g=document.getElementById(id);if(!g)return;var ns='http://www.w3.org/2000/svg',s=16,cx=140,cy=140,R=112,seed=mode==='A'?11:29;
+    function rnd(){seed=(seed*9301+49297)%233280;return seed/233280;}
+    for(var y=cy-R;y<cy+R;y+=s)for(var x=cx-R;x<cx+R;x+=s){var mx=x+s/2-cx,my=y+s/2-cy,d=Math.sqrt(mx*mx+my*my);if(d>R-5)continue;
+      var v=rnd(),bad;
+      if(mode==='A'){var edge=d>R-34,left=mx<-30;bad=(edge&&v<(left?0.75:0.35))||(left&&v<0.08)||v<0.02;}else{bad=v<0.035;}
+      var r=document.createElementNS(ns,'rect');r.setAttribute('x',x+1);r.setAttribute('y',y+1);r.setAttribute('width',s-2);r.setAttribute('height',s-2);r.setAttribute('class',bad?'badf':'okf');r.setAttribute('opacity','.85');g.appendChild(r);}}
+  map('wmA','A');map('wmB','B');
+  // 타이머
+  var clock=document.getElementById('clock'),box=document.getElementById('timer'),st=document.getElementById('tst'),iv=null,left=900,label='';
+  function show(){var m=Math.floor(left/60),s=left%60;clock.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  function start(sec,l){clearInterval(iv);left=sec;label=l;box.classList.remove('done');show();st.textContent=l+' 진행 중';
+    iv=setInterval(function(){left--;show();if(left<=60&&left>0)st.textContent=l+' · 1분 남음';if(left<=0){clearInterval(iv);box.classList.add('done');st.textContent=l+' 시간 종료. 다음 단계로 넘어가세요.';}},1000);}
+  document.getElementById('t15').addEventListener('click',function(){start(900,'풀이 15분');});
+  document.getElementById('t10').addEventListener('click',function(){start(600,'발표 10분');});
+  document.getElementById('tstop').addEventListener('click',function(){clearInterval(iv);left=900;box.classList.remove('done');show();st.textContent='초기화했습니다. 풀이 15분 또는 발표 10분을 누르세요.';});
+  // 유형 필터
+  var fb=[].slice.call(document.querySelectorAll('#filters button')),probs=[].slice.call(document.querySelectorAll('.prob'));
+  fb.forEach(function(b){b.addEventListener('click',function(){var f=b.getAttribute('data-f');fb.forEach(function(x){x.classList.toggle('on',x===b);});
+    probs.forEach(function(p){p.hidden=!(f==='all'||p.getAttribute('data-t')===f);});});});
+  // 현재 위치 표시
+  var secs=[].slice.call(document.querySelectorAll('#how,.prob,#bank')),links=[].slice.call(document.querySelectorAll('#toc a, #chips a'));
+  function mark(id){links.forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+id);});var c=document.querySelector('#chips a.on');
+    if(c){var p=c.parentNode;p.scrollLeft=(c.getBoundingClientRect().left-p.getBoundingClientRect().left)+p.scrollLeft-p.clientWidth/2+c.clientWidth/2;}}
+  if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)mark(e.target.id);});},{rootMargin:'-30% 0px -60% 0px'});secs.forEach(function(s){io.observe(s);});}
+})();
+</script>
