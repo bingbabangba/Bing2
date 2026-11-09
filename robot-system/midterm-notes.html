@@ -1,0 +1,842 @@
+<title>로봇시스템 중간고사 정리</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: 강의 순서대로 내려가는 한 줄 학습지, 데스크톱에서는 왼쪽에 고정 목차. 축 색은 로봇공학 관례(x 빨강, y 초록, z 파랑). */
+:root{
+  --bg:#f6f7f9; --paper:#ffffff; --fg:#1b2230; --muted:#5b6577; --line:#d9dee7;
+  --accent:#1f5fbf; --accent-soft:#e6eefb; --hot:#c2570c; --hot-soft:#fdf0e6;
+  --ok:#1f7a4d; --ok-soft:#e4f4ea;
+  --ax-x:#d03b3b; --ax-y:#2c8a3c; --ax-z:#2b63d6;
+  --f-body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161d; --paper:#1a2029; --fg:#e4e8ef; --muted:#9aa4b5; --line:#2e3644;
+  --accent:#78a6f0; --accent-soft:#1e2c44; --hot:#f0995a; --hot-soft:#3a2617;
+  --ok:#6cc896; --ok-soft:#173326;
+  --ax-x:#f07272; --ax-y:#6cc77a; --ax-z:#79a3f5; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161d; --paper:#1a2029; --fg:#e4e8ef; --muted:#9aa4b5; --line:#2e3644;
+  --accent:#78a6f0; --accent-soft:#1e2c44; --hot:#f0995a; --hot-soft:#3a2617;
+  --ok:#6cc896; --ok-soft:#173326;
+  --ax-x:#f07272; --ax-y:#6cc77a; --ax-z:#79a3f5; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:40px;padding-block:32px 80px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-size:14px}
+nav.toc b{display:block;font-size:12px;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}
+nav.toc a{display:block;color:var(--fg);text-decoration:none;padding:4px 0 4px 10px;border-left:2px solid var(--line)}
+nav.toc a:hover,nav.toc a:focus-visible{border-left-color:var(--accent);color:var(--accent)}
+main{min-width:0}
+header.top{margin-bottom:28px}
+header.top h1{font-size:clamp(28px,4vw,38px);line-height:1.25;margin:0 0 8px;text-wrap:balance;font-weight:700}
+header.top p{margin:0;color:var(--muted);max-width:68ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{font-size:13px;padding:2px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:var(--paper)}
+section{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:28px clamp(16px,3vw,36px);margin-bottom:24px}
+section>h2{font-size:24px;margin:0 0 4px;line-height:1.35;text-wrap:balance}
+.wk{font-family:var(--f-mono);font-size:12px;color:var(--accent);letter-spacing:.06em}
+h3{font-size:18px;margin:28px 0 8px;line-height:1.4}
+h4{font-size:15px;margin:18px 0 6px;color:var(--accent)}
+p,li{max-width:72ch}
+ul,ol{padding-left:1.3em;margin:6px 0}
+li{margin:3px 0}
+.key{background:var(--hot-soft);border-left:3px solid var(--hot);padding:10px 14px;margin:14px 0;border-radius:0 6px 6px 0}
+.key>b:first-child{color:var(--hot);font-size:13px;letter-spacing:.04em;display:block}
+.note{font-size:14px;color:var(--muted)}
+.ex{border:1px solid var(--accent);border-radius:8px;margin:18px 0;overflow:hidden}
+.ex>.exh{background:var(--accent-soft);color:var(--accent);font-weight:700;padding:6px 14px;font-size:14px}
+.ex>.exb{padding:12px 16px}
+.ex .ans{background:var(--ok-soft);border-radius:6px;padding:8px 12px;margin-top:8px}
+.ex .ans b{color:var(--ok)}
+.tbl{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;font-size:14px;min-width:100%}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft);font-weight:600}
+td.c,th.c{text-align:center}
+.m{font-family:var(--f-mono);font-size:.92em;white-space:nowrap}
+.eq{font-family:var(--f-mono);font-size:15px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin:10px 0;overflow-x:auto;line-height:1.9}
+.eq .lbl{font-family:var(--f-body);color:var(--muted);font-size:13px}
+.ps{display:inline-flex;flex-direction:column;font-size:.62em;line-height:1;vertical-align:-.15em;margin-right:1px;text-align:right}
+.mat{display:inline-grid;grid-template-columns:repeat(var(--c,3),auto);gap:1px 12px;border-left:1.6px solid currentColor;border-right:1.6px solid currentColor;border-radius:5px;padding:2px 8px;vertical-align:middle;text-align:center;font-family:var(--f-mono);font-size:14px;line-height:1.5;margin:2px 3px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin:12px 0}
+.grid2>*{min-width:0}
+figure{margin:14px 0;text-align:center}
+figure svg{max-width:100%;height:auto}
+figcaption{font-size:13px;color:var(--muted);margin-top:4px}
+svg text{font-family:var(--f-body);fill:var(--fg)}
+svg .mono{font-family:var(--f-mono)}
+.sx{stroke:var(--ax-x)} .sy{stroke:var(--ax-y)} .sz{stroke:var(--ax-z)}
+.fx{fill:var(--ax-x)} .fy{fill:var(--ax-y)} .fz{fill:var(--ax-z)}
+svg .tx{fill:var(--ax-x)} svg .ty{fill:var(--ax-y)} svg .tz{fill:var(--ax-z)}
+.sf{stroke:var(--fg)} .sm{stroke:var(--muted)} .sa{stroke:var(--accent)} .sh{stroke:var(--hot)} .so{stroke:var(--ok)}
+.ff{fill:var(--fg)} .fa{fill:var(--accent)} .fh{fill:var(--hot)} .fo{fill:var(--ok)} .fp{fill:var(--paper)} .fbg{fill:var(--bg)}
+svg .tm{fill:var(--muted)} svg .ta{fill:var(--accent)} svg .th{fill:var(--hot)} svg .to{fill:var(--ok)}
+details{border:1px solid var(--line);border-radius:6px;padding:8px 14px;margin:8px 0;background:var(--paper)}
+details summary{cursor:pointer;font-weight:500}
+details summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+details[open] summary{margin-bottom:6px}
+details p{margin:4px 0;color:var(--fg)}
+a{color:var(--accent)}
+@media (max-width:860px){
+  .wrap{grid-template-columns:minmax(0,1fr);gap:0;padding-block:20px 60px}
+  nav.toc{position:static;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:6px}
+  nav.toc b{width:100%;margin:0}
+  nav.toc a{border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px;background:var(--paper)}
+}
+@media (max-width:640px){.m{white-space:normal}.mat{font-size:12px;gap:1px 7px;padding:2px 5px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="arF" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="ff"/></marker>
+    <marker id="arX" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="fx"/></marker>
+    <marker id="arY" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="fy"/></marker>
+    <marker id="arZ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="fz"/></marker>
+    <marker id="arA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="fa"/></marker>
+    <marker id="arH" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="fh"/></marker>
+    <marker id="arO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="fo"/></marker>
+  </defs>
+</svg>
+
+<div class="wrap">
+<nav class="toc" aria-label="목차">
+  <b>목차</b>
+  <a href="#trig">0. 계산용 삼각값</a>
+  <a href="#intro">1. 로봇 개론</a>
+  <a href="#system">2. 로봇 시스템 개요</a>
+  <a href="#transform">3. 좌표변환</a>
+  <a href="#dh">4. DH 파라미터 · 정기구학</a>
+  <a href="#ik">5. 역기구학</a>
+  <a href="#jacobian">6. 자코비안</a>
+  <a href="#quiz">7. 단답 셀프체크</a>
+</nav>
+
+<main>
+<header class="top">
+  <h1>로봇시스템(MECH583001) 중간고사 정리</h1>
+  <p>Week 1~6 강의자료(개론, Kinematics, Direct Kinematics 1·2, Inverse Kinematics, Jacobian)에서 시험에 나올 만한 개념을 모았습니다. 계산이 나오는 부분에는 계산기 없이 풀 수 있는 각도(0°, 30°, 45°, 60°, 90°)로 만든 예제를 넣었습니다.</p>
+  <div class="chips"><span class="chip">중간 30% · 기말 60% · 출석 10%</span><span class="chip">교재: Lynch &amp; Park, Craig</span><span class="chip">DH는 Craig Modified 기준</span></div>
+</header>
+
+<!-- ============ 0 ============ -->
+<section id="trig">
+  <span class="wk">CHEAT SHEET</span>
+  <h2>0. 계산에 쓰는 삼각값과 표기</h2>
+  <div class="tbl"><table>
+    <tr><th>θ</th><th class="c">0°</th><th class="c">30°</th><th class="c">45°</th><th class="c">60°</th><th class="c">90°</th><th class="c">180°</th></tr>
+    <tr><td>sin θ</td><td class="c">0</td><td class="c">1/2</td><td class="c">√2/2</td><td class="c">√3/2</td><td class="c">1</td><td class="c">0</td></tr>
+    <tr><td>cos θ</td><td class="c">1</td><td class="c">√3/2</td><td class="c">√2/2</td><td class="c">1/2</td><td class="c">0</td><td class="c">−1</td></tr>
+  </table></div>
+  <ul>
+    <li><span class="m">c1 = cos θ1</span>, <span class="m">s12 = sin(θ1+θ2)</span>, <span class="m">c123 = cos(θ1+θ2+θ3)</span> 같은 축약 표기를 씁니다.</li>
+    <li>음수 각: <span class="m">cos(−θ) = cos θ</span>, <span class="m">sin(−θ) = −sin θ</span></li>
+    <li>합각 공식: <span class="m">cos(a+b) = ca·cb − sa·sb</span>, <span class="m">sin(a+b) = sa·cb + ca·sb</span> (역기구학 θ1 유도에 사용)</li>
+    <li><span class="m">Atan2(y, x)</span>: 점 (x, y)가 놓인 사분면까지 고려한 각도. 예: <span class="m">Atan2(1,1)=45°</span>, <span class="m">Atan2(1,−1)=135°</span>, <span class="m">Atan2(−1,1)=−45°</span></li>
+  </ul>
+</section>
+
+<!-- ============ 1 ============ -->
+<section id="intro">
+  <span class="wk">WEEK 1 · UNIT 2</span>
+  <h2>1. 로봇 개론 (Overview of Robotic System 1)</h2>
+
+  <h3>로봇의 정의</h3>
+  <ul>
+    <li>사람이 하던 일상적인 기능을 수행하는 자동화 장치</li>
+    <li>환경을 <b>감지(sensing)</b>하고, <b>계산</b>으로 판단하고, 실제 세계에서 <b>행동(action)</b>하는 자율 기계</li>
+  </ul>
+
+  <h3>역사 키워드</h3>
+  <div class="tbl"><table>
+    <tr><th>연도</th><th>내용</th></tr>
+    <tr><td>1920</td><td>"Robota" 용어 등장 (Karel Čapek)</td></tr>
+    <tr><td>1961</td><td>최초의 산업용 로봇 <b>Unimate</b> (Unimation, GM 라인)</td></tr>
+    <tr><td>1980s</td><td>산업용 로봇의 황금기</td></tr>
+    <tr><td>1989</td><td>SCARA 로봇 (일본 야마나시대)</td></tr>
+    <tr><td>1990 / 1993</td><td>Roomba(iRobot) / Honda P 시리즈 휴머노이드 → ASIMO(2000)</td></tr>
+    <tr><td>2005~2016</td><td>BigDog, Curiosity, Atlas, 협동로봇(Universal Robots), Spot</td></tr>
+    <tr><td>2020s</td><td>휴머노이드·AI 로보틱스의 황금기</td></tr>
+  </table></div>
+  <div class="key"><b>흐름 암기</b>Automation → Autonomy → Popularization → Collaboration → Intelligence.
+  자동화는 구조화된 환경의 단순·반복 작업, 자율은 다양한 작업, 지능은 비구조화 환경의 자율 응용 작업입니다.</div>
+
+  <h3>매니퓰레이터 종류 (기구 구조)</h3>
+  <div class="tbl"><table>
+    <tr><th>종류</th><th>관절 구성</th><th>특징</th></tr>
+    <tr><td><b>Cartesian</b> (직교, linear robot)</td><td>P-P-P (직선 3개)</td><td>x-y-z 축과 일치, 모듈형, 3차원에서 높은 신뢰도·정밀도</td></tr>
+    <tr><td><b>Cylindrical</b> (원통)</td><td>R-P-P</td><td>원통형 작업공간. 구조 단순, 도달거리 좋음. 다관절보다 유연성·장애물 회피가 떨어짐</td></tr>
+    <tr><td><b>SCARA</b></td><td>평행한 회전 2~3개 + 수직 직선 1개</td><td>평면 방향은 유연(compliance), 수직 방향은 강성 높음. 소형·고속, 조립용</td></tr>
+    <tr><td><b>Articulated</b> (다관절)</td><td>회전 관절 3개 이상 (보통 4 또는 6)</td><td>사람 팔과 비슷, 산업 현장에서 가장 널리 사용</td></tr>
+    <tr><td><b>Delta</b> (병렬)</td><td>베이스 하나에 팔 3개</td><td>작업공간 위에 매달림, 돔 형태 작업공간. 고속·정밀, 가장 비쌈</td></tr>
+  </table></div>
+  <p class="note">SCARA = Selective Compliance Assembly Robot Arm. Compliance는 외력에 대해 로봇이 유연하게 반응하는 성질입니다.</p>
+
+  <h3>매니퓰레이터 주요 구성요소</h3>
+  <p>기계 구조(Link·Joint) + 구동·전달 장치(Actuator·Transmission) + 감지·작업 장치(Sensor·End Effector)</p>
+  <div class="tbl"><table>
+    <tr><th>구성요소</th><th>역할</th><th>예시</th></tr>
+    <tr><td>Base</td><td>로봇 전체를 지지</td><td>바닥·벽·천장 고정, 모바일 플랫폼</td></tr>
+    <tr><td>Link</td><td>관절을 연결하는 뼈대</td><td>알루미늄, 강철, 탄소섬유</td></tr>
+    <tr><td>Joint</td><td>링크 사이의 상대운동</td><td>회전(R), 직선(P)</td></tr>
+    <tr><td>Actuator</td><td>관절을 움직일 동력 생성</td><td>서보모터, 유압, 공압</td></tr>
+    <tr><td>Transmission</td><td>속도·토크 변환 후 전달</td><td>감속기, 기어, 벨트, 볼스크류</td></tr>
+    <tr><td>Sensor</td><td>관절 상태, 접촉력, 환경 측정</td><td>엔코더, 토크센서, F/T 센서, 카메라</td></tr>
+    <tr><td>End Effector</td><td>물체·환경과 직접 상호작용</td><td>그리퍼, 용접건, 흡착컵</td></tr>
+    <tr><td>Controller</td><td>센서 정보로 관절 운동 제어</td><td>로봇 컨트롤러, 모션 컨트롤러</td></tr>
+    <tr><td>Power/Wiring, Safety</td><td>전원·신호 전달 / 사고 방지</td><td>케이블, 비상정지, 브레이크, 충돌감지</td></tr>
+  </table></div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="system">
+  <span class="wk">WEEK 2 · UNIT 3</span>
+  <h2>2. 로봇 시스템 개요 (Overview of Robotic System 2)</h2>
+
+  <h3>로봇 방법론 4가지</h3>
+  <ul>
+    <li><b>Kinematics(기구학)</b>: 힘을 고려하지 않고 기하학으로 다자유도 체인의 운동을 다룸</li>
+    <li><b>Dynamics(동역학)</b>: 힘·토크와 그로 인한 가속도의 관계 (강체 시스템으로 모델링)</li>
+    <li><b>Control</b>: 로봇이 원하는 운동을 따라가도록(tracking) 하는 프로그램 시스템</li>
+    <li><b>Navigation</b>: 한 곳에서 다른 곳으로 이동을 감시·제어</li>
+  </ul>
+  <div class="tbl"><table>
+    <tr><th></th><th>Kinematics</th><th>Dynamics</th></tr>
+    <tr><td>주요 변수</td><td>위치, 자세, 속도, 가속도</td><td>힘, 토크, 질량, 관성</td></tr>
+    <tr><td>힘·토크</td><td>고려 안 함</td><td>고려함</td></tr>
+    <tr><td>핵심 관계</td><td>관절 변수 → 끝단 자세</td><td>관절 운동 ↔ 토크</td></tr>
+    <tr><td>응용</td><td>좌표변환, 궤적계획, 역기구학</td><td>모터 선정, 토크 계산, 동역학 제어</td></tr>
+  </table></div>
+
+  <h3>Kinematic Chain · Serial vs Parallel</h3>
+  <ul>
+    <li><b>Open-loop chain</b>: 베이스에서 끝단까지 경로가 <b>딱 하나</b></li>
+    <li><b>Closed-loop chain</b>: 모든 링크가 다른 링크와 <b>두 개 이상</b>의 경로로 연결</li>
+  </ul>
+  <figure>
+    <svg viewBox="0 0 560 210" width="560" role="img" aria-label="직렬 매니퓰레이터와 병렬 매니퓰레이터 비교 그림">
+      <rect x="40" y="180" width="80" height="12" class="fbg sf" stroke-width="1.5"/>
+      <polyline points="80,180 80,120 150,80 200,110" fill="none" class="sa" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="80" cy="180" r="6" class="fp sf" stroke-width="2"/><circle cx="80" cy="120" r="6" class="fp sf" stroke-width="2"/><circle cx="150" cy="80" r="6" class="fp sf" stroke-width="2"/>
+      <path d="M200 110 l14 -6 M200 110 l8 12" class="sf" stroke-width="3" fill="none"/>
+      <text x="130" y="30" text-anchor="middle" font-weight="700">Serial (직렬)</text>
+      <text x="130" y="50" text-anchor="middle" font-size="13" class="tm">경로 1개 · Open chain</text>
+      <rect x="330" y="180" width="200" height="12" class="fbg sf" stroke-width="1.5"/>
+      <rect x="390" y="78" width="80" height="10" class="fp sf" stroke-width="1.5"/>
+      <line x1="345" y1="180" x2="395" y2="88" class="sa" stroke-width="4"/>
+      <line x1="430" y1="180" x2="430" y2="88" class="sa" stroke-width="4"/>
+      <line x1="515" y1="180" x2="465" y2="88" class="sa" stroke-width="4"/>
+      <text x="430" y="30" text-anchor="middle" font-weight="700">Parallel (병렬)</text>
+      <text x="430" y="50" text-anchor="middle" font-size="13" class="tm">경로 2개 이상 · Closed chain</text>
+      <text x="430" y="72" text-anchor="middle" font-size="12" class="tm">끝단 플랫폼</text>
+    </svg>
+    <figcaption>직렬은 관절 오차가 끝단까지 누적되고, 병렬은 여러 다리가 하중을 나눠 받습니다.</figcaption>
+  </figure>
+  <div class="tbl"><table>
+    <tr><th></th><th>Serial</th><th>Parallel</th></tr>
+    <tr><td>경로 수</td><td>1개</td><td>2개 이상</td></tr>
+    <tr><td>작업공간</td><td>넓음</td><td>상대적으로 좁음</td></tr>
+    <tr><td>강성</td><td>낮음</td><td>높음</td></tr>
+    <tr><td>정밀도</td><td>관절 오차 누적</td><td>오차 누적 적음, 정밀</td></tr>
+    <tr><td>가반하중</td><td>자중 대비 제한적</td><td>무거운 하중에 유리</td></tr>
+    <tr><td>해석·제어</td><td>비교적 단순</td><td>복잡</td></tr>
+    <tr><td>예</td><td>다관절, 협동로봇</td><td>Delta, Stewart platform</td></tr>
+  </table></div>
+
+  <h3>관절 · 끝단장치 · 구동기 · 센서</h3>
+  <div class="grid2">
+    <div>
+      <h4>관절</h4>
+      <ul><li><b>Prismatic (P)</b>: 직선 슬라이딩. 변수는 거리 <span class="m">d</span></li>
+      <li><b>Revolute (R)</b>: 한 축 회전. 변수는 각도 <span class="m">θ</span></li></ul>
+      <h4>Gripper vs Robotic Hand</h4>
+      <ul><li>Gripper: 잡고 놓기, 구조·제어 단순, 손가락 2~3개, 신뢰성·반복성, 저가, 조립·포장</li>
+      <li>Hand: 사람 손 같은 조작, 손가락 3~5개, 복잡, 고가, 연구·의료·의수·휴머노이드</li></ul>
+    </div>
+    <div>
+      <h4>Actuator (로봇의 근육)</h4>
+      <ul><li>전기(DC, BLDC, AC 서보, 스텝): 로봇팔, 협동로봇, 모바일 로봇</li>
+      <li>유압: 건설·중작업 로봇</li>
+      <li>공압: 그리퍼, pick-and-place</li>
+      <li>스마트 소재: 소프트·초소형 로봇</li></ul>
+      <h4>감속·전달</h4>
+      <ul><li>볼스크류: 회전 → 직선</li><li>Spur, Planetary gear, Harmonic drive, RV 감속기</li></ul>
+    </div>
+  </div>
+  <div class="tbl"><table>
+    <tr><th>센서</th><th>측정량</th></tr>
+    <tr><td>Potentiometer</td><td>위치·각도</td></tr>
+    <tr><td>Encoder (Incremental / Absolute)</td><td>위치·각도·속도 (상대 위치와 속도 / 절대 위치)</td></tr>
+    <tr><td>Tachogenerator</td><td>회전 속도</td></tr>
+    <tr><td>Accelerometer</td><td>선가속도</td></tr>
+    <tr><td>Vision, LiDAR, RADAR</td><td>빛·색·형상 / 거리·3D 형상 / 거리·상대속도</td></tr>
+    <tr><td>Force/Torque sensor</td><td>힘·모멘트</td></tr>
+  </table></div>
+
+  <h3>공간 (Space)</h3>
+  <ul>
+    <li><b>Configuration space (C-space)</b>: 로봇이 가질 수 있는 모든 형상(위치·자세)의 집합을 기하학적 공간으로 나타낸 것</li>
+    <li><b>Joint space</b>: 관절 변수 <span class="m">q = (q1, …, qn)</span>의 집합. Configuration space라고도 부름</li>
+    <li><b>Cartesian space</b> (= Task / Operational space): 끝단의 <span class="m">x, y, z, roll, pitch, yaw</span>. 엄밀히는 Task space는 "작업을 정의하는 데 필요한 모든 변수"라서 Cartesian space와 같지 않음</li>
+  </ul>
+  <div class="tbl"><table>
+    <tr><th></th><th>Cartesian Space</th><th>Joint Space</th></tr>
+    <tr><td>경로</td><td>직선·원호 같은 작업 경로를 직접 정의</td><td>관절값 사이를 보간</td></tr>
+    <tr><td>장점</td><td>작업자에게 직관적</td><td>계산 단순, 관절 운동이 부드러움</td></tr>
+    <tr><td>응용</td><td>용접, 조립, 표면가공</td><td>자세 변경, 빠른 재배치</td></tr>
+  </table></div>
+  <div class="eq">Joint Space &nbsp;── Forward Kinematics ──▶&nbsp; Cartesian Space<br>Joint Space &nbsp;◀── Inverse Kinematics ──&nbsp; Cartesian Space</div>
+
+  <h3>작업공간 (Workspace)</h3>
+  <ul>
+    <li><b>Reachable workspace</b>: 끝단이 <b>최소 한 가지 자세</b>로 도달할 수 있는 점들의 공간</li>
+    <li><b>Dexterous workspace</b>: 끝단이 <b>모든 자세</b>로 도달할 수 있는 점들의 공간 → 항상 Reachable의 부분집합</li>
+  </ul>
+
+  <h3>자유도 (DOF)</h3>
+  <div class="eq">DOF = (변수의 수) − (독립된 구속식의 수)</div>
+  <ul>
+    <li>3차원 공간에서 물체를 마음대로 다루려면 6 DOF(위치 3 + 자세 3)가 필요</li>
+    <li>General purpose: 6 DOF / <b>Redundant</b>: 6보다 많음 (7 DOF 이상) / <b>Deficient</b>: 6보다 적음</li>
+  </ul>
+  <p class="note">강의자료에는 Redundant가 "&gt;7"로 적혀 있는데, 일반적인 정의는 6 초과(7 이상)입니다. 시험 답안은 "작업에 필요한 자유도보다 많으면 여유자유도"라고 쓰면 안전합니다.</p>
+
+  <h3>로봇 문제 종류 (Given / Compute 구분이 자주 나옴)</h3>
+  <div class="tbl"><table>
+    <tr><th>문제</th><th>Given</th><th>Compute</th><th>방법</th></tr>
+    <tr><td>Forward Kinematics</td><td>관절각, 링크 기하</td><td>베이스 기준 끝단 위치·자세</td><td>4×4 동차변환 행렬</td></tr>
+    <tr><td>Inverse Kinematics</td><td>끝단 위치·자세</td><td>가능한 <b>모든</b> 관절각 조합</td><td>해석적/수치적</td></tr>
+    <tr><td>Jacobian</td><td>관절 속도</td><td>끝단 속도</td><td><span class="m">Ẋ = J(θ)θ̇</span>, 특이점에서 역변환 불가</td></tr>
+    <tr><td>Static force</td><td>끝단 힘</td><td>관절 토크</td><td><span class="m">τ = Jᵀ(θ) F</span></td></tr>
+    <tr><td>Forward Dynamics</td><td>관절 토크, 질량·관성·마찰</td><td>링크 각가속도 (미분방정식)</td><td>Newton–Euler, Lagrange</td></tr>
+    <tr><td>Inverse Dynamics</td><td>각가속도·속도·각도, 질량·관성</td><td>관절 토크</td><td>Newton–Euler, Lagrange</td></tr>
+    <tr><td>Trajectory generation</td><td>기하, A점과 B점</td><td>각 관절의 궤적</td><td>3차 이상 다항식 spline</td></tr>
+    <tr><td>Control</td><td>센서값(관절각), 기하, 질량</td><td>원하는 궤적을 위한 관절 토크</td><td>PID 피드백, feedforward 동역학 제어</td></tr>
+  </table></div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="transform">
+  <span class="wk">WEEK 3 · KINEMATICS</span>
+  <h2>3. 위치·자세 표현과 좌표변환</h2>
+
+  <h3>오른손 좌표계 (RHS)</h3>
+  <div class="grid2">
+    <figure>
+      <svg viewBox="0 0 260 200" width="260" role="img" aria-label="오른손 좌표계: x 오른쪽, y 위쪽, z 화면 밖">
+        <line x1="70" y1="150" x2="210" y2="150" class="sx" stroke-width="3" marker-end="url(#arX)"/>
+        <line x1="70" y1="150" x2="70" y2="20" class="sy" stroke-width="3" marker-end="url(#arY)"/>
+        <circle cx="70" cy="150" r="10" class="fp sz" stroke-width="2.5"/><circle cx="70" cy="150" r="3" class="fz"/>
+        <text x="216" y="155" class="tx" font-weight="700">x</text>
+        <text x="62" y="14" class="ty" font-weight="700">y</text>
+        <text x="30" y="180" class="tz" font-weight="700">z (화면 밖)</text>
+        <path d="M150 150 A80 80 0 0 0 70 70" fill="none" class="sm" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arF)"/>
+        <text x="140" y="95" font-size="12" class="tm">x → y 회전 = +z</text>
+      </svg>
+      <figcaption>z축 위에서 보면 x→y 방향이 반시계</figcaption>
+    </figure>
+    <div>
+      <ol>
+        <li>오른손 엄지가 +Z 방향</li>
+        <li>손가락을 감는 방향이 X축 → Y축</li>
+        <li>Z축 위에서 보면 반시계 방향</li>
+      </ol>
+      <p>Roll-Pitch-Yaw: x축 회전 = Roll, y축 회전 = Pitch, z축 회전 = Yaw</p>
+      <p>Frame <span class="m">{B} = { <span class="ps"><sup>A</sup><sub>B</sub></span>R, <sup>A</sup>P<sub>B</sub> }</span> : 자세(회전행렬) + 원점 위치의 쌍</p>
+    </div>
+  </div>
+
+  <h3>평행이동 · 회전 · 역행렬</h3>
+  <div class="eq">
+    <span class="lbl">평행이동만:</span> &nbsp;<sup>A</sup>P = <sup>B</sup>P + <sup>A</sup>P<sub>B</sub><br>
+    <span class="lbl">회전만(원점 같음):</span> &nbsp;<sup>A</sup>P = <span class="ps"><sup>A</sup><sub>B</sub></span>R · <sup>B</sup>P<br>
+    <span class="lbl">역회전:</span> &nbsp;<span class="ps"><sup>B</sup><sub>A</sub></span>R = <span class="ps"><sup>A</sup><sub>B</sub></span>R<sup>−1</sup> = <span class="ps"><sup>A</sup><sub>B</sub></span>R<sup>T</sup> &nbsp;&nbsp;<span class="lbl">(회전행렬은 직교행렬: RRᵀ = I, det R = 1)</span>
+  </div>
+  <div class="key"><b>시험 포인트</b><span class="ps"><sup>A</sup><sub>B</sub></span>R의 <b>각 열</b>은 {B}의 x, y, z 단위벡터를 {A}에서 본 성분입니다. 회전행렬의 역은 전치로 구하므로 계산할 필요가 없습니다.</div>
+
+  <h4>기본 회전행렬 (외우기)</h4>
+  <div class="row" style="font-size:14px">
+    <span class="m">R<sub>X</sub>(γ) =</span><span class="mat"><i>1</i><i>0</i><i>0</i><i>0</i><i>cγ</i><i>−sγ</i><i>0</i><i>sγ</i><i>cγ</i></span>
+    <span class="m">R<sub>Y</sub>(β) =</span><span class="mat"><i>cβ</i><i>0</i><i>sβ</i><i>0</i><i>1</i><i>0</i><i>−sβ</i><i>0</i><i>cβ</i></span>
+    <span class="m">R<sub>Z</sub>(α) =</span><span class="mat"><i>cα</i><i>−sα</i><i>0</i><i>sα</i><i>cα</i><i>0</i><i>0</i><i>0</i><i>1</i></span>
+  </div>
+  <p class="note">R<sub>Y</sub>만 −s가 왼쪽 아래에 있습니다(z×x = y 순서 때문). 자주 틀리는 부분입니다.</p>
+
+  <div class="grid2">
+    <figure>
+      <svg viewBox="0 0 260 220" width="260" role="img" aria-label="z축으로 90도 회전한 프레임 B와 점 P">
+        <line x1="60" y1="170" x2="220" y2="170" class="sx" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arX)"/>
+        <line x1="60" y1="170" x2="60" y2="20" class="sy" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arY)"/>
+        <text x="200" y="190" class="tx" font-size="13">X<tspan font-size="10" dy="3">A</tspan></text>
+        <text x="66" y="26" class="ty" font-size="13">Y<tspan font-size="10" dy="3">A</tspan></text>
+        <line x1="60" y1="170" x2="60" y2="60" class="sx" stroke-width="3" marker-end="url(#arX)"/>
+        <line x1="60" y1="170" x2="12" y2="170" class="sy" stroke-width="3" marker-end="url(#arY)"/>
+        <text x="30" y="72" class="tx" font-size="13" font-weight="700">X<tspan font-size="10" dy="3">B</tspan></text>
+        <text x="6" y="160" class="ty" font-size="13" font-weight="700">Y<tspan font-size="10" dy="3">B</tspan></text>
+        <path d="M110 170 A50 50 0 0 0 60 120" fill="none" class="sh" stroke-width="2" marker-end="url(#arH)"/>
+        <text x="100" y="135" class="th" font-size="13">90°</text>
+        <circle cx="60" cy="90" r="5" class="fa"/>
+        <text x="72" y="94" class="ta" font-size="13">P</text>
+      </svg>
+      <figcaption>점선 {A}, 실선 {B}. {B}의 x축이 {A}의 y축 방향을 향함</figcaption>
+    </figure>
+    <div class="ex"><div class="exh">예제 3-1 · 회전만 있는 경우</div><div class="exb">
+      {B}가 {A}에 대해 z축으로 90° 회전. <sup>B</sup>P = (2, 0, 0)일 때 <sup>A</sup>P는?
+      <div class="row" style="margin-top:8px"><span class="m"><sup>A</sup>P =</span><span class="mat"><i>0</i><i>−1</i><i>0</i><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i></span><span class="mat" style="--c:1"><i>2</i><i>0</i><i>0</i></span><span class="m">=</span><span class="mat" style="--c:1"><i>0</i><i>2</i><i>0</i></span></div>
+      <div class="ans"><b>답</b> <sup>A</sup>P = (0, 2, 0). {B}의 x축이 {A}의 y축과 같은 방향이므로 그림과 일치합니다. 거꾸로 <sup>B</sup>P = Rᵀ·<sup>A</sup>P = (2, 0, 0)으로 돌아옵니다.</div>
+    </div></div>
+  </div>
+
+  <h3>Z-Y-X Euler 각 (움직이는 좌표축 기준)</h3>
+  <p>z축으로 α → <b>새로 생긴</b> y축으로 β → <b>새로 생긴</b> x축으로 γ 회전. 움직이는 축 기준 회전은 <b>오른쪽으로</b> 곱해 나갑니다.</p>
+  <div class="eq"><span class="ps"><sup>A</sup><sub>B</sub></span>R<sub>Z'Y'X'</sub>(α, β, γ) = R<sub>Z</sub>(α) · R<sub>Y</sub>(β) · R<sub>X</sub>(γ)</div>
+  <div class="row" style="font-size:13px"><span class="m">=</span><span class="mat"><i>cαcβ</i><i>cαsβsγ − sαcγ</i><i>cαsβcγ + sαsγ</i><i>sαcβ</i><i>sαsβsγ + cαcγ</i><i>sαsβcγ − cαsγ</i><i>−sβ</i><i>cβsγ</i><i>cβcγ</i></span></div>
+  <div class="key"><b>시험 포인트</b>움직이는 축(Euler) 기준이면 <span class="m">R = R1·R2·R3</span> (오른쪽 곱), 고정 축 기준이면 <span class="m">R = R3·R2·R1</span> (왼쪽 곱). 그래서 Z-Y-X Euler 각은 X-Y-Z 고정각과 같은 행렬이 됩니다.</div>
+
+  <div class="ex"><div class="exh">예제 3-2 · Euler 각 (90°로 단순화)</div><div class="exb">
+    움직이는 축 기준으로 z축 90°, 새 y축 90°, 새 x축 0° 회전했을 때 <span class="ps"><sup>A</sup><sub>B</sub></span>R은?
+    <div class="row" style="margin-top:8px"><span class="m">R<sub>Z</sub>(90°)R<sub>Y</sub>(90°) =</span><span class="mat"><i>0</i><i>−1</i><i>0</i><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i></span><span class="mat"><i>0</i><i>0</i><i>1</i><i>0</i><i>1</i><i>0</i><i>−1</i><i>0</i><i>0</i></span><span class="m">=</span><span class="mat"><i>0</i><i>−1</i><i>0</i><i>0</i><i>0</i><i>1</i><i>−1</i><i>0</i><i>0</i></span></div>
+    <div class="ans"><b>답</b> 공식에 α=90°, β=90°, γ=0°를 넣어도 같은 결과입니다(cα=0, sα=1, cβ=0, sβ=1, cγ=1, sγ=0). 검산으로 x열×y열 = (0,0,−1)×(−1,0,0) = (0,1,0) = z열이 나오면 오른손 좌표계가 맞습니다.</div>
+    <p class="note">강의 예제(z 30°, y 45°, x 60°)도 같은 방법으로, 위 공식에 cα=√3/2, sα=1/2, cβ=sβ=√2/2, cγ=1/2, sγ=√3/2를 대입하면 됩니다. 예: r<sub>31</sub> = −sβ = −√2/2, r<sub>33</sub> = cβcγ = √2/4.</p>
+  </div></div>
+
+  <h3>동차변환 (Homogeneous Transform)</h3>
+  <div class="grid2">
+    <figure>
+      <svg viewBox="0 0 320 230" width="320" role="img" aria-label="동차변환 벡터 관계: AP = R BP + AP_B">
+        <line x1="30" y1="200" x2="110" y2="200" class="sx" stroke-width="2" marker-end="url(#arX)"/>
+        <line x1="30" y1="200" x2="30" y2="120" class="sy" stroke-width="2" marker-end="url(#arY)"/>
+        <text x="10" y="222" font-size="12" class="tm">{A}</text>
+        <line x1="30" y1="200" x2="200" y2="130" class="sf" stroke-width="2" marker-end="url(#arF)"/>
+        <text x="100" y="182" font-size="13"><tspan font-size="10" dy="-5">A</tspan><tspan dy="5">P</tspan><tspan font-size="10" dy="3">B</tspan></text>
+        <line x1="200" y1="130" x2="265" y2="92" class="sx" stroke-width="2" marker-end="url(#arX)"/>
+        <line x1="200" y1="130" x2="162" y2="65" class="sy" stroke-width="2" marker-end="url(#arY)"/>
+        <text x="205" y="150" font-size="12" class="tm">{B}</text>
+        <line x1="200" y1="130" x2="215" y2="30" class="sa" stroke-width="2.5" marker-end="url(#arA)"/>
+        <text x="220" y="70" font-size="13" class="ta"><tspan font-size="10" dy="-5">B</tspan><tspan dy="5">P</tspan></text>
+        <line x1="30" y1="200" x2="213" y2="32" class="sh" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arH)"/>
+        <text x="95" y="105" font-size="13" class="th"><tspan font-size="10" dy="-5">A</tspan><tspan dy="5">P</tspan></text>
+        <circle cx="215" cy="28" r="4" class="ff"/>
+      </svg>
+      <figcaption>점선(<sup>A</sup>P) = {B}의 원점 위치 + 회전시킨 <sup>B</sup>P</figcaption>
+    </figure>
+    <div>
+      <div class="eq"><sup>A</sup>P = <span class="ps"><sup>A</sup><sub>B</sub></span>R · <sup>B</sup>P + <sup>A</sup>P<sub>B</sub> = <span class="ps"><sup>A</sup><sub>B</sub></span>T · <sup>B</sup>P</div>
+      <div class="row"><span class="m"><span class="ps"><sup>A</sup><sub>B</sub></span>T =</span><span class="mat" style="--c:2"><i><span class="ps"><sup>A</sup><sub>B</sub></span>R (3×3)</i><i><sup>A</sup>P<sub>B</sub> (3×1)</i><i>0 0 0</i><i>1</i></span></div>
+      <p>위치벡터는 <span class="m">(x, y, z, 1)</span>처럼 1을 붙인 4×1로 씁니다. 마지막 행이 [0 0 0 1]이 아니거나 R이 정규직교가 아니면 올바른 동차변환이 아닙니다.</p>
+    </div>
+  </div>
+
+  <h4>합성과 역변환</h4>
+  <div class="eq">
+    <span class="lbl">합성:</span> <sup>A</sup>P = <span class="ps"><sup>A</sup><sub>B</sub></span>T · <span class="ps"><sup>B</sup><sub>C</sub></span>T · <sup>C</sup>P &nbsp; <span class="lbl">(아래첨자·위첨자가 이어지도록 곱함)</span><br>
+    <span class="lbl">역변환:</span> <span class="ps"><sup>B</sup><sub>A</sub></span>T = <span class="ps"><sup>A</sup><sub>B</sub></span>T<sup>−1</sup> = [ Rᵀ &nbsp; −Rᵀ·<sup>A</sup>P<sub>B</sub> ; 0 0 0 1 ]
+  </div>
+  <div class="key"><b>자주 나오는 실수</b>역변환의 위치 부분은 그냥 −P가 아니라 <b>−Rᵀ·P</b>입니다.</div>
+  <p><b>동차변환의 세 가지 해석</b></p>
+  <ol>
+    <li><b>Description of a frame</b>: {B}가 {A}에 대해 어디 있고 어느 방향인지 기술</li>
+    <li><b>Transform mapping</b>: <sup>B</sup>P → <sup>A</sup>P 로 좌표계를 바꿔 표현</li>
+    <li><b>Transform operator</b>: 같은 좌표계 안에서 점을 이동시킴, <sup>A</sup>P<sub>2</sub> = T · <sup>A</sup>P<sub>1</sub></li>
+  </ol>
+
+  <div class="ex"><div class="exh">예제 3-3 · 동차변환 (쉬운 버전)</div><div class="exb">
+    {B}는 {A}에 대해 z축으로 90° 회전하고 (2, 1, 0)만큼 이동. <sup>B</sup>P = (1, 0, 0)일 때 <sup>A</sup>P와 <span class="ps"><sup>B</sup><sub>A</sub></span>T를 구하라.
+    <div class="row" style="margin-top:8px"><span class="m"><sup>A</sup>P =</span><span class="mat" style="--c:4"><i>0</i><i>−1</i><i>0</i><i>2</i><i>1</i><i>0</i><i>0</i><i>1</i><i>0</i><i>0</i><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i></span><span class="mat" style="--c:1"><i>1</i><i>0</i><i>0</i><i>1</i></span><span class="m">=</span><span class="mat" style="--c:1"><i>2</i><i>2</i><i>0</i><i>1</i></span></div>
+    <p>역변환: <span class="m">Rᵀ = R<sub>Z</sub>(−90°)</span>, <span class="m">Rᵀ·(2,1,0) = (1, −2, 0)</span> 이므로 <span class="m">−Rᵀ·P = (−1, 2, 0)</span></p>
+    <div class="row"><span class="m"><span class="ps"><sup>B</sup><sub>A</sub></span>T =</span><span class="mat" style="--c:4"><i>0</i><i>1</i><i>0</i><i>−1</i><i>−1</i><i>0</i><i>0</i><i>2</i><i>0</i><i>0</i><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i></span></div>
+    <div class="ans"><b>답</b> <sup>A</sup>P = (2, 2, 0). 검산: <span class="ps"><sup>B</sup><sub>A</sub></span>T·(2,2,0,1) = (2−1, −2+2, 0) = (1, 0, 0) = <sup>B</sup>P ✓</div>
+  </div></div>
+
+  <div class="ex"><div class="exh">예제 3-4 · 강의 예제 2.2 (z 30°, X<sub>A</sub>로 10, Y<sub>A</sub>로 5, <sup>B</sup>P = (3, 7, 0))</div><div class="exb">
+    <div class="row"><span class="m"><span class="ps"><sup>A</sup><sub>B</sub></span>T =</span><span class="mat" style="--c:4"><i>√3/2</i><i>−1/2</i><i>0</i><i>10</i><i>1/2</i><i>√3/2</i><i>0</i><i>5</i><i>0</i><i>0</i><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i></span></div>
+    <p><span class="m">x = 3·√3/2 − 7·1/2 + 10 = (3√3 − 7)/2 + 10 ≈ 9.10</span><br>
+    <span class="m">y = 3·1/2 + 7·√3/2 + 5 = (3 + 7√3)/2 + 5 ≈ 12.56</span></p>
+    <p>역변환: <span class="m">Rᵀ·(10,5,0) = (5√3 + 2.5, −5 + 2.5√3, 0)</span> → 위치 부분 <span class="m">(−5√3 − 2.5, 5 − 2.5√3, 0) ≈ (−11.16, 0.67, 0)</span></p>
+    <div class="ans"><b>답</b> <sup>A</sup>P ≈ (9.10, 12.56, 0). 계산기가 없으면 √3 형태로 두면 됩니다.</div>
+  </div></div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="dh">
+  <span class="wk">WEEK 4–5 · DIRECT KINEMATICS 1, 2</span>
+  <h2>4. DH 파라미터와 정기구학 (Forward Kinematics)</h2>
+  <p>각 링크에 좌표계를 붙이고(Denavit–Hartenberg 규칙), 이웃한 좌표계 사이를 4개의 파라미터로 표현한 뒤 변환행렬을 차례로 곱합니다.</p>
+
+  <h3>DH 파라미터 4개 (Craig Modified DH)</h3>
+  <div class="grid2">
+    <figure>
+      <svg viewBox="0 0 420 290" width="420" role="img" aria-label="DH 파라미터 a, alpha, d, theta의 기하학적 의미">
+        <line x1="80" y1="30" x2="80" y2="270" class="sz" stroke-width="2.5"/>
+        <line x1="80" y1="100" x2="80" y2="40" class="sz" stroke-width="3" marker-end="url(#arZ)"/>
+        <text x="40" y="40" class="tz" font-size="14" font-weight="700">Z<tspan font-size="10" dy="3">i−1</tspan></text>
+        <text x="20" y="285" font-size="12" class="tm">관절축 i−1</text>
+        <line x1="80" y1="190" x2="345" y2="190" class="sx" stroke-width="2.5" marker-end="url(#arX)"/>
+        <text x="350" y="196" class="tx" font-size="14" font-weight="700">X<tspan font-size="10" dy="3">i−1</tspan></text>
+        <line x1="80" y1="205" x2="300" y2="205" class="sh" stroke-width="1.5" marker-start="url(#arH)" marker-end="url(#arH)"/>
+        <text x="175" y="225" class="th" font-size="14" font-weight="700">a<tspan font-size="10" dy="3">i−1</tspan></text>
+        <line x1="270" y1="285" x2="345" y2="40" class="sz" stroke-width="2.5"/>
+        <text x="350" y="40" class="tz" font-size="14" font-weight="700">Z<tspan font-size="10" dy="3">i</tspan></text>
+        <text x="270" y="282" font-size="12" class="tm" text-anchor="end">관절축 i</text>
+        <line x1="300" y1="190" x2="300" y2="50" class="sm" stroke-width="1.2" stroke-dasharray="4 3"/>
+        <path d="M300 80 A110 110 0 0 1 333 82" fill="none" class="so" stroke-width="2" marker-end="url(#arO)"/>
+        <text x="280" y="68" class="to" font-size="14" font-weight="700">α<tspan font-size="10" dy="3">i−1</tspan></text>
+        <circle cx="300" cy="190" r="4" class="ff"/>
+        <circle cx="318" cy="132" r="4" class="ff"/>
+        <line x1="306" y1="188" x2="322" y2="136" class="sa" stroke-width="4" stroke-linecap="round" opacity=".55"/>
+        <text x="330" y="168" class="ta" font-size="14" font-weight="700">d<tspan font-size="10" dy="3">i</tspan></text>
+        <line x1="318" y1="132" x2="405" y2="132" class="sm" stroke-width="1.2" stroke-dasharray="4 3"/>
+        <line x1="318" y1="132" x2="395" y2="95" class="sx" stroke-width="2.5" marker-end="url(#arX)"/>
+        <text x="395" y="88" class="tx" font-size="14" font-weight="700">X<tspan font-size="10" dy="3">i</tspan></text>
+        <path d="M370 132 A52 52 0 0 0 364 110" fill="none" class="sa" stroke-width="2" marker-end="url(#arA)"/>
+        <text x="376" y="124" class="ta" font-size="14" font-weight="700">θ<tspan font-size="10" dy="3">i</tspan></text>
+      </svg>
+      <figcaption>a, α는 X<sub>i−1</sub>을 따라, d, θ는 Z<sub>i</sub>를 따라 잰다</figcaption>
+    </figure>
+    <div class="tbl"><table>
+      <tr><th>기호</th><th>이름</th><th>정의</th></tr>
+      <tr><td><b>a<sub>i−1</sub></b></td><td>Link length</td><td>Z<sub>i−1</sub>에서 Z<sub>i</sub>까지 거리, <b>X<sub>i−1</sub></b>을 따라</td></tr>
+      <tr><td><b>α<sub>i−1</sub></b></td><td>Link twist</td><td>Z<sub>i−1</sub>에서 Z<sub>i</sub>까지 각도, <b>X<sub>i−1</sub></b> 축 회전</td></tr>
+      <tr><td><b>d<sub>i</sub></b></td><td>Link offset</td><td>X<sub>i−1</sub>에서 X<sub>i</sub>까지 거리, <b>Z<sub>i</sub></b>를 따라</td></tr>
+      <tr><td><b>θ<sub>i</sub></b></td><td>Joint angle</td><td>X<sub>i−1</sub>에서 X<sub>i</sub>까지 각도, <b>Z<sub>i</sub></b> 축 회전</td></tr>
+    </table>
+    <p>회전 관절이면 <b>θ<sub>i</sub></b>가 변수, 직선 관절이면 <b>d<sub>i</sub></b>가 변수입니다. 나머지 3개는 고정된 기하 값입니다.</p></div>
+  </div>
+
+  <h4>좌표계 붙이는 규칙</h4>
+  <ul>
+    <li><b>Z<sub>i</sub></b>: 관절 i의 축 방향</li>
+    <li><b>X<sub>i</sub></b>: 관절 i축에서 i+1축으로 가는 <b>공통수선</b> 방향. 두 축이 만나면 두 축이 이루는 평면에 수직</li>
+    <li><b>Y<sub>i</sub></b>: 오른손 법칙으로 완성</li>
+    <li>{0}: 첫 관절 변수가 0일 때 {1}과 겹치도록 잡음 → a<sub>0</sub> = 0, α<sub>0</sub> = 0</li>
+    <li>{N}(끝 좌표계): 원점과 방향을 자유롭게 고르되, 파라미터가 최대한 0이 되게</li>
+  </ul>
+
+  <h4>Standard DH vs Craig Modified DH</h4>
+  <div class="tbl"><table>
+    <tr><th></th><th>Standard DH (Spong)</th><th>Craig Modified DH (수업 기준)</th></tr>
+    <tr><td>관절 i의 회전축</td><td>z<sub>i−1</sub></td><td>z<sub>i</sub></td></tr>
+    <tr><td>파라미터</td><td>a<sub>i</sub>, α<sub>i</sub>, d<sub>i</sub>, θ<sub>i</sub></td><td>a<sub>i−1</sub>, α<sub>i−1</sub>, d<sub>i</sub>, θ<sub>i</sub></td></tr>
+    <tr><td>링크 길이·비틀림 기준축</td><td>x<sub>i</sub></td><td>x<sub>i−1</sub></td></tr>
+    <tr><td>변환 순서</td><td><span class="m">R<sub>z</sub>(θ<sub>i</sub>)T<sub>z</sub>(d<sub>i</sub>)T<sub>x</sub>(a<sub>i</sub>)R<sub>x</sub>(α<sub>i</sub>)</span></td><td><span class="m">R<sub>x</sub>(α<sub>i−1</sub>)T<sub>x</sub>(a<sub>i−1</sub>)R<sub>z</sub>(θ<sub>i</sub>)T<sub>z</sub>(d<sub>i</sub>)</span></td></tr>
+  </table></div>
+
+  <h3>링크 변환행렬</h3>
+  <p>중간 좌표계 {R}, {Q}, {P}를 거쳐 α 회전 → a 이동 → θ 회전 → d 이동 순서로 곱합니다.</p>
+  <div class="row" style="font-size:13px"><span class="m"><span class="ps"><sup>i−1</sup><sub>i</sub></span>T = R<sub>X</sub>(α<sub>i−1</sub>) D<sub>X</sub>(a<sub>i−1</sub>) R<sub>Z</sub>(θ<sub>i</sub>) D<sub>Z</sub>(d<sub>i</sub>) =</span><span class="mat" style="--c:4"><i>cθ<sub>i</sub></i><i>−sθ<sub>i</sub></i><i>0</i><i>a<sub>i−1</sub></i><i>sθ<sub>i</sub>cα<sub>i−1</sub></i><i>cθ<sub>i</sub>cα<sub>i−1</sub></i><i>−sα<sub>i−1</sub></i><i>−sα<sub>i−1</sub>d<sub>i</sub></i><i>sθ<sub>i</sub>sα<sub>i−1</sub></i><i>cθ<sub>i</sub>sα<sub>i−1</sub></i><i>cα<sub>i−1</sub></i><i>cα<sub>i−1</sub>d<sub>i</sub></i><i>0</i><i>0</i><i>0</i><i>1</i></span></div>
+  <div class="key"><b>꼭 외울 것</b>α = 0이면 <span class="mat" style="--c:4;font-size:12px"><i>c</i><i>−s</i><i>0</i><i>a</i><i>s</i><i>c</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i><i>d</i><i>0</i><i>0</i><i>0</i><i>1</i></span> 로 단순해집니다. 평면 로봇 문제는 거의 이 형태입니다.
+  <br><span class="note">강의자료 한 슬라이드의 마지막 항이 D<sub>X</sub>(d<sub>i</sub>)로 적혀 있지만 d는 Z축 이동이므로 D<sub>Z</sub>(d<sub>i</sub>)가 맞습니다.</span></div>
+  <div class="eq"><span class="ps"><sup>0</sup><sub>N</sub></span>T = <span class="ps"><sup>0</sup><sub>1</sub></span>T · <span class="ps"><sup>1</sup><sub>2</sub></span>T · … · <span class="ps"><sup>N−1</sup><sub>N</sub></span>T &nbsp;<span class="lbl">→ 모든 관절 변수의 함수. 관절 센서값을 넣으면 끝단 위치·자세가 나옴</span></div>
+  <p><b>절차</b>: ① 링크 좌표계 정의 → ② 링크별 DH 파라미터 표 작성 → ③ 링크 변환행렬 계산 → ④ 모두 곱해서 {N}을 {0}에 연결</p>
+
+  <h3>강의에 나온 DH 표 (형태 익히기)</h3>
+  <div class="grid2">
+    <div>
+      <h4>평면 3R (Example 3.3)</h4>
+      <div class="tbl"><table><tr><th>i</th><th>α<sub>i−1</sub></th><th>a<sub>i−1</sub></th><th>d<sub>i</sub></th><th>θ<sub>i</sub></th></tr>
+      <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>θ1</td></tr><tr><td>2</td><td>0</td><td>L1</td><td>0</td><td>θ2</td></tr><tr><td>3</td><td>0</td><td>L2</td><td>0</td><td>θ3</td></tr><tr><td>EE</td><td>0</td><td>L3</td><td>0</td><td>0</td></tr></table></div>
+      <p class="note">모든 축이 평행(화면 밖) → α 전부 0, 평면이라 d 전부 0</p>
+    </div>
+    <div>
+      <h4>3R 공간 로봇 (Example 3.4)</h4>
+      <div class="tbl"><table><tr><th>i</th><th>α<sub>i−1</sub></th><th>a<sub>i−1</sub></th><th>d<sub>i</sub></th><th>θ<sub>i</sub></th></tr>
+      <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>θ1</td></tr><tr><td>2</td><td>90°</td><td>0</td><td>d2</td><td>θ2</td></tr><tr><td>3</td><td>0</td><td>0</td><td>L2</td><td>θ3</td></tr></table></div>
+      <p class="note">관절 1(수직)과 관절 2(수평)가 직교해서 α<sub>1</sub> = 90°</p>
+    </div>
+    <div>
+      <h4>3R (Example 4, Week 5)</h4>
+      <div class="tbl"><table><tr><th>i</th><th>α<sub>i−1</sub></th><th>a<sub>i−1</sub></th><th>d<sub>i</sub></th><th>θ<sub>i</sub></th></tr>
+      <tr><td>1</td><td>0</td><td>0</td><td>L1+L2</td><td>θ1</td></tr><tr><td>2</td><td>90°</td><td>0</td><td>0</td><td>θ2</td></tr><tr><td>3</td><td>0</td><td>L3</td><td>0</td><td>θ3</td></tr><tr><td>4</td><td>0</td><td>L4</td><td>0</td><td>0</td></tr></table></div>
+    </div>
+    <div>
+      <h4>PUMA 560 (6R)</h4>
+      <div class="tbl"><table><tr><th>i</th><th>α<sub>i−1</sub></th><th>a<sub>i−1</sub></th><th>d<sub>i</sub></th><th>θ<sub>i</sub></th></tr>
+      <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>θ1</td></tr><tr><td>2</td><td>−90°</td><td>0</td><td>0</td><td>θ2</td></tr><tr><td>3</td><td>0</td><td>a2</td><td>d3</td><td>θ3</td></tr><tr><td>4</td><td>−90°</td><td>a3</td><td>d4</td><td>θ4</td></tr><tr><td>5</td><td>90°</td><td>0</td><td>0</td><td>θ5</td></tr><tr><td>6</td><td>−90°</td><td>0</td><td>0</td><td>θ6</td></tr></table></div>
+      <p class="note">4·5·6축이 한 점에서 만나는 손목(spherical wrist)</p>
+    </div>
+  </div>
+  <p class="note">Week 5의 PRR, 3P, 3R-wrist 그림 문제도 같은 규칙입니다. 직선 관절(P)은 d<sub>i</sub>가 변수(예: PRR이면 d1, θ2, θ3), 3P(직교로봇)는 d1, d2, d3가 변수입니다.</p>
+
+  <div class="ex"><div class="exh">예제 4-1 · 평면 2R 정기구학</div><div class="exb">
+    <div class="grid2" style="margin:0">
+      <div>
+        <p>DH 표 (α 전부 0, d 전부 0):</p>
+        <div class="tbl"><table><tr><th>i</th><th>α<sub>i−1</sub></th><th>a<sub>i−1</sub></th><th>d<sub>i</sub></th><th>θ<sub>i</sub></th></tr>
+        <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>θ1</td></tr><tr><td>2</td><td>0</td><td>L1</td><td>0</td><td>θ2</td></tr><tr><td>E</td><td>0</td><td>L2</td><td>0</td><td>0</td></tr></table></div>
+        <p>곱하면 일반식:</p>
+        <div class="eq">x = L1·c1 + L2·c12<br>y = L1·s1 + L2·s12<br>φ = θ1 + θ2 <span class="lbl">(끝단 방향)</span></div>
+      </div>
+      <figure>
+        <svg viewBox="0 0 260 260" width="260" role="img" aria-label="2R 로봇, theta1 90도 theta2 -90도, 끝단 (1,1)">
+          <g class="sm" stroke-width="1" opacity=".35"><line x1="40" y1="100" x2="230" y2="100"/><line x1="160" y1="30" x2="160" y2="220"/></g>
+          <line x1="40" y1="220" x2="235" y2="220" class="sx" stroke-width="1.5" marker-end="url(#arX)"/>
+          <line x1="40" y1="220" x2="40" y2="20" class="sy" stroke-width="1.5" marker-end="url(#arY)"/>
+          <text x="238" y="226" class="tx" font-size="12">x</text><text x="44" y="22" class="ty" font-size="12">y</text>
+          <text x="156" y="238" font-size="12" class="tm">1</text><text x="26" y="104" font-size="12" class="tm">1</text>
+          <line x1="40" y1="220" x2="40" y2="100" class="sa" stroke-width="6" stroke-linecap="round"/>
+          <line x1="40" y1="100" x2="160" y2="100" class="sa" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="40" cy="220" r="7" class="fp sf" stroke-width="2"/><circle cx="40" cy="100" r="7" class="fp sf" stroke-width="2"/>
+          <circle cx="160" cy="100" r="5" class="fh"/>
+          <text x="148" y="88" class="th" font-size="13" font-weight="700">(1, 1)</text>
+          <path d="M62 220 A22 22 0 0 0 40 198" fill="none" class="sh" stroke-width="1.5"/>
+          <text x="58" y="200" font-size="12" class="th">θ1=90°</text>
+          <line x1="40" y1="100" x2="40" y2="60" class="sm" stroke-width="1" stroke-dasharray="3 3"/>
+          <path d="M40 74 A26 26 0 0 1 66 100" fill="none" class="sh" stroke-width="1.5"/>
+          <text x="64" y="80" font-size="12" class="th">θ2=−90°</text>
+          <text x="10" y="165" font-size="12" class="tm">L1</text><text x="96" y="118" font-size="12" class="tm">L2</text>
+        </svg>
+        <figcaption>L1 = L2 = 1, θ1 = 90°, θ2 = −90°</figcaption>
+      </figure>
+    </div>
+    <p><b>문제</b>: L1 = L2 = 1, θ1 = 90°, θ2 = −90°일 때 끝단 위치는?</p>
+    <p><span class="m">c1 = 0, s1 = 1, θ1+θ2 = 0° → c12 = 1, s12 = 0</span></p>
+    <div class="ans"><b>답</b> x = 1·0 + 1·1 = 1, y = 1·1 + 1·0 = 1, φ = 0°. 끝단 (1, 1)이고 x축 방향을 향합니다.</div>
+    <p class="note">행렬로 확인: <span class="ps"><sup>0</sup><sub>1</sub></span>T·<span class="ps"><sup>1</sup><sub>2</sub></span>T의 회전부 = R<sub>Z</sub>(90°)R<sub>Z</sub>(−90°) = I, 위치부 = R<sub>Z</sub>(90°)·(1,0,0) = (0,1,0). 여기에 <span class="ps"><sup>2</sup><sub>E</sub></span>T의 (1,0,0)을 더하면 (1,1,0)입니다.</p>
+  </div></div>
+
+  <div class="ex"><div class="exh">예제 4-2 · 평면 3R 결과 행렬 (강의 3R)</div><div class="exb">
+    <div class="row" style="font-size:13px"><span class="m"><span class="ps"><sup>0</sup><sub>3</sub></span>T =</span><span class="mat" style="--c:4"><i>c123</i><i>−s123</i><i>0</i><i>L1c1 + L2c12</i><i>s123</i><i>c123</i><i>0</i><i>L1s1 + L2s12</i><i>0</i><i>0</i><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i></span></div>
+    <p>θ1 = 30°, θ2 = 60°, θ3 = 0°, L1 = L2 = 2일 때 {3}의 원점은?</p>
+    <div class="ans"><b>답</b> θ1+θ2 = 90° → c12 = 0, s12 = 1. x = 2·(√3/2) + 0 = √3, y = 2·(1/2) + 2·1 = 3. 원점 (√3, 3), 방향 θ1+θ2+θ3 = 90°</div>
+  </div></div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="ik">
+  <span class="wk">WEEK 6-1 · INVERSE KINEMATICS</span>
+  <h2>5. 역기구학 (Inverse Kinematics)</h2>
+  <p>원하는 끝단 자세 T<sub>d</sub>가 주어졌을 때 <span class="m">FK(q) = T<sub>d</sub></span>를 만족하는 관절 변수 q를 관절 한계 안에서 찾는 문제입니다. 해(solution)는 그 자세에 해당하는 관절 변수 한 세트입니다.</p>
+
+  <h3>해의 존재성 · 다중해 · 풀이법</h3>
+  <div class="tbl"><table>
+    <tr><th>항목</th><th>내용</th></tr>
+    <tr><td>① 해의 존재</td><td>목표점이 작업공간 안에 있어야 함. Reachable(한 자세라도) / Dexterous(모든 자세)</td></tr>
+    <tr><td>② 다중해</td><td>이산적인 해: elbow-up / elbow-down. 여유자유도(관절 DOF &gt; 작업 차원)면 연속적인 해의 집합. 해의 개수는 관절 수와 링크 파라미터에 따라 달라짐 → 그중 하나를 골라야 함</td></tr>
+    <tr><td>③ 풀이법</td><td>모든 로봇에 통하는 닫힌 해는 없음</td></tr>
+  </table></div>
+  <div class="grid2">
+    <div class="key" style="margin:0"><b>Closed-form (해석적)</b>
+      <b style="color:var(--fg);font-size:14px;display:inline">Algebraic</b>: 비선형 식을 대수·삼각 항등식으로 정리<br>
+      <b style="color:var(--fg);font-size:14px;display:inline">Geometric</b>: 평면·삼각형 같은 기하 문제로 쪼갬<br>
+      완전한 유도는 <b>모든 해 가지</b>를 찾아냄</div>
+    <div class="key" style="margin:0"><b>Numerical (반복적)</b>
+      초기값에서 시작 → 현재 자세 계산 → 오차 계산 후 관절 갱신 → 오차가 충분히 작을 때까지 반복 (예: 자코비안 기반). 한 번에 보통 <b>해 하나</b>, 초기값과 수렴성이 중요</div>
+  </div>
+
+  <h3>평면 2R(3R) 역기구학 공식</h3>
+  <div class="eq">
+    <span class="lbl">① θ2 (코사인 법칙):</span><br>
+    x² + y² = L1² + L2² + 2L1L2·c2 &nbsp;⇒&nbsp; c2 = (x² + y² − L1² − L2²) / (2L1L2)<br>
+    s2 = ±√(1 − c2²), &nbsp; θ2 = Atan2(s2, c2) <span class="lbl">(± 두 개 → elbow 두 해)</span><br><br>
+    <span class="lbl">② θ1 (대수적):</span> k1 = L1 + L2·c2, &nbsp; k2 = L2·s2<br>
+    x = k1·c1 − k2·s1, &nbsp; y = k1·s1 + k2·c1 &nbsp;⇒&nbsp; θ1 = Atan2(y, x) − Atan2(k2, k1)<br><br>
+    <span class="lbl">③ 3R이면:</span> θ3 = φ − θ1 − θ2 &nbsp;<span class="lbl">(φ = 원하는 끝단 방향)</span>
+  </div>
+  <p class="note">강의 슬라이드에 k2 = l2로 적힌 곳이 있는데, 위 식 x = k1c1 − k2s1이 성립하려면 k2 = L2·s2입니다.</p>
+  <p><b>기하적 방법</b>: θ1 = β ± ψ, β = Atan2(y, x), ψ는 삼각형(L1, L2, r)에서 코사인 법칙으로 <span class="m">cos ψ = (x² + y² + L1² − L2²) / (2L1·√(x²+y²))</span></p>
+  <div class="key"><b>해가 없는 경우</b>|c2| &gt; 1이면 목표점이 너무 멀거나 가까운 것입니다. 2R의 reachable workspace는 <span class="m">|L1 − L2| ≤ r ≤ L1 + L2</span> 인 고리 모양이고, L1 = L2이면 원점까지 닿습니다.</div>
+
+  <div class="grid2">
+    <figure>
+      <svg viewBox="0 0 260 260" width="260" role="img" aria-label="2R 작업공간: 반지름 1과 3 사이 고리">
+        <circle cx="130" cy="130" r="114" class="fa" opacity=".18"/>
+        <circle cx="130" cy="130" r="114" fill="none" class="sa" stroke-width="2"/>
+        <circle cx="130" cy="130" r="38" class="fp sa" stroke-width="2"/>
+        <circle cx="130" cy="130" r="5" class="ff"/>
+        <line x1="130" y1="130" x2="244" y2="130" class="sf" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="200" y="124" font-size="12">L1+L2=3</text>
+        <line x1="130" y1="130" x2="103" y2="103" class="sf" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="62" y="98" font-size="12">|L1−L2|=1</text>
+        <text x="130" y="250" text-anchor="middle" font-size="12" class="tm">L1=2, L2=1</text>
+      </svg>
+      <figcaption>색칠된 고리 = reachable workspace</figcaption>
+    </figure>
+    <figure>
+      <svg viewBox="0 0 260 260" width="260" role="img" aria-label="목표점 (1,1)에 대한 두 해: elbow-down과 elbow-up">
+        <line x1="40" y1="220" x2="235" y2="220" class="sx" stroke-width="1.5" marker-end="url(#arX)"/>
+        <line x1="40" y1="220" x2="40" y2="20" class="sy" stroke-width="1.5" marker-end="url(#arY)"/>
+        <line x1="40" y1="220" x2="160" y2="220" class="sa" stroke-width="6" stroke-linecap="round" opacity=".85"/>
+        <line x1="160" y1="220" x2="160" y2="100" class="sa" stroke-width="6" stroke-linecap="round" opacity=".85"/>
+        <line x1="40" y1="220" x2="40" y2="100" class="sh" stroke-width="6" stroke-linecap="round" opacity=".85"/>
+        <line x1="40" y1="100" x2="160" y2="100" class="sh" stroke-width="6" stroke-linecap="round" opacity=".85"/>
+        <circle cx="40" cy="220" r="7" class="fp sf" stroke-width="2"/>
+        <circle cx="160" cy="220" r="7" class="fp sa" stroke-width="2"/>
+        <circle cx="40" cy="100" r="7" class="fp sh" stroke-width="2"/>
+        <circle cx="160" cy="100" r="6" class="ff"/>
+        <text x="170" y="96" font-size="13" font-weight="700">목표 (1,1)</text>
+        <text x="170" y="214" font-size="12" class="ta">해 A: elbow-down</text>
+        <text x="170" y="230" font-size="12" class="ta">θ1=0°, θ2=90°</text>
+        <text x="50" y="60" font-size="12" class="th">해 B: elbow-up</text>
+        <text x="50" y="76" font-size="12" class="th">θ1=90°, θ2=−90°</text>
+      </svg>
+      <figcaption>같은 끝단 위치에 관절각 해가 두 개</figcaption>
+    </figure>
+  </div>
+
+  <div class="ex"><div class="exh">예제 5-1 · 2R 역기구학 (두 해)</div><div class="exb">
+    L1 = L2 = 1, 목표점 (x, y) = (1, 1). θ1, θ2를 모두 구하라.
+    <ol>
+      <li><span class="m">c2 = (1 + 1 − 1 − 1)/(2·1·1) = 0</span> → <span class="m">s2 = ±1</span> → <span class="m">θ2 = ±90°</span></li>
+      <li><b>θ2 = +90°</b>: k1 = 1 + 0 = 1, k2 = 1·1 = 1 → <span class="m">θ1 = Atan2(1,1) − Atan2(1,1) = 45° − 45° = 0°</span></li>
+      <li><b>θ2 = −90°</b>: k1 = 1, k2 = −1 → <span class="m">θ1 = 45° − (−45°) = 90°</span></li>
+    </ol>
+    <div class="ans"><b>답</b> (θ1, θ2) = (0°, 90°) 또는 (90°, −90°). 두 번째 해는 예제 4-1의 정기구학과 정확히 같은 자세입니다. FK에 다시 넣어 검산하는 습관을 들이세요: (c0 + c90, s0 + s90) = (1, 1) ✓</div>
+  </div></div>
+
+  <div class="ex"><div class="exh">예제 5-2 · 끝까지 뻗은 경우와 도달 불가</div><div class="exb">
+    L1 = L2 = 1. (a) 목표 (2, 0) &nbsp; (b) 목표 (0, 3)
+    <div class="ans"><b>답</b> (a) c2 = (4 − 2)/2 = 1 → θ2 = 0° (해 하나로 합쳐짐), k1 = 2, k2 = 0 → θ1 = 0° − 0° = 0°. 팔을 완전히 편 자세로, 6장의 특이점과 같은 자세입니다.<br>(b) c2 = (9 − 2)/2 = 3.5 &gt; 1 → 해 없음 (r = 3 &gt; L1 + L2 = 2)</div>
+  </div></div>
+
+  <div class="ex"><div class="exh">예제 5-3 · 3R (방향까지 지정)</div><div class="exb">
+    예제 5-1의 로봇 끝에 세 번째 관절을 달고, 끝단 방향 φ = 90°를 원한다. 해 A(θ1=0°, θ2=90°)일 때 θ3은?
+    <div class="ans"><b>답</b> θ3 = φ − θ1 − θ2 = 90° − 0° − 90° = 0°. 해 B라면 θ3 = 90° − 90° − (−90°) = 90°</div>
+  </div></div>
+
+  <h3>PUMA 560 대수적 풀이 아이디어</h3>
+  <p>정기구학 식 <span class="m"><span class="ps"><sup>0</sup><sub>6</sub></span>T = <span class="ps"><sup>0</sup><sub>1</sub></span>T(θ1)·…·<span class="ps"><sup>5</sup><sub>6</sub></span>T(θ6)</span>의 양변 앞에 <span class="m"><span class="ps"><sup>0</sup><sub>1</sub></span>T(θ1)<sup>−1</sup></span> 같은 역행렬을 곱해서 변수를 한쪽으로 분리하고, 원소끼리 비교해 풀 수 있는 식을 하나씩 찾아갑니다.</p>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="jacobian">
+  <span class="wk">WEEK 6-2 · JACOBIAN</span>
+  <h2>6. 자코비안: 속도와 정적 힘</h2>
+
+  <h3>정의</h3>
+  <div class="eq">
+    Y = F(X) 이면 &nbsp; δY = (∂F/∂X)·δX = J(X)·δX &nbsp;<span class="lbl">J의 (i, j) 원소 = ∂f<sub>i</sub>/∂x<sub>j</sub></span><br>
+    로봇: &nbsp; ẋ = J(θ)·θ̇ &nbsp;&nbsp; θ̇ = J<sup>−1</sup>(θ)·ẋ <span class="lbl">(J가 정방이고 비특이일 때)</span>
+  </div>
+  <ul>
+    <li><span class="m">ẋ = (v<sub>x</sub>, v<sub>y</sub>, v<sub>z</sub>, ω<sub>x</sub>, ω<sub>y</sub>, ω<sub>z</sub>)</span>: 끝단 선속도 + 각속도, 6×1</li>
+    <li>J는 <b>6×n</b> 행렬 (n = 관절 수), θ̇는 n×1</li>
+    <li>J는 θ에 따라 변하는 <b>시변 선형변환</b>입니다</li>
+    <li><b>특이점(singularity)</b>: det J = 0이 되어 역변환이 안 되는 자세. 끝단이 어떤 방향으로는 움직일 수 없음</li>
+  </ul>
+  <p><b>자코비안 구하는 두 방법</b>: ① 정기구학 식을 시간으로 미분 ② 링크 속도를 차례로 전파(recursive velocity propagation)</p>
+
+  <div class="grid2">
+    <figure>
+      <svg viewBox="0 0 260 220" width="260" role="img" aria-label="1R 로봇의 끝단 속도는 링크에 수직">
+        <line x1="40" y1="190" x2="240" y2="190" class="sx" stroke-width="1.5" marker-end="url(#arX)"/>
+        <line x1="40" y1="190" x2="40" y2="20" class="sy" stroke-width="1.5" marker-end="url(#arY)"/>
+        <line x1="40" y1="190" x2="170" y2="115" class="sa" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="40" cy="190" r="7" class="fp sf" stroke-width="2"/>
+        <circle cx="170" cy="115" r="5" class="ff"/>
+        <line x1="170" y1="115" x2="132" y2="50" class="sh" stroke-width="2.5" marker-end="url(#arH)"/>
+        <text x="100" y="48" class="th" font-size="13" font-weight="700">v = rθ̇</text>
+        <path d="M80 190 A40 40 0 0 0 75 170" fill="none" class="sf" stroke-width="1.5"/>
+        <text x="86" y="182" font-size="13">θ</text>
+        <text x="96" y="140" font-size="13" class="ta">r</text>
+        <path d="M164 104 l-8 4 l4 8" fill="none" class="sm" stroke-width="1.2"/>
+      </svg>
+      <figcaption>회전 관절의 끝단 속도는 링크에 수직</figcaption>
+    </figure>
+    <div class="ex" style="margin:0"><div class="exh">예제 6-1 · 1R 로봇</div><div class="exb">
+      <div class="eq" style="margin-top:0">x = r cos θ, &nbsp;y = r sin θ<br>ẋ = −r sin θ·θ̇, &nbsp;ẏ = r cos θ·θ̇ &nbsp;⇒ J = [−r sθ ; r cθ]</div>
+      r = 2, θ = 90°, θ̇ = 1 rad/s 일 때 끝단 속도는?
+      <div class="ans"><b>답</b> ẋ = −2·1·1 = −2, ẏ = 2·0·1 = 0 → v = (−2, 0). 링크가 위를 향할 때 왼쪽으로 움직이며, 반시계 회전과 일치합니다.</div>
+    </div></div>
+  </div>
+
+  <h3>평면 2R / 3R 자코비안</h3>
+  <div class="row" style="font-size:13px"><span class="m">J<sub>2R</sub> =</span><span class="mat" style="--c:2"><i>−L1s1 − L2s12</i><i>−L2s12</i><i>L1c1 + L2c12</i><i>L2c12</i></span><span class="m">&nbsp; det J = L1·L2·s2</span></div>
+  <div class="row" style="font-size:13px"><span class="m">J<sub>3R</sub> =</span><span class="mat"><i>−L1s1 − L2s12 − L3s123</i><i>−L2s12 − L3s123</i><i>−L3s123</i><i>L1c1 + L2c12 + L3c123</i><i>L2c12 + L3c123</i><i>L3c123</i><i>1</i><i>1</i><i>1</i></span><span class="m">&nbsp; x = (x, y, α), α = θ1+θ2+θ3</span></div>
+  <p class="note">외우는 요령: 1열은 x, y를 θ1로 미분한 것(−y, x), 2열은 θ1 항을 뺀 나머지의 (−y, x), 3열은 마지막 링크만의 (−y, x)입니다.</p>
+  <div class="key"><b>특이점</b>2R은 det J = L1L2·sin θ2 = 0 → <b>θ2 = 0°</b>(완전히 폄) 또는 <b>θ2 = 180°</b>(완전히 접음). 이때 끝단은 팔 길이 방향(반지름 방향)으로 움직일 수 없습니다. 작업공간 경계가 대표적인 특이 자세입니다.</div>
+
+  <figure>
+    <svg viewBox="0 0 420 150" width="420" role="img" aria-label="팔을 편 특이 자세: 반지름 방향 속도 불가">
+      <line x1="40" y1="100" x2="300" y2="100" class="sa" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="40" cy="100" r="7" class="fp sf" stroke-width="2"/><circle cx="170" cy="100" r="7" class="fp sf" stroke-width="2"/><circle cx="300" cy="100" r="5" class="ff"/>
+      <line x1="300" y1="100" x2="300" y2="40" class="so" stroke-width="2.5" marker-end="url(#arO)"/>
+      <text x="308" y="50" class="to" font-size="13">이 방향은 가능</text>
+      <line x1="300" y1="100" x2="370" y2="100" class="sh" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#arH)"/>
+      <text x="320" y="125" class="th" font-size="13">이 방향은 불가 ✕</text>
+      <text x="90" y="88" font-size="12" class="tm">θ2 = 0°</text>
+    </svg>
+    <figcaption>두 관절이 만드는 속도가 모두 같은 방향(위아래)이라 열벡터가 평행 → det J = 0</figcaption>
+  </figure>
+
+  <div class="ex"><div class="exh">예제 6-2 · 2R 속도, 역속도, 특이점</div><div class="exb">
+    L1 = L2 = 1, θ1 = 0°, θ2 = 90° (예제 5-1의 해 A 자세)
+    <div class="row" style="margin-top:8px"><span class="m">s1=0, c1=1, θ1+θ2=90° → s12=1, c12=0 &nbsp;⇒ J =</span><span class="mat" style="--c:2"><i>−1</i><i>−1</i><i>1</i><i>0</i></span><span class="m">, det J = 0·(−1) − (−1)·1 = 1</span></div>
+    <p>(a) θ̇ = (1, 0)일 때 끝단 속도 &nbsp; (b) 끝단을 v = (0, 1)로 움직이려면 θ̇는? &nbsp; (c) 이 로봇의 특이 자세는?</p>
+    <div class="ans"><b>답</b><br>
+      (a) v = J·(1,0) = (−1, 1)<br>
+      (b) J<sup>−1</sup> = (1/det)·[d −b; −c a] = [0 1; −1 −1] → θ̇ = J<sup>−1</sup>(0,1) = (1, −1). 검산 J(1,−1) = (−1+1, 1+0) = (0, 1) ✓<br>
+      (c) det J = s2 = 0 → θ2 = 0° 또는 180°. 예: θ1 = 0°, θ2 = 0°이면 J = [0 0; 2 1], det = 0</div>
+    <p class="note">2×2 역행렬 공식 <span class="m">[a b; c d]<sup>−1</sup> = 1/(ad − bc)·[d −b; −c a]</span>은 계산기 없이 꼭 쓸 수 있어야 합니다.</p>
+  </div></div>
+
+  <h3>정적 힘: τ = Jᵀ F</h3>
+  <p>끝단이 환경에 힘 F를 가할 때 각 관절이 내야 할 토크는 자코비안의 전치로 구합니다(가상일의 원리: τᵀθ̇ = Fᵀẋ).</p>
+  <div class="ex"><div class="exh">예제 6-3 · 관절 토크</div><div class="exb">
+    예제 6-2 자세(J = [−1 −1; 1 0])에서 끝단에 위쪽 힘 F = (0, 1) N이 필요하다. 관절 토크는?
+    <div class="row" style="margin-top:8px"><span class="m">τ = Jᵀ F =</span><span class="mat" style="--c:2"><i>−1</i><i>1</i><i>−1</i><i>0</i></span><span class="mat" style="--c:1"><i>0</i><i>1</i></span><span class="m">=</span><span class="mat" style="--c:1"><i>1</i><i>0</i></span></div>
+    <div class="ans"><b>답</b> τ1 = 1 N·m, τ2 = 0. 직관: 관절2(1,0)에서 끝단(1,1)까지 팔이 수직이라 위쪽 힘은 관절2에 모멘트를 만들지 않고, 관절1에는 모멘트팔 1 m × 1 N = 1 N·m가 걸립니다.</div>
+  </div></div>
+
+  <h3>준비 개념: 대칭·반대칭 행렬과 각속도</h3>
+  <ul>
+    <li>대칭: <span class="m">A = Aᵀ</span> / 반대칭(skew-symmetric): <span class="m">A = −Aᵀ</span> → 대각 원소 0, <span class="m">a12 = −a21</span>…</li>
+    <li><span class="m">RRᵀ = I</span>를 미분 → <span class="m">ṘRᵀ + RṘᵀ = 0</span> → <span class="m">S(ω) = ṘRᵀ</span>는 반대칭 → <span class="m">Ṙ = S(ω)R</span></li>
+    <li><span class="m">S(ω)·r = ω × r</span>: "회전하는 벡터의 변화율은 각속도와 그 벡터의 외적"</li>
+  </ul>
+  <div class="row"><span class="m">S(ω) =</span><span class="mat"><i>0</i><i>−ω<sub>z</sub></i><i>ω<sub>y</sub></i><i>ω<sub>z</sub></i><i>0</i><i>−ω<sub>x</sub></i><i>−ω<sub>y</sub></i><i>ω<sub>x</sub></i><i>0</i></span><span class="m">, &nbsp;ω×r = (ω<sub>y</sub>r<sub>z</sub> − ω<sub>z</sub>r<sub>y</sub>, ω<sub>z</sub>r<sub>x</sub> − ω<sub>x</sub>r<sub>z</sub>, ω<sub>x</sub>r<sub>y</sub> − ω<sub>y</sub>r<sub>x</sub>)</span></div>
+  <div class="ex"><div class="exh">예제 6-4 · 외적 / 반대칭 행렬</div><div class="exb">
+    ω = (0, 0, 2), r = (1, 1, 0)일 때 ṙ = ω × r는?
+    <div class="row" style="margin-top:8px"><span class="mat"><i>0</i><i>−2</i><i>0</i><i>2</i><i>0</i><i>0</i><i>0</i><i>0</i><i>0</i></span><span class="mat" style="--c:1"><i>1</i><i>1</i><i>0</i></span><span class="m">=</span><span class="mat" style="--c:1"><i>−2</i><i>2</i><i>0</i></span></div>
+    <div class="ans"><b>답</b> (−2, 2, 0). r에 수직이고 크기는 |ω||r| = 2√2 입니다.</div>
+  </div></div>
+
+  <h3>속도 전파와 자코비안 열 (관절 종류별)</h3>
+  <div class="tbl"><table>
+    <tr><th></th><th>Prismatic (P)</th><th>Revolute (R)</th></tr>
+    <tr><td>상대 운동</td><td>ω<sub>i−1,i</sub> = 0, &nbsp; ṗ<sub>i−1,i</sub> = ḋ<sub>i</sub> z<sub>i−1</sub></td><td>ω<sub>i−1,i</sub> = θ̇<sub>i</sub> z<sub>i−1</sub>, &nbsp; v<sub>i−1,i</sub> = ω<sub>i−1,i</sub> × r<sub>i−1,i</sub></td></tr>
+    <tr><td>각속도 전파</td><td>ω<sub>i</sub> = ω<sub>i−1</sub></td><td>ω<sub>i</sub> = ω<sub>i−1</sub> + θ̇<sub>i</sub> z<sub>i−1</sub></td></tr>
+    <tr><td>선속도 전파</td><td>ṗ<sub>i</sub> = ṗ<sub>i−1</sub> + ḋ<sub>i</sub> z<sub>i−1</sub> + ω<sub>i</sub> × r<sub>i−1,i</sub></td><td>ṗ<sub>i</sub> = ṗ<sub>i−1</sub> + ω<sub>i</sub> × r<sub>i−1,i</sub></td></tr>
+    <tr><td><b>자코비안 i열</b> [J<sub>P</sub>; J<sub>O</sub>]</td><td><b>[ z<sub>i−1</sub> ; 0 ]</b></td><td><b>[ z<sub>i−1</sub> × (p<sub>e</sub> − p<sub>i−1</sub>) ; z<sub>i−1</sub> ]</b></td></tr>
+  </table></div>
+  <div class="ex"><div class="exh">예제 6-5 · 열 공식으로 2R 자코비안 다시 구하기</div><div class="exb">
+    평면이라 z<sub>0</sub> = z<sub>1</sub> = (0, 0, 1). <span class="m">(0,0,1) × (x, y, 0) = (−y, x, 0)</span> 을 이용하면
+    <ul>
+      <li>1열: p<sub>e</sub> − p<sub>0</sub> = (L1c1 + L2c12, L1s1 + L2s12, 0) → (−L1s1 − L2s12, L1c1 + L2c12, 0), 각속도 부분 (0, 0, 1)</li>
+      <li>2열: p<sub>e</sub> − p<sub>1</sub> = (L2c12, L2s12, 0) → (−L2s12, L2c12, 0), 각속도 부분 (0, 0, 1)</li>
+    </ul>
+    <div class="ans"><b>답</b> 6×2 자코비안의 위 두 행이 미분으로 구한 J<sub>2R</sub>과 같고, 마지막 행(ω<sub>z</sub>)은 [1 1]입니다. 두 방법의 결과가 일치합니다.</div>
+  </div></div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="quiz">
+  <span class="wk">SELF CHECK</span>
+  <h2>7. 단답 셀프체크</h2>
+  <p class="note">질문을 눌러 답을 확인하세요.</p>
+  <details><summary>Kinematics와 Dynamics의 가장 큰 차이는?</summary><p>Kinematics는 힘·토크를 고려하지 않고 위치·속도·가속도만 다루고, Dynamics는 힘·토크와 가속도의 관계를 다룬다.</p></details>
+  <details><summary>Open chain과 Closed chain을 경로 개수로 구분하면?</summary><p>Open: 베이스에서 끝단까지 경로가 하나. Closed: 링크끼리 두 개 이상의 경로로 연결.</p></details>
+  <details><summary>병렬 매니퓰레이터가 직렬보다 유리한 점 세 가지는?</summary><p>강성이 높고, 오차 누적이 적어 정밀하며, 무거운 하중을 지지하기 좋다. (단점: 작업공간이 좁고 해석·제어가 복잡)</p></details>
+  <details><summary>SCARA의 "Selective Compliance"는 무슨 뜻인가?</summary><p>평면 방향(평행한 회전 관절)으로는 유연하고, 수직 방향으로는 강성이 높아 조립 작업에 유리하다는 뜻.</p></details>
+  <details><summary>Reachable workspace와 Dexterous workspace의 차이는?</summary><p>Reachable: 최소 한 가지 자세로 도달 가능한 점. Dexterous: 모든 자세로 도달 가능한 점. Dexterous ⊂ Reachable.</p></details>
+  <details><summary>Redundant robot이란?</summary><p>작업에 필요한 자유도(3D에서 6)보다 관절 자유도가 많은 로봇. 역기구학 해가 연속적으로 무수히 많다.</p></details>
+  <details><summary>회전행렬의 역행렬은 어떻게 구하나?</summary><p>전치하면 된다. R<sup>−1</sup> = Rᵀ (직교행렬).</p></details>
+  <details><summary>동차변환 역행렬의 위치 부분은?</summary><p>−Rᵀ·P. 그냥 −P가 아니다.</p></details>
+  <details><summary>Z-Y-X Euler 각의 행렬 곱 순서는?</summary><p>R<sub>Z</sub>(α)·R<sub>Y</sub>(β)·R<sub>X</sub>(γ). 움직이는 축 기준이므로 오른쪽으로 곱한다.</p></details>
+  <details><summary>Craig DH에서 a<sub>i−1</sub>과 d<sub>i</sub>는 각각 어느 축을 따라 재나?</summary><p>a<sub>i−1</sub>: X<sub>i−1</sub>을 따라 Z<sub>i−1</sub>→Z<sub>i</sub> 거리. d<sub>i</sub>: Z<sub>i</sub>를 따라 X<sub>i−1</sub>→X<sub>i</sub> 거리.</p></details>
+  <details><summary>회전 관절과 직선 관절의 DH 변수는?</summary><p>회전(R): θ<sub>i</sub>. 직선(P): d<sub>i</sub>.</p></details>
+  <details><summary>역기구학 해석적 방법과 수치적 방법의 특징은?</summary><p>해석적(대수/기하): 식으로 바로 계산, 모든 해 가지를 찾을 수 있음. 수치적(반복): 초기값에서 오차를 줄여 감, 보통 해 하나, 초기값·수렴성이 중요.</p></details>
+  <details><summary>2R 로봇에서 θ2의 해가 두 개 나오는 이유는?</summary><p>s2 = ±√(1 − c2²)에서 부호가 두 개라서. elbow-up / elbow-down.</p></details>
+  <details><summary>ẋ = Jθ̇에서 J의 크기는?</summary><p>6×n (끝단 선속도 3 + 각속도 3, n = 관절 수).</p></details>
+  <details><summary>특이점에서는 무슨 일이 생기나?</summary><p>det J = 0이라 J<sup>−1</sup>이 없고, 끝단이 특정 방향으로 움직일 수 없다. 2R은 θ2 = 0° 또는 180°.</p></details>
+  <details><summary>끝단 힘과 관절 토크의 관계식은?</summary><p>τ = Jᵀ(θ)·F</p></details>
+  <details><summary>회전 관절 i의 자코비안 열은?</summary><p>선속도 부분 z<sub>i−1</sub> × (p<sub>e</sub> − p<sub>i−1</sub>), 각속도 부분 z<sub>i−1</sub>. 직선 관절이면 [z<sub>i−1</sub>; 0].</p></details>
+</section>
+</main>
+</div>
