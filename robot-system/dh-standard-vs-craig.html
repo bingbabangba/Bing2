@@ -1,0 +1,260 @@
+<title>Standard DH vs Craig DH</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: 같은 그림을 Standard(보라) / Craig(파랑) 두 칸으로 나란히. 좌표축 색은 x빨강 y초록 z파랑, 변환 경로는 번호 붙은 주황 화살표. */
+:root{
+  --bg:#f6f7f9; --paper:#ffffff; --fg:#1b2230; --muted:#5b6577; --line:#d9dee7; --axis:#8a94a6;
+  --std:#7a3fb8; --std-soft:#f1eafa; --crg:#1f5fbf; --crg-soft:#e6eefb; --hot:#d9691a; --hot-soft:#fdf0e6;
+  --ax-x:#d03b3b; --ax-y:#2c8a3c; --ax-z:#2b63d6;
+  --f-body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161d; --paper:#1a2029; --fg:#e4e8ef; --muted:#9aa4b5; --line:#2e3644; --axis:#6f7a8c;
+  --std:#b98be8; --std-soft:#2a2038; --crg:#78a6f0; --crg-soft:#1e2c44; --hot:#f0995a; --hot-soft:#3a2617;
+  --ax-x:#f07272; --ax-y:#6cc77a; --ax-z:#79a3f5; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161d; --paper:#1a2029; --fg:#e4e8ef; --muted:#9aa4b5; --line:#2e3644; --axis:#6f7a8c;
+  --std:#b98be8; --std-soft:#2a2038; --crg:#78a6f0; --crg-soft:#1e2c44; --hot:#f0995a; --hot-soft:#3a2617;
+  --ax-x:#f07272; --ax-y:#6cc77a; --ax-z:#79a3f5; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1100px;margin:0 auto;padding-block:32px 72px}
+h1{font-size:clamp(26px,4vw,36px);line-height:1.25;margin:0 0 8px;text-wrap:balance}
+.lede{color:var(--muted);margin:0 0 20px;max-width:72ch}
+section{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:24px clamp(16px,3vw,32px);margin-bottom:22px}
+h2{font-size:22px;margin:0 0 6px;line-height:1.35;text-wrap:balance}
+h3{font-size:17px;margin:0 0 6px}
+p,li{max-width:72ch}
+.m{font-family:var(--f-mono);font-size:.92em}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:12px}
+.panel{border:1px solid var(--line);border-radius:8px;padding:14px;min-width:0;background:var(--bg)}
+.panel.std{border-top:4px solid var(--std)} .panel.crg{border-top:4px solid var(--crg)}
+.panel.std h3{color:var(--std)} .panel.crg h3{color:var(--crg)}
+.panel svg{width:100%;height:auto;display:block}
+.panel p{font-size:14px;margin:6px 0}
+svg text{font-family:var(--f-body);fill:var(--fg)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{border:1px solid var(--line);padding:5px 9px;text-align:center}
+.std th{background:var(--std-soft)} .crg th{background:var(--crg-soft)}
+td.hl{background:var(--hot-soft);font-weight:700}
+.steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;font-family:var(--f-mono);font-size:13.5px}
+.steps span.s{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:2px 8px}
+.steps span.n{display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;background:var(--hot);color:var(--paper);font-size:11px;margin-right:4px;font-family:var(--f-body);font-weight:700}
+.key{background:var(--hot-soft);border-left:3px solid var(--hot);padding:10px 14px;margin:14px 0 0;border-radius:0 6px 6px 0}
+.key b.t{color:var(--hot);font-size:13px;letter-spacing:.04em;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:18px;border-top:3px solid;vertical-align:middle;margin-right:5px}
+@media (max-width:760px){.pair{grid-template-columns:minmax(0,1fr)}}
+</style>
+
+<main>
+  <h1>Standard DH vs Craig DH</h1>
+  <p class="lede">두 방식은 같은 로봇을 같은 네 숫자(a, α, d, θ)로 나타냅니다. 다른 것은 <b>좌표계 {i}를 관절의 어느 쪽에 붙이느냐</b> 하나뿐이고, 첨자와 곱하는 순서 차이는 모두 여기서 나옵니다. 이 수업은 Craig 방식입니다.</p>
+
+  <section>
+    <h2>① 좌표계를 붙이는 위치</h2>
+    <p>같은 체인(관절 i−1 → 링크 → 관절 i → 링크 → 관절 i+1)에 두 방식의 좌표계를 붙인 모습입니다.</p>
+    <div class="pair">
+      <div class="panel std"><h3>Standard (Spong)</h3><div id="chainS"></div>
+        <p>{i}는 링크 i의 <b>끝(다음 관절)</b>에 붙습니다. 그래서 관절 i는 한 칸 앞 좌표계의 <b>z<sub>i−1</sub></b> 축으로 돕니다.</p></div>
+      <div class="panel crg"><h3>Craig (Modified)</h3><div id="chainC"></div>
+        <p>{i}는 링크 i의 <b>시작(자기 관절)</b>에 붙습니다. 그래서 관절 i는 <b>z<sub>i</sub></b> 축으로 돕니다. 번호가 맞아서 직관적입니다.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>② 같은 기하에서 파라미터를 재는 곳</h2>
+    <div class="legend"><span><i style="border-color:var(--axis);border-top-style:dashed"></i>관절축 (서로 꼬인 직선)</span><span><i style="border-color:var(--muted)"></i>공통수선</span><span><i style="border-color:var(--hot)"></i>{i−1} → {i} 변환 경로 (번호 순서)</span></div>
+    <div class="pair">
+      <div class="panel std"><h3>Standard: z 먼저, 그다음 x</h3><div id="geoS"></div>
+        <div class="steps"><span class="s"><span class="n">1</span>Rz(θ<sub>i</sub>)</span>→<span class="s"><span class="n">2</span>Tz(d<sub>i</sub>)</span>→<span class="s"><span class="n">3</span>Tx(a<sub>i</sub>)</span>→<span class="s"><span class="n">4</span>Rx(α<sub>i</sub>)</span></div>
+        <p>a<sub>i</sub>, α<sub>i</sub>는 <b>관절 i와 i+1 사이</b>(앞쪽 링크)를 잽니다.</p></div>
+      <div class="panel crg"><h3>Craig: x 먼저, 그다음 z</h3><div id="geoC"></div>
+        <div class="steps"><span class="s"><span class="n">1</span>Rx(α<sub>i−1</sub>)</span>→<span class="s"><span class="n">2</span>Tx(a<sub>i−1</sub>)</span>→<span class="s"><span class="n">3</span>Rz(θ<sub>i</sub>)</span>→<span class="s"><span class="n">4</span>Tz(d<sub>i</sub>)</span></div>
+        <p>a<sub>i−1</sub>, α<sub>i−1</sub>는 <b>관절 i−1과 i 사이</b>(뒤쪽 링크)를 잽니다. 그래서 첨자가 i−1입니다.</p></div>
+    </div>
+    <div class="key"><b class="t">공통점</b>d<sub>i</sub>와 θ<sub>i</sub>는 두 방식 모두 <b>관절 i의 축을 따라</b> 잽니다. 첨자 차이가 나는 것은 a와 α뿐입니다.</div>
+  </section>
+
+  <section>
+    <h2>③ 같은 평면 2R 로봇에 적용하면</h2>
+    <p>L1 = L2, θ1 = 30°, θ2 = 30°인 자세입니다. 모든 관절축(z)은 화면 밖을 향합니다(◉).</p>
+    <div class="pair">
+      <div class="panel std"><h3>Standard: 좌표계 3개 ({0}, {1}, {2})</h3><div id="armS"></div>
+        <div class="tbl std"><table><tr><th>i</th><th>a<sub>i</sub></th><th>α<sub>i</sub></th><th>d<sub>i</sub></th><th>θ<sub>i</sub></th></tr>
+          <tr><td>1</td><td class="hl">L1</td><td>0</td><td>0</td><td>θ1</td></tr>
+          <tr><td>2</td><td class="hl">L2</td><td>0</td><td>0</td><td>θ2</td></tr></table></div>
+        <p>{2}가 이미 끝단에 있어서 두 줄로 끝납니다. L1이 1번 줄에 있습니다.</p></div>
+      <div class="panel crg"><h3>Craig: 좌표계 4개 ({0}, {1}, {2}, {E})</h3><div id="armC"></div>
+        <div class="tbl crg"><table><tr><th>i</th><th>α<sub>i−1</sub></th><th>a<sub>i−1</sub></th><th>d<sub>i</sub></th><th>θ<sub>i</sub></th></tr>
+          <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>θ1</td></tr>
+          <tr><td>2</td><td>0</td><td class="hl">L1</td><td>0</td><td>θ2</td></tr>
+          <tr><td>E</td><td>0</td><td class="hl">L2</td><td>0</td><td>0</td></tr></table></div>
+        <p>{1}이 관절 1 위에 있어서 링크 길이가 <b>한 줄씩 아래로 밀립니다</b>. 끝단까지 가려면 E 줄이 더 필요합니다.</p></div>
+    </div>
+    <div class="key"><b class="t">결과는 같다</b>어느 방식이든 <span class="m">x = L1c1 + L2c12</span>, <span class="m">y = L1s1 + L2s12</span>가 나옵니다. 표는 달라도 로봇과 최종 ⁰T<sub>끝단</sub>은 같습니다.</div>
+  </section>
+
+  <section>
+    <h2>④ 행렬로 구분하기</h2>
+    <div class="pair">
+      <div class="panel std"><h3>Standard</h3>
+        <div class="tbl std"><table>
+          <tr><td class="hl">cθ</td><td>−sθcα</td><td>sθsα</td><td>a·cθ</td></tr>
+          <tr><td>sθ</td><td>cθcα</td><td>−cθsα</td><td>a·sθ</td></tr>
+          <tr><td class="hl">0</td><td class="hl">sα</td><td class="hl">cα</td><td class="hl">d</td></tr>
+          <tr><td>0</td><td>0</td><td>0</td><td>1</td></tr></table></div>
+        <p><b>셋째 행</b>이 [0, sα, cα, d]로 깔끔합니다.</p></div>
+      <div class="panel crg"><h3>Craig (α, a는 i−1)</h3>
+        <div class="tbl crg"><table>
+          <tr><td class="hl">cθ</td><td class="hl">−sθ</td><td class="hl">0</td><td class="hl">a</td></tr>
+          <tr><td>sθcα</td><td>cθcα</td><td>−sα</td><td>−sα·d</td></tr>
+          <tr><td>sθsα</td><td>cθsα</td><td>cα</td><td>cα·d</td></tr>
+          <tr><td>0</td><td>0</td><td>0</td><td>1</td></tr></table></div>
+        <p><b>첫째 행</b>이 [cθ, −sθ, 0, a]로 깔끔합니다.</p></div>
+    </div>
+    <div class="key"><b class="t">시험 체크리스트</b>
+      표 머리가 <span class="m">α<sub>i−1</sub>, a<sub>i−1</sub>, d<sub>i</sub>, θ<sub>i</sub></span>면 Craig입니다. Craig로 쓸 때는 L1을 1번 줄이 아닌 <b>2번 줄</b>에 넣고, 첫 줄은 보통 a<sub>0</sub> = α<sub>0</sub> = 0입니다. 한 표 안에서 두 방식을 섞지 마세요.</div>
+  </section>
+</main>
+
+<script>
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  const el=(n,a,txt)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.innerHTML=txt;return e;};
+  let mid=0;
+  function svgBox(target,w,h,aria){
+    const s=el('svg',{viewBox:`0 0 ${w} ${h}`,role:'img','aria-label':aria});
+    const d=el('defs',{}); s.appendChild(d);
+    const id='k'+(mid++);
+    [['x','var(--ax-x)'],['y','var(--ax-y)'],['z','var(--ax-z)'],['h','var(--hot)'],['m','var(--muted)']].forEach(([n,c])=>{
+      const m=el('marker',{id:id+n,viewBox:'0 0 10 10',refX:'8',refY:'5',markerWidth:'5',markerHeight:'5',orient:'auto-start-reverse'});
+      m.appendChild(el('path',{d:'M0 0 L10 5 L0 10 z',style:'fill:'+c})); d.appendChild(m);});
+    target.appendChild(s); s._id=id; return s;
+  }
+  const line=(s,x1,y1,x2,y2,st,mk)=>{const l=el('line',{x1,y1,x2,y2,style:st}); if(mk)l.setAttribute('marker-end',`url(#${s._id}${mk})`); s.appendChild(l); return l;};
+  const text=(s,x,y,t,st,anchor)=>s.appendChild(el('text',{x,y,'font-size':'13','text-anchor':anchor||'middle',style:st||''},t));
+  const sub=(b,i)=>`${b}<tspan font-size="9" dy="3">${i}</tspan>`;
+
+  // ---------- ① chain ----------
+  function chain(target,kind){
+    const s=svgBox(target,440,170,kind+' 좌표계 위치');
+    const J=[70,220,370], y=95;
+    line(s,J[0],y,J[2],y,'stroke:var(--fg);stroke-width:7;stroke-linecap:round;opacity:.22');
+    J.forEach((x,k)=>{ s.appendChild(el('circle',{cx:x,cy:y,r:13,style:'fill:var(--paper);stroke:var(--fg);stroke-width:2'}));
+      text(s,x,y+38,'관절 '+['i−1','i','i+1'][k],'fill:var(--muted);font-size:12px');});
+    text(s,145,y+22,'링크 i−1','fill:var(--muted);font-size:12px'); text(s,295,y+22,'링크 i','fill:var(--muted);font-size:12px');
+    const col = kind==='S'?'var(--std)':'var(--crg)';
+    const fr = kind==='S' ? [[J[0],'{i−2}'],[J[1],'{i−1}'],[J[2],'{i}']] : [[J[0],'{i−1}'],[J[1],'{i}'],[J[2],'{i+1}']];
+    fr.forEach(([x,lab])=>{ line(s,x,y,x+34,y,'stroke:var(--ax-x);stroke-width:2.5',"x"); line(s,x,y,x,y-38,'stroke:var(--ax-y);stroke-width:2.5','y');
+      s.appendChild(el('circle',{cx:x,cy:y,r:4,style:'fill:var(--ax-z)'}));
+      text(s,x,y-48,lab,`fill:${col};font-weight:700;font-size:14px`);});
+    // highlight frame i and which joint rotates about it
+    const xi = kind==='S'?J[2]:J[1];
+    s.appendChild(el('rect',{x:xi-30,y:y-68,width:60,height:24,rx:6,style:`fill:none;stroke:${col};stroke-width:1.5`}));
+    const note = kind==='S' ? '관절 i는 {i−1}의 z축으로 회전' : '관절 i는 {i}의 z축으로 회전';
+    text(s,220,160,note,`fill:${col};font-weight:700;font-size:13px`);
+  }
+  chain(document.getElementById('chainS'),'S'); chain(document.getElementById('chainC'),'C');
+
+  // ---------- ② geometry ----------
+  // axes: A0 vertical x=60; A1 tilted through (230,200)-(262,72); A2 vertical x=400
+  const A1 = t => [230+32*t, 200-128*t]; // t=0 at foot of perp(i-1,i), t=0.625 at y=120
+  const P0=[60,200], P1=A1(0), P2=A1(0.625), P3=[400,120];
+  function geo(target,kind){
+    const s=svgBox(target,460,300,kind+' 파라미터 측정 위치');
+    // joint axes
+    line(s,60,30,60,280,'stroke:var(--axis);stroke-width:1.6;stroke-dasharray:6 4');
+    const a=A1(-0.55), b=A1(1.25); line(s,a[0],a[1],b[0],b[1],'stroke:var(--axis);stroke-width:1.6;stroke-dasharray:6 4');
+    line(s,400,30,400,280,'stroke:var(--axis);stroke-width:1.6;stroke-dasharray:6 4');
+    text(s,60,295,'관절축 i−1','fill:var(--muted);font-size:12px'); text(s,a[0]-4,295,'관절축 i','fill:var(--muted);font-size:12px'); text(s,400,295,'관절축 i+1','fill:var(--muted);font-size:12px');
+    // common perpendiculars
+    line(s,P0[0],P0[1],P1[0],P1[1],'stroke:var(--muted);stroke-width:2');
+    line(s,P2[0],P2[1],P3[0],P3[1],'stroke:var(--muted);stroke-width:2');
+    const col = kind==='S'?'var(--std)':'var(--crg)';
+    // frames: origin + z (along joint axis) + x (along perpendicular)
+    const zA1=[32,-128].map(v=>v/132*42);
+    function frame(o,zdir,xdir,lab,lpos){
+      line(s,o[0],o[1],o[0]+zdir[0],o[1]+zdir[1],'stroke:var(--ax-z);stroke-width:3','z');
+      line(s,o[0],o[1],o[0]+xdir[0],o[1]+xdir[1],'stroke:var(--ax-x);stroke-width:3','x');
+      s.appendChild(el('circle',{cx:o[0],cy:o[1],r:4.5,style:`fill:${col}`}));
+      text(s,o[0]+lpos[0],o[1]+lpos[1],lab,`fill:${col};font-weight:700;font-size:13px`,'start');
+    }
+    const hot='stroke:var(--hot);stroke-width:2.4';
+    if(kind==='C'){
+      frame(P0,[0,-42],[44,0],'{i−1}',[-38,22]);
+      frame(P2,zA1,[44,0],'{i}',[-34,18]);
+      text(s,P0[0]+12,P0[1]-52,sub('z','i−1'),'fill:var(--ax-z);font-size:12px','start');
+      text(s,P2[0]-26,P2[1]-34,sub('z','i'),'fill:var(--ax-z);font-size:12px','start');
+      // path 1 α_{i-1}: twist at P0 (arc showing z_{i-1} -> parallel of axis i)
+      s.appendChild(el('path',{d:`M${P0[0]} ${P0[1]-30} A30 30 0 0 1 ${P0[0]+7.3} ${P0[1]-29.1}`,style:'fill:none;'+hot,'marker-end':`url(#${s._id}h)`}));
+      text(s,P0[0]+18,P0[1]-62,'<tspan class="n">①</tspan> '+sub('α','i−1'),'fill:var(--hot);font-weight:700;font-size:13px','start');
+      // path 2 a_{i-1}
+      line(s,P0[0]+8,P0[1]+14,P1[0]-4,P1[1]+14,hot,'h');
+      text(s,(P0[0]+P1[0])/2,P0[1]+32,'② '+sub('a','i−1')+' (X<tspan font-size="9" dy="3">i−1</tspan><tspan dy="-3"> 따라)</tspan>','fill:var(--hot);font-weight:700');
+      // path 3 θ_i at P1/P2 between x_{i-1} parallel and x_i (both horizontal here -> show small arc anyway)
+      // path 4 d_i along axis i
+      line(s,P1[0]+16,P1[1],P2[0]+16,P2[1]+6,hot,'h');
+      text(s,P1[0]+28,P1[1]-30,'③ '+sub('θ','i')+' ④ '+sub('d','i'),'fill:var(--hot);font-weight:700','start');
+      text(s,P1[0]+28,P1[1]-14,'(관절축 i 따라)','fill:var(--hot);font-size:12px','start');
+      text(s,(P2[0]+P3[0])/2+8,P3[1]-10,sub('a','i')+'는 다음 줄','fill:var(--muted);font-size:12px');
+    } else {
+      frame(P1,zA1,[44,0],'{i−1}',[-44,24]);
+      frame(P3,[0,-42],[44,0],'{i}',[8,24]);
+      text(s,P1[0]-30,P1[1]-34,sub('z','i−1'),'fill:var(--ax-z);font-size:12px','start');
+      text(s,P3[0]+6,P3[1]-46,sub('z','i'),'fill:var(--ax-z);font-size:12px','start');
+      text(s,(P0[0]+P1[0])/2,P0[1]+20,sub('a','i−1')+'는 앞 줄','fill:var(--muted);font-size:12px');
+      // 1 θ_i, 2 d_i along axis i (z_{i-1})
+      line(s,P1[0]+16,P1[1],P2[0]+16,P2[1]+6,hot,'h');
+      text(s,P1[0]+28,P1[1]-30,'① '+sub('θ','i')+' ② '+sub('d','i'),'fill:var(--hot);font-weight:700','start');
+      text(s,P1[0]+28,P1[1]-14,'(관절축 i 따라)','fill:var(--hot);font-size:12px','start');
+      // 3 a_i along x_i
+      line(s,P2[0]+8,P2[1]-14,P3[0]-4,P3[1]-14,hot,'h');
+      text(s,(P2[0]+P3[0])/2,P2[1]-22,'③ '+sub('a','i')+' (X<tspan font-size="9" dy="3">i</tspan><tspan dy="-3"> 따라)</tspan>','fill:var(--hot);font-weight:700');
+      // 4 α_i twist at P3
+      s.appendChild(el('path',{d:`M${P3[0]-7.3} ${P3[1]-29.1} A30 30 0 0 1 ${P3[0]} ${P3[1]-30}`,style:'fill:none;'+hot,'marker-end':`url(#${s._id}h)`}));
+      text(s,P3[0]-14,P3[1]-62,'④ '+sub('α','i'),'fill:var(--hot);font-weight:700;font-size:13px','end');
+    }
+  }
+  geo(document.getElementById('geoS'),'S'); geo(document.getElementById('geoC'),'C');
+
+  // ---------- ③ 2R arm ----------
+  function arm(target,kind){
+    const s=svgBox(target,360,280,kind+' 2R 로봇 좌표계');
+    const L=120, J1=[60,240], t1=30*Math.PI/180, t12=60*Math.PI/180;
+    const J2=[J1[0]+L*Math.cos(t1), J1[1]-L*Math.sin(t1)], E=[J2[0]+L*Math.cos(t12), J2[1]-L*Math.sin(t12)];
+    line(s,20,J1[1]+14,140,J1[1]+14,'stroke:var(--muted);stroke-width:2');
+    for(let k=0;k<6;k++) line(s,26+k*20,J1[1]+14,16+k*20,J1[1]+24,'stroke:var(--muted);stroke-width:1.2');
+    line(s,J1[0],J1[1],J2[0],J2[1],'stroke:var(--fg);stroke-width:8;stroke-linecap:round;opacity:.2');
+    line(s,J2[0],J2[1],E[0],E[1],'stroke:var(--fg);stroke-width:8;stroke-linecap:round;opacity:.2');
+    text(s,(J1[0]+J2[0])/2+10,(J1[1]+J2[1])/2+22,'L1','fill:var(--muted)'); text(s,(J2[0]+E[0])/2+16,(J2[1]+E[1])/2+8,'L2','fill:var(--muted)');
+    [J1,J2].forEach(p=>s.appendChild(el('circle',{cx:p[0],cy:p[1],r:9,style:'fill:var(--paper);stroke:var(--fg);stroke-width:2'})));
+    const col = kind==='S'?'var(--std)':'var(--crg)';
+    function fr(o,ang,lab,lp,len){
+      len=len||34; const c=Math.cos(ang), sn=Math.sin(ang);
+      line(s,o[0],o[1],o[0]+len*c,o[1]-len*sn,'stroke:var(--ax-x);stroke-width:2.6','x');
+      line(s,o[0],o[1],o[0]-len*sn,o[1]-len*c,'stroke:var(--ax-y);stroke-width:2.6','y');
+      s.appendChild(el('circle',{cx:o[0],cy:o[1],r:5,style:'fill:var(--paper);stroke:var(--ax-z);stroke-width:2'}));
+      s.appendChild(el('circle',{cx:o[0],cy:o[1],r:1.8,style:'fill:var(--ax-z)'}));
+      text(s,o[0]+lp[0],o[1]+lp[1],lab,`fill:${col};font-weight:700;font-size:14px`,'start');
+    }
+    if(kind==='S'){
+      fr(J1,0,'{0}',[-34,-6]);
+      fr(J2,t1,'{1}',[10,26]);
+      fr(E,t12,'{2}',[12,8]);
+      text(s,190,272,'{1}은 관절 2에, {2}는 끝단에','fill:'+col+';font-size:12px');
+    } else {
+      fr(J1,0,'{0}',[-34,-6],40);
+      fr(J1,t1,'{1}',[-30,-38],26);
+      fr(J2,t12,'{2}',[10,26]);
+      fr(E,t12,'{E}',[12,8]);
+      text(s,190,272,'{1}은 관절 1에, {2}는 관절 2에','fill:'+col+';font-size:12px');
+    }
+  }
+  arm(document.getElementById('armS'),'S'); arm(document.getElementById('armC'),'C');
+})();
+</script>
