@@ -1,0 +1,248 @@
+<title>움직이는 축 vs 고정 축</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: 위아래 두 줄 비교(움직이는 축 / 고정 축)를 같은 3단계로 나란히, 그 아래 구분법. 물체 축은 x빨강 y초록 z파랑, 고정 축은 회색 점선, 회전축은 주황 띠. */
+:root{
+  --bg:#f6f7f9; --paper:#ffffff; --fg:#1b2230; --muted:#5b6577; --line:#d9dee7; --fixed:#8a94a6;
+  --accent:#1f5fbf; --accent-soft:#e6eefb; --hot:#e07a1f; --hot-soft:#fdf0e6; --ok:#1f7a4d; --ok-soft:#e4f4ea;
+  --ax-x:#d03b3b; --ax-y:#2c8a3c; --ax-z:#2b63d6;
+  --f-body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161d; --paper:#1a2029; --fg:#e4e8ef; --muted:#9aa4b5; --line:#2e3644; --fixed:#6f7a8c;
+  --accent:#78a6f0; --accent-soft:#1e2c44; --hot:#f0995a; --hot-soft:#3a2617; --ok:#6cc896; --ok-soft:#173326;
+  --ax-x:#f07272; --ax-y:#6cc77a; --ax-z:#79a3f5; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161d; --paper:#1a2029; --fg:#e4e8ef; --muted:#9aa4b5; --line:#2e3644; --fixed:#6f7a8c;
+  --accent:#78a6f0; --accent-soft:#1e2c44; --hot:#f0995a; --hot-soft:#3a2617; --ok:#6cc896; --ok-soft:#173326;
+  --ax-x:#f07272; --ax-y:#6cc77a; --ax-z:#79a3f5; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1080px;margin:0 auto;padding-block:32px 72px}
+h1{font-size:clamp(26px,4vw,36px);line-height:1.25;margin:0 0 8px;text-wrap:balance}
+.lede{color:var(--muted);margin:0 0 20px;max-width:70ch}
+section{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:24px clamp(16px,3vw,32px);margin-bottom:22px}
+h2{font-size:22px;margin:0 0 6px;line-height:1.35;text-wrap:balance}
+h3{font-size:17px;margin:18px 0 6px}
+p,li{max-width:72ch}
+.m{font-family:var(--f-mono);font-size:.92em}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--muted);margin:8px 0 4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:22px;height:0;border-top:3px solid}
+.row-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:18px 0 6px}
+.row-h b{font-size:18px}
+.tag{font-size:12px;font-weight:700;letter-spacing:.06em;padding:2px 8px;border-radius:999px}
+.tag.mv{background:var(--accent-soft);color:var(--accent)}
+.tag.fx{background:var(--hot-soft);color:var(--hot)}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.step{border:1px solid var(--line);border-radius:8px;padding:10px 10px 12px;background:var(--bg);min-width:0}
+.step .cap{font-size:14px;line-height:1.5;margin:0 0 4px;min-height:3em}
+.step .cap b{display:block}
+.step svg{width:100%;height:auto;display:block}
+.step .res{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);margin-top:2px}
+svg text{font-family:var(--f-body)}
+.key{background:var(--hot-soft);border-left:3px solid var(--hot);padding:10px 14px;margin:14px 0;border-radius:0 6px 6px 0}
+.key b.t{color:var(--hot);font-size:13px;letter-spacing:.04em;display:block}
+.cmp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:12px 0}
+.card{border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.card.mv{border-top:4px solid var(--accent)}
+.card.fx{border-top:4px solid var(--hot)}
+.card h3{margin-top:0}
+.card ul{padding-left:1.2em;margin:6px 0}
+.mul{font-family:var(--f-mono);font-size:15px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin:8px 0;overflow-x:auto;white-space:nowrap}
+.mul .new{color:var(--paper);background:var(--accent);border-radius:4px;padding:0 5px}
+.card.fx .mul .new{background:var(--hot)}
+.flow{display:flex;flex-direction:column;gap:10px;margin:10px 0}
+.q{border:1.5px solid var(--fg);border-radius:8px;padding:10px 14px;font-weight:500}
+.branches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.br{border-radius:8px;padding:10px 14px;min-width:0}
+.br.mv{background:var(--accent-soft)} .br.fx{background:var(--hot-soft)}
+.br b{display:block}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft)}
+details{border:1px solid var(--line);border-radius:6px;padding:8px 14px;margin:8px 0;background:var(--paper)}
+details summary{cursor:pointer;font-weight:500}
+details summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+details .ans{background:var(--ok-soft);border-radius:6px;padding:8px 12px;margin-top:8px}
+details .ans b{color:var(--ok)}
+@media (max-width:760px){
+  .steps{grid-template-columns:minmax(0,1fr)}
+  .step .cap{min-height:0}
+  .cmp,.branches{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+
+<main>
+  <h1>움직이는 축 vs 고정 축</h1>
+  <p class="lede">똑같이 "Z축으로 90° 돌리고, 다음에 Y축으로 90°"를 해도, 두 번째 회전의 Y축이 <b>물체를 따라 돌아간 y축</b>인지 <b>처음 그대로의 Y축</b>인지에 따라 결과가 달라집니다. 아래 그림에서 물체의 x축(빨강)이 어디로 가는지 따라가 보세요.</p>
+
+  <section>
+    <h2>그림으로 비교</h2>
+    <div class="legend">
+      <span><i class="sw" style="border-color:var(--fixed);border-top-style:dashed"></i>고정 축 X<sub>A</sub>, Y<sub>A</sub>, Z<sub>A</sub> (절대 안 움직임)</span>
+      <span><i class="sw" style="border-color:var(--ax-x)"></i><i class="sw" style="border-color:var(--ax-y);margin-left:-4px"></i><i class="sw" style="border-color:var(--ax-z);margin-left:-4px"></i>물체 축 x<sub>B</sub>, y<sub>B</sub>, z<sub>B</sub></span>
+      <span><i class="sw" style="border-color:var(--hot);border-top-width:7px;opacity:.5"></i>이번에 돌린 회전축</span>
+      <span><i class="sw" style="border-color:var(--muted);opacity:.35"></i>직전 자세(흐리게)</span>
+    </div>
+
+    <div class="row-h"><span class="tag mv">움직이는 축</span><b>Z → 새 y<sub>B</sub> (Euler 각)</b></div>
+    <div class="steps" id="mv"></div>
+
+    <div class="row-h"><span class="tag fx">고정 축</span><b>Z<sub>A</sub> → Y<sub>A</sub> (Fixed 각)</b></div>
+    <div class="steps" id="fx"></div>
+
+    <div class="key"><b class="t">그림에서 구분하는 법</b>
+      주황 회전축이 <b>색깔 있는 물체 축과 겹치면</b> 움직이는 축 회전, <b>회색 고정 축과 겹치면</b> 고정 축 회전입니다.
+      첫 번째 회전은 물체 축과 고정 축이 아직 겹쳐 있어서 두 방식이 똑같고, <b>두 번째 회전부터</b> 차이가 생깁니다.</div>
+  </section>
+
+  <section>
+    <h2>행렬을 곱하는 위치</h2>
+    <div class="cmp">
+      <div class="card mv">
+        <h3>움직이는 축: 새 회전을 <u>오른쪽</u>에 붙임</h3>
+        <div class="mul">R = R<sub>Z</sub>(90°)</div>
+        <div class="mul">R = R<sub>Z</sub>(90°) · <span class="new">R<sub>Y</sub>(90°)</span></div>
+        <p>물체 입장에서 "지금 내 몸의 y축"으로 도는 것이라, 기존 회전 뒤에 이어 붙입니다. 3번 돌리면 <span class="m">R = R1·R2·R3</span> (읽는 순서 그대로).</p>
+      </div>
+      <div class="card fx">
+        <h3>고정 축: 새 회전을 <u>왼쪽</u>에 붙임</h3>
+        <div class="mul">R = R<sub>Z</sub>(90°)</div>
+        <div class="mul">R = <span class="new">R<sub>Y</sub>(90°)</span> · R<sub>Z</sub>(90°)</div>
+        <p>방에 고정된 Y축으로 이미 돌아간 물체를 통째로 다시 돌리는 것이라, 앞에 덧씌웁니다. 3번 돌리면 <span class="m">R = R3·R2·R1</span> (거꾸로).</p>
+      </div>
+    </div>
+    <p><b>그래서</b> Z-Y-X 움직이는 축(Euler) = <span class="m">R<sub>Z</sub>R<sub>Y</sub>R<sub>X</sub></span> = X-Y-Z 고정 축(Fixed). 순서를 뒤집으면 같은 행렬이 됩니다.</p>
+  </section>
+
+  <section>
+    <h2>문제에서 구분하는 법</h2>
+    <div class="flow">
+      <div class="q">두 번째(이후) 회전의 축이 "앞선 회전으로 돌아간 축"인가?</div>
+      <div class="branches">
+        <div class="br mv"><b>예 → 움직이는 축</b>R = R1 · R2 · R3<br><span style="font-size:14px">새 회전을 오른쪽에</span></div>
+        <div class="br fx"><b>아니오(원래 기준좌표계 축) → 고정 축</b>R = R3 · R2 · R1<br><span style="font-size:14px">새 회전을 왼쪽에</span></div>
+      </div>
+    </div>
+    <h3>문장 속 단서</h3>
+    <div class="tbl"><table>
+      <tr><th>움직이는 축 (moving / current / body)</th><th>고정 축 (fixed / reference)</th></tr>
+      <tr><td><b>Euler angles</b></td><td><b>Fixed angles</b>, X-Y-Z fixed angles</td></tr>
+      <tr><td>"about the <b>new</b> y axis", "<b>rotated</b> axis", "<b>current</b> frame"</td><td>"about the <b>fixed</b> axis", "about the axis of the <b>reference frame</b>"</td></tr>
+      <tr><td>"a <b>moving</b> reference frame" (강의 예제 문구)</td><td>축 이름에 기준좌표계 첨자: "about <b>X<sub>A</sub></b>", "<b>Y<sub>A</sub></b>"</td></tr>
+      <tr><td>프라임 표기: <b>Z'Y'X'</b>, Z-Y'-X''</td><td>프라임 없이 기준 프레임 축만 언급</td></tr>
+      <tr><td>"회전된 좌표계의 ~축으로", "새로 생긴 축"</td><td>"{A}의 ~축으로", "고정된 기준축에 대해"</td></tr>
+    </table></div>
+    <div class="key"><b class="t">이 수업에서는</b>강의 슬라이드의 <b>Z-Y-X Euler Angles</b>가 "moving reference frame" 기준이라고 명시돼 있습니다. 시험 문제에 "Euler"가 보이면 움직이는 축, 즉 <span class="m">R<sub>Z</sub>(α)R<sub>Y</sub>(β)R<sub>X</sub>(γ)</span>로 곱하면 됩니다.</div>
+  </section>
+
+  <section>
+    <h2>연습</h2>
+    <details><summary>① "{B}를 {A}의 X<sub>A</sub>축으로 30° 돌린 뒤, Z<sub>A</sub>축으로 45° 돌렸다." R은?</summary>
+      <div class="ans"><b>고정 축</b> (축 이름에 A 첨자). 새 회전을 왼쪽에: <span class="m">R = R<sub>Z</sub>(45°) · R<sub>X</sub>(30°)</span></div></details>
+    <details><summary>② "z축으로 30° 회전한 뒤, 회전된 x축으로 60° 회전했다." R은?</summary>
+      <div class="ans"><b>움직이는 축</b> ("회전된 x축"). 새 회전을 오른쪽에: <span class="m">R = R<sub>Z</sub>(30°) · R<sub>X</sub>(60°)</span></div></details>
+    <details><summary>③ 강의 예제: "moving reference frame, Z 30° → Y 45° → X 60°"</summary>
+      <div class="ans"><b>움직이는 축</b>. <span class="m">R = R<sub>Z</sub>(30°)·R<sub>Y</sub>(45°)·R<sub>X</sub>(60°)</span>. 같은 각도를 고정 축으로 돌렸다면 <span class="m">R<sub>X</sub>(60°)·R<sub>Y</sub>(45°)·R<sub>Z</sub>(30°)</span>로 다른 행렬입니다.</div></details>
+    <details><summary>④ 위 그림의 두 결과에서 x<sub>B</sub>는 각각 어디를 향하나? (행렬의 첫째 열)</summary>
+      <div class="ans">움직이는 축: <span class="m">R<sub>Z</sub>(90°)R<sub>Y</sub>(90°)</span>의 첫째 열 (0, 0, −1) → <b>아래(−Z<sub>A</sub>)</b><br>고정 축: <span class="m">R<sub>Y</sub>(90°)R<sub>Z</sub>(90°)</span>의 첫째 열 (0, 1, 0) → <b>Y<sub>A</sub> 방향</b></div></details>
+  </section>
+</main>
+
+<script>
+(function(){
+  // 3D helpers
+  const rot = (axis, deg) => {
+    const [ux,uy,uz] = axis, t = deg*Math.PI/180, c = Math.cos(t), s = Math.sin(t), C = 1-c;
+    return [[c+ux*ux*C, ux*uy*C-uz*s, ux*uz*C+uy*s],[uy*ux*C+uz*s, c+uy*uy*C, uy*uz*C-ux*s],[uz*ux*C-uy*s, uz*uy*C+ux*s, c+uz*uz*C]];
+  };
+  const mul = (A,B) => A.map((r,i)=>[0,1,2].map(j=>r[0]*B[0][j]+r[1]*B[1][j]+r[2]*B[2][j]));
+  const col = (R,j) => [R[0][j],R[1][j],R[2][j]];
+  const I = [[1,0,0],[0,1,0],[0,0,1]];
+  const cross = (a,b)=>[a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+  const norm = v => {const l=Math.hypot(...v); return v.map(x=>x/l);};
+  // projection: X_A down-left, Y_A right, Z_A up
+  const W = 260, H = 230, cx = 128, cy = 128, L = 80;
+  const P = v => [cx + (-0.62*v[0] + 0.96*v[1])*L, cy + (0.40*v[0] + 0.14*v[1] - 1.0*v[2])*L];
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  let mid = 0;
+
+  function marker(svg, id, color){
+    const m = el('marker',{id, viewBox:'0 0 10 10', refX:'8', refY:'5', markerWidth:'5', markerHeight:'5', orient:'auto-start-reverse'});
+    m.appendChild(el('path',{d:'M0 0 L10 5 L0 10 z', style:'fill:'+color}));
+    svg.querySelector('defs').appendChild(m);
+  }
+
+  function draw(target, o){
+    const svg = el('svg',{viewBox:`0 0 ${W} ${H}`, role:'img', 'aria-label':o.aria});
+    svg.appendChild(el('defs',{}));
+    const id = 'm'+(mid++);
+    const cols = {x:'var(--ax-x)', y:'var(--ax-y)', z:'var(--ax-z)'};
+    marker(svg,id+'x',cols.x); marker(svg,id+'y',cols.y); marker(svg,id+'z',cols.z); marker(svg,id+'h','var(--hot)');
+    const O = P([0,0,0]);
+    // rotation axis highlight (behind)
+    if (o.axis){
+      const a = o.axis, p1 = P(a.map(x=>-x*1.25)), p2 = P(a.map(x=>x*1.35));
+      svg.appendChild(el('line',{x1:p1[0],y1:p1[1],x2:p2[0],y2:p2[1], style:'stroke:var(--hot);stroke-width:9;stroke-linecap:round;opacity:.28'}));
+    }
+    // fixed axes
+    [['X',[1,0,0]],['Y',[0,1,0]],['Z',[0,0,1]]].forEach(([n,v])=>{
+      const p = P(v.map(x=>x*1.25));
+      svg.appendChild(el('line',{x1:O[0],y1:O[1],x2:p[0],y2:p[1], style:'stroke:var(--fixed);stroke-width:1.5;stroke-dasharray:5 4'}));
+      const q = P(v.map(x=>x*1.42));
+      const t = el('text',{x:q[0],y:q[1]+4,'text-anchor':'middle','font-size':'12', style:'fill:var(--fixed)'}); t.innerHTML = n+'<tspan font-size="9" dy="3">A</tspan>'; svg.appendChild(t);
+    });
+    // previous pose ghost
+    if (o.prev){
+      ['x','y','z'].forEach((n,j)=>{ const p = P(col(o.prev,j).map(x=>x*0.9));
+        svg.appendChild(el('line',{x1:O[0],y1:O[1],x2:p[0],y2:p[1], style:`stroke:${cols[n]};stroke-width:2.5;opacity:.22;stroke-linecap:round`})); });
+    }
+    // rotation arc around axis
+    if (o.axis){
+      const a = norm(o.axis), ref = Math.abs(a[2])<0.9?[0,0,1]:[1,0,0];
+      const u = norm(cross(ref,a)), v = cross(a,u), c0 = a.map(x=>x*1.05), r = 0.26;
+      let d = '';
+      for (let i=0;i<=40;i++){ const t = i/40*1.55*Math.PI; const p = P(c0.map((x,k)=>x + r*(u[k]*Math.cos(t)+v[k]*Math.sin(t)))); d += (i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1); }
+      svg.appendChild(el('path',{d, fill:'none', style:'stroke:var(--hot);stroke-width:2', 'marker-end':`url(#${id}h)`}));
+      const lp = P(c0.map((x,k)=>x + 0.42*u[k]));
+      const t = el('text',{x:lp[0]+6,y:lp[1]-6,'font-size':'12','font-weight':'700', style:'fill:var(--hot)'}); t.textContent = '90°'; svg.appendChild(t);
+    }
+    // body axes, draw farthest first (rough depth by projected y)
+    const order = [0,1,2].sort((i,j)=> P(col(o.R,j))[1] - P(col(o.R,i))[1]);
+    order.forEach(j=>{
+      const n = 'xyz'[j], v = col(o.R,j), p = P(v.map(x=>x*0.9)), q = P(v.map(x=>x*1.08));
+      svg.appendChild(el('line',{x1:O[0],y1:O[1],x2:p[0],y2:p[1], style:`stroke:${cols[n]};stroke-width:3.2;stroke-linecap:round`, 'marker-end':`url(#${id}${n})`}));
+      const t = el('text',{x:q[0]+(v[1]>0.5?8:0),y:q[1]+(v[2]>0.5?-2:12),'text-anchor':'middle','font-size':'14','font-weight':'700', style:`fill:${cols[n]};paint-order:stroke;stroke:var(--bg);stroke-width:3px`});
+      t.innerHTML = n+'<tspan font-size="10" dy="3">B</tspan>'; svg.appendChild(t);
+    });
+    svg.appendChild(el('circle',{cx:O[0],cy:O[1],r:3.5, style:'fill:var(--fg)'}));
+    const box = document.createElement('div'); box.className = 'step';
+    box.innerHTML = `<p class="cap">${o.cap}</p>`; box.appendChild(svg);
+    const res = document.createElement('div'); res.className = 'res'; res.innerHTML = o.res; box.appendChild(res);
+    target.appendChild(box);
+  }
+
+  const Rz = rot([0,0,1],90);
+  // moving: second rotation about current y_B = column 2 of Rz  -> R = Rz*Ry
+  const yB1 = col(Rz,1);
+  const Rmv = mul(Rz, rot([0,1,0],90));
+  // fixed: second rotation about Y_A -> R = Ry*Rz
+  const Rfx = mul(rot([0,1,0],90), Rz);
+  const fmt = v => '('+v.map(x=>Math.round(x)+0).join(', ')+')';
+
+  const mv = document.getElementById('mv'), fx = document.getElementById('fx');
+  draw(mv,{R:I, cap:'<b>시작</b>물체 축 = 고정 축 (겹쳐 있음)', res:'x<sub>B</sub> = (1, 0, 0)', aria:'시작 자세'});
+  draw(mv,{R:Rz, prev:I, axis:[0,0,1], cap:'<b>① z<sub>B</sub>축으로 90°</b>x<sub>B</sub>가 Y<sub>A</sub> 쪽으로, y<sub>B</sub>가 −X<sub>A</sub> 쪽으로 감', res:'x<sub>B</sub> = '+fmt(col(Rz,0))+' · R = R<sub>Z</sub>', aria:'z축 90도 회전 후'});
+  draw(mv,{R:Rmv, prev:Rz, axis:yB1, cap:'<b>② 돌아간 y<sub>B</sub>축(−X<sub>A</sub> 방향)으로 90°</b>회전축이 초록 y<sub>B</sub>와 겹침', res:'x<sub>B</sub> = '+fmt(col(Rmv,0))+' · R = R<sub>Z</sub>R<sub>Y</sub>', aria:'새 y축으로 90도 회전 후, x_B가 아래를 향함'});
+
+  draw(fx,{R:I, cap:'<b>시작</b>물체 축 = 고정 축 (겹쳐 있음)', res:'x<sub>B</sub> = (1, 0, 0)', aria:'시작 자세'});
+  draw(fx,{R:Rz, prev:I, axis:[0,0,1], cap:'<b>① Z<sub>A</sub>축으로 90°</b>첫 회전은 위와 똑같음', res:'x<sub>B</sub> = '+fmt(col(Rz,0))+' · R = R<sub>Z</sub>', aria:'Z_A축 90도 회전 후'});
+  draw(fx,{R:Rfx, prev:Rz, axis:[0,1,0], cap:'<b>② 원래 Y<sub>A</sub>축으로 90°</b>회전축이 회색 Y<sub>A</sub>와 겹침. x<sub>B</sub>는 축 위에 있어서 그대로', res:'x<sub>B</sub> = '+fmt(col(Rfx,0))+' · R = R<sub>Y</sub>R<sub>Z</sub>', aria:'고정 Y축으로 90도 회전 후, x_B가 Y_A 방향 그대로'});
+})();
+</script>
