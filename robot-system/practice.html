@@ -1,0 +1,280 @@
+<title>로봇시스템 연습문제</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: 단원별 문제 카드 한 줄 목록. 문제 바로 밑에 초록 정답·풀이 상자. 위쪽 스위치로 정답을 한꺼번에 가릴 수 있음. */
+:root{
+  --bg:#f6f7f9; --paper:#ffffff; --fg:#1b2230; --muted:#5b6577; --line:#d9dee7;
+  --accent:#1f5fbf; --accent-soft:#e6eefb; --ok:#1f7a4d; --ok-soft:#e8f5ee; --hot:#c2570c; --hot-soft:#fdf0e6;
+  --ax-x:#d03b3b; --ax-y:#2c8a3c; --link:#1f5fbf;
+  --f-body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161d; --paper:#1a2029; --fg:#e4e8ef; --muted:#9aa4b5; --line:#2e3644;
+  --accent:#78a6f0; --accent-soft:#1e2c44; --ok:#6cc896; --ok-soft:#173326; --hot:#f0995a; --hot-soft:#3a2617;
+  --ax-x:#f07272; --ax-y:#6cc77a; --link:#78a6f0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161d; --paper:#1a2029; --fg:#e4e8ef; --muted:#9aa4b5; --line:#2e3644;
+  --accent:#78a6f0; --accent-soft:#1e2c44; --ok:#6cc896; --ok-soft:#173326; --hot:#f0995a; --hot-soft:#3a2617;
+  --ax-x:#f07272; --ax-y:#6cc77a; --link:#78a6f0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:860px;margin:0 auto;padding-block:28px 72px}
+h1{font-size:clamp(26px,4vw,34px);line-height:1.25;margin:0 0 6px}
+.lede{color:var(--muted);margin:0 0 14px}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:8px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--line);margin-bottom:18px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.bar a{font-size:13px;padding:2px 10px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--fg);text-decoration:none}
+.bar a:hover,.bar a:focus-visible{border-color:var(--accent);color:var(--accent)}
+.toggle{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;cursor:pointer;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px 12px}
+.toggle input{accent-color:var(--ok);width:16px;height:16px}
+h2{font-size:21px;margin:30px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--accent);color:var(--accent);scroll-margin-top:60px}
+.q{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:14px}
+.qh{display:flex;gap:10px;align-items:baseline}
+.num{flex:none;font-family:var(--f-mono);font-weight:600;font-size:14px;color:var(--paper);background:var(--fg);border-radius:6px;padding:0 7px}
+.qt{margin:0;min-width:0}
+.qbody{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.qbody>.txt{flex:1 1 300px;min-width:0}
+.qbody svg{flex:none;width:200px;max-width:100%;height:auto}
+.ans{background:var(--ok-soft);border-radius:8px;padding:10px 14px;margin-top:12px}
+.ans .a1{font-weight:700;color:var(--ok)}
+.ans ol,.ans ul{margin:4px 0;padding-left:1.3em}
+.ans p{margin:4px 0}
+body.hide .ans,body.hide .sol{display:none}
+.m{font-family:var(--f-mono);font-size:.92em;white-space:nowrap}
+.eq{font-family:var(--f-mono);font-size:14px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px 10px;margin:6px 0;overflow-x:auto;white-space:pre;line-height:1.6}
+svg text{font-family:var(--f-body);fill:var(--fg)}
+@media (max-width:640px){.m{white-space:normal}.toggle{margin-left:0}}
+</style>
+
+<main>
+  <h1>로봇시스템 연습문제</h1>
+  <p class="lede">계산기 없이 풀 수 있는 각도로 만든 20문제입니다. 문제 바로 밑에 정답과 풀이가 있습니다. 먼저 풀어 보고 싶으면 오른쪽 위 스위치로 정답을 가리세요.</p>
+  <div class="bar">
+    <a href="#s1">좌표변환</a><a href="#s2">정기구학·DH</a><a href="#s3">역기구학</a><a href="#s4">자코비안</a><a href="#s5">개념 OX</a>
+    <label class="toggle" for="hideAns"><input type="checkbox" id="hideAns">정답 가리기</label>
+  </div>
+
+  <!-- ================= 1 ================= -->
+  <h2 id="s1">1. 좌표변환</h2>
+
+  <div class="q"><div class="qh"><span class="num">1</span><p class="qt">{B}는 {A}에 대해 z축으로 90° 회전해 있다(원점은 같음). <sup>B</sup>P = (3, 0, 0)일 때 <sup>A</sup>P는?</p></div>
+    <div class="ans"><span class="a1">답: <sup>A</sup>P = (0, 3, 0)</span>
+      <div class="eq">R_Z(90°) = [0 −1 0; 1 0 0; 0 0 1]
+ᴬP = R·ᴮP = (0·3 − 1·0 + 0, 1·3 + 0 + 0, 0) = (0, 3, 0)</div>
+      <p>{B}의 x축이 {A}의 y축 방향을 향하므로, {B}의 x 방향 3은 {A}의 y 방향 3입니다.</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">2</span><p class="qt">{B}는 {A}에 대해 z축으로 90° 회전하고 (1, 2, 0)만큼 이동해 있다. <sup>B</sup>P = (0, 1, 0)일 때 <sup>A</sup>P는?</p></div>
+    <div class="ans"><span class="a1">답: <sup>A</sup>P = (0, 2, 0)</span>
+      <div class="eq">ᴬP = R·ᴮP + ᴬP_B
+R·(0,1,0) = (0·0 − 1·1, 1·0 + 0·1, 0) = (−1, 0, 0)
+ᴬP = (−1, 0, 0) + (1, 2, 0) = (0, 2, 0)</div>
+      <p>먼저 회전, 그다음 원점 위치를 더합니다.</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">3</span><p class="qt">문제 2의 <sup>A</sup><sub>B</sub>T에 대해 역변환 <sup>B</sup><sub>A</sub>T를 구하고, 문제 2의 답으로 검산하라.</p></div>
+    <div class="ans"><span class="a1">답: 회전부 Rᵀ = R_Z(−90°), 위치부 (−2, 1, 0)</span>
+      <div class="eq">ᴮ_AT = [ Rᵀ   −Rᵀ·ᴬP_B ; 0 0 0 1 ]
+Rᵀ = [0 1 0; −1 0 0; 0 0 1]
+Rᵀ·(1,2,0) = (0·1 + 1·2, −1·1 + 0·2, 0) = (2, −1, 0)
+−Rᵀ·P = (−2, 1, 0)
+
+ᴮ_AT = [ 0  1  0 −2 ]
+       [−1  0  0  1 ]
+       [ 0  0  1  0 ]
+       [ 0  0  0  1 ]</div>
+      <p>검산: <sup>B</sup><sub>A</sub>T·(0, 2, 0, 1) = (0 + 2 − 2, 0 + 0 + 1, 0) = (0, 1, 0) = <sup>B</sup>P ✓</p>
+      <p>위치부를 그냥 −P = (−1, −2, 0)으로 쓰면 틀립니다.</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">4</span><p class="qt">물체를 z축으로 90° 돌린 뒤, <b>회전된</b> x축으로 90° 돌렸다. 회전행렬 R을 구하고, 물체의 x<sub>B</sub>축이 {A}에서 어느 방향인지 답하라.</p></div>
+    <div class="ans"><span class="a1">답: R = [0 0 1; 1 0 0; 0 1 0], x<sub>B</sub> = (0, 1, 0) → Y<sub>A</sub> 방향</span>
+      <p>"회전된 x축"이므로 <b>움직이는 축</b>입니다. 새 회전을 오른쪽에 곱합니다.</p>
+      <div class="eq">R = R_Z(90°)·R_X(90°)
+  = [0 −1 0]   [1 0  0]   [0 0 1]
+    [1  0 0] · [0 0 −1] = [1 0 0]
+    [0  0 1]   [0 1  0]   [0 1 0]</div>
+      <p>x<sub>B</sub>는 R의 <b>첫째 열</b> (0, 1, 0)입니다. x축으로 도는 동안 x<sub>B</sub>는 회전축 위에 있어서 움직이지 않으므로, 첫 회전 뒤의 방향 Y<sub>A</sub>에 그대로 있습니다.</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">5</span><p class="qt">문제 4와 같은 각도로, 이번에는 <b>고정된</b> X<sub>A</sub>축으로 두 번째 회전을 했다. R은?</p></div>
+    <div class="ans"><span class="a1">답: R = R_X(90°)·R_Z(90°) = [0 −1 0; 0 0 −1; 1 0 0]</span>
+      <p>고정 축이므로 새 회전을 <b>왼쪽</b>에 곱합니다.</p>
+      <div class="eq">[1 0  0]   [0 −1 0]   [0 −1  0]
+[0 0 −1] · [1  0 0] = [0  0 −1]
+[0 1  0]   [0  0 1]   [1  0  0]</div>
+      <p>x<sub>B</sub> = (0, 0, 1), 즉 위를 향합니다. 문제 4와 결과가 다릅니다.</p></div></div>
+
+  <!-- ================= 2 ================= -->
+  <h2 id="s2">2. 정기구학 · DH</h2>
+
+  <div class="q"><div class="qh"><span class="num">6</span><div class="qt qbody"><div class="txt">평면 2R에서 L1 = 2, L2 = 1, θ1 = 0°, θ2 = 90°일 때 끝단 위치 (x, y)와 방향 φ는?</div><svg data-arm="2,1,0,90" role="img" aria-label="2R, L1=2, L2=1, θ1=0, θ2=90"></svg></div></div>
+    <div class="ans"><span class="a1">답: (2, 1), φ = 90°</span>
+      <div class="eq">x = L1·c1 + L2·c12 = 2·1 + 1·cos 90° = 2
+y = L1·s1 + L2·s12 = 2·0 + 1·sin 90° = 1
+φ = θ1 + θ2 = 90°</div></div></div>
+
+  <div class="q"><div class="qh"><span class="num">7</span><div class="qt qbody"><div class="txt">평면 2R에서 L1 = L2 = 1, θ1 = 90°, θ2 = 90°일 때 끝단 위치는?</div><svg data-arm="1,1,90,90" role="img" aria-label="2R, θ1=90, θ2=90"></svg></div></div>
+    <div class="ans"><span class="a1">답: (−1, 1)</span>
+      <div class="eq">c1 = 0, s1 = 1, θ1+θ2 = 180° → c12 = −1, s12 = 0
+x = 0 + (−1) = −1,  y = 1 + 0 = 1</div>
+      <p>링크 1이 위로 서고, 링크 2가 왼쪽으로 꺾인 자세입니다.</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">8</span><p class="qt">평면 2R(링크 L1, L2)의 DH 표를 <b>Craig 방식</b>으로 끝단(E)까지 써라.</p></div>
+    <div class="ans"><span class="a1">답</span>
+      <div class="eq">  i | α_{i−1} | a_{i−1} | d_i | θ_i
+  1 |    0    |    0    |  0  | θ1
+  2 |    0    |   L1    |  0  | θ2
+  E |    0    |   L2    |  0  | 0</div>
+      <p>축이 모두 평행해서 α = 0이고, 평면이라 d = 0입니다. Craig에서는 L1이 <b>2번 줄</b>에 들어갑니다. Standard 방식이면 1번 줄에 a₁ = L1이 들어가고 두 줄로 끝납니다.</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">9</span><p class="qt">Craig DH에서 α<sub>i−1</sub> = 0, a<sub>i−1</sub> = 2, d<sub>i</sub> = 0, θ<sub>i</sub> = 90°일 때 링크 변환행렬 <sup>i−1</sup><sub>i</sub>T는?</p></div>
+    <div class="ans"><span class="a1">답</span>
+      <div class="eq">α = 0이면  [cθ −sθ 0 a]
+           [sθ  cθ 0 0]
+           [0   0  1 d]
+           [0   0  0 1]
+
+θ = 90°, a = 2, d = 0 →  [0 −1 0 2]
+                         [1  0 0 0]
+                         [0  0 1 0]
+                         [0  0 0 1]</div></div></div>
+
+  <div class="q"><div class="qh"><span class="num">10</span><p class="qt">P-R-R 로봇(첫 관절이 직선, 나머지 두 개가 회전)의 관절 변수 세 개는?</p></div>
+    <div class="ans"><span class="a1">답: d1, θ2, θ3</span>
+      <p>직선(P) 관절은 d가 변수이고 θ는 상수입니다. 회전(R) 관절은 θ가 변수이고 d는 상수입니다.</p></div></div>
+
+  <!-- ================= 3 ================= -->
+  <h2 id="s3">3. 역기구학</h2>
+  <p class="lede" style="margin:0 0 10px">공식: <span class="m">c2 = (x²+y²−L1²−L2²)/(2L1L2)</span>, <span class="m">θ2 = Atan2(±√(1−c2²), c2)</span>, <span class="m">θ1 = Atan2(y,x) − Atan2(L2s2, L1+L2c2)</span></p>
+
+  <div class="q"><div class="qh"><span class="num">11</span><p class="qt">L1 = L2 = 1인 2R이 끝단을 (0, 2)에 놓으려면 θ1, θ2는?</p></div>
+    <div class="ans"><span class="a1">답: θ1 = 90°, θ2 = 0° (해 1개)</span>
+      <div class="eq">c2 = (0 + 4 − 1 − 1)/(2·1·1) = 1 → s2 = 0 → θ2 = 0°
+k1 = 1 + 1·1 = 2, k2 = 1·0 = 0
+θ1 = Atan2(2, 0) − Atan2(0, 2) = 90° − 0° = 90°</div>
+      <p>거리 2 = L1 + L2라서 팔을 완전히 편 자세입니다. 두 해(±)가 하나로 합쳐지고, 이 자세는 특이점입니다.</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">12</span><div class="qt qbody"><div class="txt">L1 = L2 = 1인 2R이 끝단을 (1, −1)에 놓는 해를 <b>모두</b> 구하라.</div><svg data-arm2="1,1,-90,90,0,-90" data-target="1,-1" role="img" aria-label="(1,-1)에 대한 두 해"></svg></div></div>
+    <div class="ans"><span class="a1">답: (θ1, θ2) = (−90°, 90°) 또는 (0°, −90°)</span>
+      <div class="eq">c2 = (1 + 1 − 1 − 1)/2 = 0 → s2 = ±1 → θ2 = ±90°
+Atan2(y, x) = Atan2(−1, 1) = −45°
+
+θ2 = +90°: k1 = 1, k2 = 1  → θ1 = −45° − Atan2(1,1)  = −45° − 45° = −90°
+θ2 = −90°: k1 = 1, k2 = −1 → θ1 = −45° − Atan2(−1,1) = −45° + 45° = 0°</div>
+      <p>검산 (−90°, 90°): (cos(−90°) + cos 0°, sin(−90°) + sin 0°) = (1, −1) ✓<br>검산 (0°, −90°): (1 + cos(−90°), 0 + sin(−90°)) = (1, −1) ✓</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">13</span><p class="qt">L1 = 3, L2 = 1인 2R이 (1, 0)에 도달할 수 있는가?</p></div>
+    <div class="ans"><span class="a1">답: 도달 불가</span>
+      <div class="eq">c2 = (1 − 9 − 1)/(2·3·1) = −9/6 = −1.5 → |c2| > 1 → 해 없음</div>
+      <p>reachable workspace는 <span class="m">|L1−L2| ≤ r ≤ L1+L2</span>, 즉 2 ≤ r ≤ 4인 고리입니다. r = 1은 안쪽 구멍에 있습니다.</p></div></div>
+
+  <!-- ================= 4 ================= -->
+  <h2 id="s4">4. 자코비안</h2>
+  <p class="lede" style="margin:0 0 10px">2R: <span class="m">J = [−L1s1−L2s12, −L2s12; L1c1+L2c12, L2c12]</span>, <span class="m">det J = L1L2·s2</span>, 2×2 역행렬 <span class="m">[a b; c d]⁻¹ = 1/(ad−bc)·[d −b; −c a]</span></p>
+
+  <div class="q"><div class="qh"><span class="num">14</span><p class="qt">1R 로봇(길이 r = 3)이 θ = 0°에서 θ̇ = 2 rad/s로 돈다. 끝단 속도는?</p></div>
+    <div class="ans"><span class="a1">답: v = (0, 6)</span>
+      <div class="eq">ẋ = −r·sθ·θ̇ = −3·0·2 = 0
+ẏ =  r·cθ·θ̇ =  3·1·2 = 6</div>
+      <p>링크가 x축 위에 있으니 속도는 링크에 수직인 위쪽, 크기 rω = 6입니다.</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">15</span><div class="qt qbody"><div class="txt">L1 = L2 = 1, θ1 = 90°, θ2 = −90°(끝단 (1, 1))인 2R의 자코비안 J와 det J를 구하라. 또 θ̇ = (1, 1)일 때 끝단 속도는?</div><svg data-arm="1,1,90,-90" role="img" aria-label="θ1=90, θ2=-90"></svg></div></div>
+    <div class="ans"><span class="a1">답: J = [−1 0; 1 1], det J = −1, v = (−1, 2)</span>
+      <div class="eq">s1 = 1, c1 = 0, θ1+θ2 = 0° → s12 = 0, c12 = 1
+J = [ −1·1 − 1·0   −1·0 ]  =  [ −1  0 ]
+    [  1·0 + 1·1    1·1 ]     [  1  1 ]
+det J = (−1)(1) − (0)(1) = −1   (= L1L2·sin(−90°) ✓)
+v = J·(1,1) = (−1 + 0, 1 + 1) = (−1, 2)</div>
+      <p>각 열로 보면: 관절 1만 돌리면 (−1, 1), 관절 2만 돌리면 (0, 1). 둘을 더해서 (−1, 2)입니다.</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">16</span><p class="qt">문제 15의 자세에서 끝단을 v = (1, 0), 즉 오른쪽으로 움직이려면 θ̇는?</p></div>
+    <div class="ans"><span class="a1">답: θ̇ = (−1, 1)</span>
+      <div class="eq">J⁻¹ = 1/(−1) · [ 1  0 ]  =  [ −1   0 ]
+                [−1 −1 ]     [  1   1 ]
+θ̇ = J⁻¹·(1, 0) = (−1, 1)</div>
+      <p>검산: J·(−1, 1) = (−1·(−1) + 0, 1·(−1) + 1·1) = (1, 0) ✓</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">17</span><p class="qt">문제 15의 자세에서 끝단이 오른쪽으로 F = (1, 0) N의 힘을 내야 한다. 관절 토크 τ는?</p></div>
+    <div class="ans"><span class="a1">답: τ = (−1, 0) N·m</span>
+      <div class="eq">τ = Jᵀ·F = [ −1  1 ] [1]  =  [ −1 ]
+            [  0  1 ] [0]     [  0 ]</div>
+      <p>직관: 관절 1(원점)→끝단 (1, 1)에 +x 힘이면 모멘트 = x·Fy − y·Fx = 0 − 1 = −1. 관절 2(0, 1)→끝단 벡터는 (1, 0)으로 힘과 같은 방향이라 모멘트 0입니다.</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">18</span><p class="qt">ω = (0, 0, 3), r = (2, 0, 0)일 때 ω × r은? 반대칭 행렬 S(ω)도 써라.</p></div>
+    <div class="ans"><span class="a1">답: ω × r = (0, 6, 0)</span>
+      <div class="eq">S(ω) = [ 0 −3  0 ]       S(ω)·r = (0·2, 3·2, 0) = (0, 6, 0)
+       [ 3  0  0 ]
+       [ 0  0  0 ]</div>
+      <p>z축으로 돌면 x축 위의 점은 +y 방향으로 움직입니다. 크기 = |ω||r| = 6.</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">19</span><p class="qt">L1 = 2, L2 = 1인 2R의 특이 자세는? 그때 끝단이 움직일 수 없는 방향은?</p></div>
+    <div class="ans"><span class="a1">답: θ2 = 0° 또는 180°. 팔 길이 방향(반지름 방향)으로 못 움직임</span>
+      <div class="eq">det J = L1L2·s2 = 2·sin θ2 = 0 → θ2 = 0°, 180°</div>
+      <p>θ2 = 0°면 팔을 쭉 편 상태(r = 3, 바깥 경계), θ2 = 180°면 접힌 상태(r = 1, 안쪽 경계)입니다. 두 열이 평행해져서 J⁻¹이 없습니다.</p></div></div>
+
+  <div class="q"><div class="qh"><span class="num">20</span><p class="qt">6자유도 로봇과 7자유도 로봇의 자코비안 크기는? 어느 쪽이 J⁻¹을 바로 쓸 수 없나?</p></div>
+    <div class="ans"><span class="a1">답: 6×6, 6×7. 7자유도는 정방행렬이 아니라 J⁻¹이 없음</span>
+      <p>J는 (끝단 속도 6개) × (관절 수 n)입니다. 7자유도는 여유자유도(redundant) 로봇이라 같은 끝단 속도를 만드는 관절 속도가 무수히 많습니다.</p></div></div>
+
+  <!-- ================= 5 ================= -->
+  <h2 id="s5">5. 개념 OX</h2>
+  <div class="q"><div class="qh"><span class="num">21</span><p class="qt">Dexterous workspace는 Reachable workspace의 부분집합이다.</p></div>
+    <div class="ans"><span class="a1">O</span> 모든 자세로 닿는 점이면 당연히 한 자세로도 닿습니다.</div></div>
+  <div class="q"><div class="qh"><span class="num">22</span><p class="qt">병렬 로봇은 직렬 로봇보다 작업공간이 넓다.</p></div>
+    <div class="ans"><span class="a1">X</span> 병렬은 강성·정밀도·가반하중이 좋고, 작업공간은 좁습니다.</div></div>
+  <div class="q"><div class="qh"><span class="num">23</span><p class="qt">Craig DH에서 d<sub>i</sub>는 X<sub>i−1</sub>을 따라 잰다.</p></div>
+    <div class="ans"><span class="a1">X</span> d<sub>i</sub>와 θ<sub>i</sub>는 <b>Z<sub>i</sub></b>를 따라 잽니다. X<sub>i−1</sub>을 따라 재는 것은 a<sub>i−1</sub>, α<sub>i−1</sub>입니다.</div></div>
+  <div class="q"><div class="qh"><span class="num">24</span><p class="qt">수치적 역기구학은 한 번 실행으로 모든 해를 찾는다.</p></div>
+    <div class="ans"><span class="a1">X</span> 보통 초기값 근처의 해 하나를 찾습니다. 모든 해를 찾는 것은 해석적(closed-form) 방법입니다.</div></div>
+  <div class="q"><div class="qh"><span class="num">25</span><p class="qt">회전행렬의 역행렬은 전치행렬과 같다.</p></div>
+    <div class="ans"><span class="a1">O</span> 회전행렬은 직교행렬이라 R⁻¹ = Rᵀ입니다.</div></div>
+</main>
+
+<script>
+(function(){
+  const cb=document.getElementById('hideAns');
+  try{ if(localStorage.getItem('hideAns')==='1'){cb.checked=true;document.body.classList.add('hide');} }catch(e){}
+  cb.addEventListener('change',()=>{document.body.classList.toggle('hide',cb.checked);try{localStorage.setItem('hideAns',cb.checked?'1':'0');}catch(e){}});
+
+  const NS='http://www.w3.org/2000/svg', D=Math.PI/180;
+  const el=(n,a,h)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(h!=null)e.textContent=h;return e;};
+  function setup(svg,pts){
+    const xs=pts.map(p=>p[0]).concat([0]), ys=pts.map(p=>p[1]).concat([0]);
+    const minx=Math.min(...xs)-0.5,maxx=Math.max(...xs)+0.6,miny=Math.min(...ys)-0.5,maxy=Math.max(...ys)+0.6;
+    const sc=Math.min(170/(maxx-minx),170/(maxy-miny));
+    const W=200,H=Math.round((maxy-miny)*sc)+20;
+    svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    const P=p=>[10+(p[0]-minx)*sc, H-10-(p[1]-miny)*sc];
+    const o=P([0,0]);
+    svg.appendChild(el('line',{x1:10,y1:o[1],x2:W-6,y2:o[1],style:'stroke:var(--ax-x);stroke-width:1.2;opacity:.6'}));
+    svg.appendChild(el('line',{x1:o[0],y1:H-6,x2:o[0],y2:6,style:'stroke:var(--ax-y);stroke-width:1.2;opacity:.6'}));
+    svg.appendChild(el('text',{x:W-12,y:o[1]-4,'font-size':'11',style:'fill:var(--ax-x)'},'x'));
+    svg.appendChild(el('text',{x:o[0]+4,y:14,'font-size':'11',style:'fill:var(--ax-y)'},'y'));
+    return P;
+  }
+  function arm(root,P,L1,L2,t1,t2,color,label,cls){
+    const svg=el('g',cls?{class:cls}:{}); root.appendChild(svg);
+    const j=[L1*Math.cos(t1*D),L1*Math.sin(t1*D)], e=[j[0]+L2*Math.cos((t1+t2)*D), j[1]+L2*Math.sin((t1+t2)*D)];
+    const a=P([0,0]),b=P(j),c=P(e);
+    svg.appendChild(el('polyline',{points:`${a} ${b} ${c}`,fill:'none',style:`stroke:${color};stroke-width:5;stroke-linecap:round;stroke-linejoin:round;opacity:.85`}));
+    [a,b].forEach(p=>svg.appendChild(el('circle',{cx:p[0],cy:p[1],r:5,style:'fill:var(--paper);stroke:var(--fg);stroke-width:1.6'})));
+    svg.appendChild(el('circle',{cx:c[0],cy:c[1],r:4,style:'fill:var(--hot)'}));
+    if(label) svg.appendChild(el('text',{x:b[0]+6,y:b[1]-6,'font-size':'11',style:`fill:${color}`},label));
+    return e;
+  }
+  document.querySelectorAll('svg[data-arm]').forEach(svg=>{
+    const [L1,L2,t1,t2]=svg.dataset.arm.split(',').map(Number);
+    const j=[L1*Math.cos(t1*D),L1*Math.sin(t1*D)], e=[j[0]+L2*Math.cos((t1+t2)*D), j[1]+L2*Math.sin((t1+t2)*D)];
+    const P=setup(svg,[j,e]); arm(svg,P,L1,L2,t1,t2,'var(--link)');
+  });
+  document.querySelectorAll('svg[data-arm2]').forEach(svg=>{
+    const [L1,L2,a1,a2,b1,b2]=svg.dataset.arm2.split(',').map(Number);
+    const pts=[[L1*Math.cos(a1*D),L1*Math.sin(a1*D)],[L1*Math.cos(b1*D),L1*Math.sin(b1*D)]];
+    const tg=svg.dataset.target.split(',').map(Number); pts.push(tg);
+    const P=setup(svg,pts);
+    arm(svg,P,L1,L2,a1,a2,'var(--accent)','해1','sol'); arm(svg,P,L1,L2,b1,b2,'var(--hot)','해2','sol');
+    const t=P(tg); svg.appendChild(el('circle',{cx:t[0],cy:t[1],r:5,style:'fill:none;stroke:var(--hot);stroke-width:2'}));
+    svg.appendChild(el('text',{x:t[0]+8,y:t[1]+4,'font-size':'11'},'목표 ('+tg.join(', ')+')'));
+  });
+})();
+</script>
