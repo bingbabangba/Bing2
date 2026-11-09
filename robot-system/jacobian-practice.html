@@ -1,0 +1,210 @@
+<title>자코비안 그림 예제</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: 문제 카드 목록. 왼쪽 문제 그림, 오른쪽 문제 글. 바로 아래 초록 정답 상자에 풀이 그림과 계산. 관절1 효과 주황, 관절2 보라, 관절3 청록, 결과 초록, 힘 빨강. */
+:root{
+  --bg:#f6f7f9; --paper:#ffffff; --fg:#1b2230; --muted:#5b6577; --line:#d9dee7;
+  --arm:#1f5fbf; --arm-soft:#e6eefb; --c1:#d9691a; --c2:#7a3fb8; --c3:#0f8a8a; --v:#1f7a4d; --ok-soft:#e8f5ee; --f:#c0392b; --key-soft:#fdf0e6;
+  --ax-x:#d03b3b; --ax-y:#2c8a3c;
+  --f-body:"IBM Plex Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161d; --paper:#1a2029; --fg:#e4e8ef; --muted:#9aa4b5; --line:#2e3644;
+  --arm:#78a6f0; --arm-soft:#1e2c44; --c1:#f0995a; --c2:#b98be8; --c3:#4fc9c9; --v:#6cc896; --ok-soft:#173326; --f:#f07272; --key-soft:#3a2617;
+  --ax-x:#f07272; --ax-y:#6cc77a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161d; --paper:#1a2029; --fg:#e4e8ef; --muted:#9aa4b5; --line:#2e3644;
+  --arm:#78a6f0; --arm-soft:#1e2c44; --c1:#f0995a; --c2:#b98be8; --c3:#4fc9c9; --v:#6cc896; --ok-soft:#173326; --f:#f07272; --key-soft:#3a2617;
+  --ax-x:#f07272; --ax-y:#6cc77a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+main{max-width:900px;margin:0 auto;padding-block:28px 72px}
+h1{font-size:clamp(26px,4vw,34px);line-height:1.25;margin:0 0 6px}
+.lede{color:var(--muted);margin:0 0 12px}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:8px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-bottom:1px solid var(--line);margin-bottom:18px}
+.formula{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.toggle{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;cursor:pointer;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px 12px}
+.toggle input{accent-color:var(--v);width:16px;height:16px}
+.q{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:16px}
+.row{display:grid;grid-template-columns:240px minmax(0,1fr);gap:18px;align-items:start}
+.row svg,.ans svg{width:100%;height:auto;display:block;background:var(--bg);border-radius:8px}
+.num{display:inline-block;font-family:var(--f-mono);font-weight:600;font-size:14px;color:var(--paper);background:var(--fg);border-radius:6px;padding:0 7px;margin-right:6px}
+.qt h3{font-size:17px;margin:0 0 6px;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px}
+.qt p{margin:4px 0}
+.qt ol{margin:4px 0;padding-left:1.4em}
+.ans{background:var(--ok-soft);border-radius:8px;padding:12px 14px;margin-top:12px}
+.ans .head{font-weight:700;color:var(--v)}
+.ans .row{grid-template-columns:240px minmax(0,1fr)}
+.calc{font-family:var(--f-mono);font-size:13.5px;white-space:pre;overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:6px 0;line-height:1.65}
+.ans p{margin:4px 0}
+body.hide .ans{display:none}
+.c1{color:var(--c1);font-weight:700} .c2{color:var(--c2);font-weight:700} .c3{color:var(--c3);font-weight:700} .vv{color:var(--v);font-weight:700} .ff{color:var(--f);font-weight:700}
+.m{font-family:var(--f-mono);font-size:.92em}
+svg text{font-family:var(--f-body)}
+@media (max-width:640px){.row,.ans .row{grid-template-columns:minmax(0,1fr)}.row svg,.ans svg{max-width:300px}.toggle{margin-left:0}}
+</style>
+
+<main>
+  <h1>자코비안 그림 예제</h1>
+  <p class="lede">평면 로봇, 링크 길이는 모두 1입니다. 문제 그림을 보고 풀고, 바로 아래 정답 상자에서 풀이 그림과 계산을 확인하세요.</p>
+  <div class="bar">
+    <span class="formula">J 열 = (관절→끝단 벡터 (X,Y)) 를 90° 돌린 (−Y, X) &nbsp;|&nbsp; v = Jθ̇ &nbsp;|&nbsp; θ̇ = J⁻¹v &nbsp;|&nbsp; τ = JᵀF</span>
+    <label class="toggle" for="hideAns"><input type="checkbox" id="hideAns">정답 가리기</label>
+  </div>
+
+  <div class="q"><div class="row"><svg data-fig="q1"></svg><div class="qt">
+    <h3><span class="num">1</span>1R 로봇의 끝단 속도</h3>
+    <p>길이 r = 2인 1R 로봇이 θ = 90°(위를 향함)에서 θ̇ = 1 rad/s로 반시계 방향으로 돈다. 끝단 속도 (ẋ, ẏ)는?</p></div></div>
+    <div class="ans"><div class="row"><svg data-fig="a1"></svg><div>
+      <p class="head">답: v = (−2, 0)</p>
+      <div class="calc">ẋ = −r·sin θ·θ̇ = −2·1·1 = −2
+ẏ =  r·cos θ·θ̇ =  2·0·1 =  0</div>
+      <p>링크(위쪽)에 수직인 방향은 왼쪽이고, 크기는 v = rω = 2·1 = 2입니다.</p></div></div></div></div>
+
+  <div class="q"><div class="row"><svg data-fig="q2"></svg><div class="qt">
+    <h3><span class="num">2</span>J의 열을 그림으로 구하기</h3>
+    <p>2R 로봇, θ1 = 90°, θ2 = 90°. 끝단은 (−1, 1)에 있다.</p>
+    <ol><li>각 관절에서 끝단까지 벡터를 이용해 J의 두 열을 구하라.</li><li>θ̇ = (1, 1)일 때 끝단 속도는?</li></ol></div></div>
+    <div class="ans"><div class="row"><svg data-fig="a2"></svg><div>
+      <p class="head">답: J = [−1 0; −1 −1], v = (−1, −2)</p>
+      <div class="calc">관절1 (0,0) → 끝단: (−1, 1)  → 90° 돌리면 <span class="c1">(−1, −1)</span>  = 1열
+관절2 (0,1) → 끝단: (−1, 0)  → 90° 돌리면 <span class="c2">( 0, −1)</span>  = 2열
+
+J = [ <span class="c1">−1</span>   <span class="c2">0</span> ]     v = <span class="c1">(−1,−1)</span> + <span class="c2">(0,−1)</span> = <span class="vv">(−1, −2)</span>
+    [ <span class="c1">−1</span>  <span class="c2">−1</span> ]</div>
+      <p>식으로 확인: s1 = 1, c1 = 0, s12 = sin180° = 0, c12 = −1 → J = [−1−0, −0; 0−1, −1] ✓</p></div></div></div></div>
+
+  <div class="q"><div class="row"><svg data-fig="q3"></svg><div class="qt">
+    <h3><span class="num">3</span>원하는 방향으로 움직이기 (역속도)</h3>
+    <p>문제 2와 같은 자세에서 끝단을 <b>오른쪽으로</b> v = (1, 0) 움직이고 싶다. θ̇1, θ̇2는?</p></div></div>
+    <div class="ans"><div class="row"><svg data-fig="a3"></svg><div>
+      <p class="head">답: θ̇ = (−1, 1)</p>
+      <div class="calc">det J = (−1)(−1) − (0)(−1) = 1
+J⁻¹ = 1/1 · [ −1   0 ]       θ̇ = J⁻¹·(1, 0) = (−1, 1)
+            [  1  −1 ]</div>
+      <p>그림으로: 1열 <span class="c1">(−1, −1)</span>을 −1배 하면 (1, 1), 2열 <span class="c2">(0, −1)</span>을 1배 더하면 (1, 0). 관절 1을 시계 방향으로 돌리면 오른쪽 위로 가고, 관절 2가 위쪽 성분을 상쇄합니다.</p>
+      <p>검산: J·(−1, 1) = (1 + 0, 1 − 1) = (1, 0) ✓</p></div></div></div></div>
+
+  <div class="q"><div class="row"><svg data-fig="q4"></svg><div class="qt">
+    <h3><span class="num">4</span>물건을 들고 버티는 토크</h3>
+    <p>문제 2와 같은 자세에서 끝단에 아래로 2 N의 하중이 걸린다. 끝단이 버티려면 <b>로봇이 내야 하는 힘</b>은 F = (0, 2)이다. 관절 토크 τ1, τ2는?</p></div></div>
+    <div class="ans"><div class="row"><svg data-fig="a4"></svg><div>
+      <p class="head">답: τ = (−2, −2) N·m</p>
+      <div class="calc">Jᵀ = [ −1  −1 ]      τ = Jᵀ·(0, 2) = (−2, −2)
+     [  0  −1 ]</div>
+      <p>그림으로: 힘의 작용선은 x = −1인 세로선입니다. 관절 1(원점)과 관절 2(0, 1)는 둘 다 이 선에서 수평으로 1만큼 떨어져 있습니다. 그래서 두 관절 모두 크기 1 × 2 = 2의 토크가 필요합니다. 부호가 음수(시계 방향)인 것은 끝단이 두 관절보다 왼쪽에 있어서, 그곳을 위로 밀려면 관절이 시계 방향으로 비틀어야 하기 때문입니다.</p></div></div></div></div>
+
+  <div class="q"><div class="row"><svg data-fig="q5"></svg><div class="qt">
+    <h3><span class="num">5</span>팔을 위로 쭉 편 자세</h3>
+    <p>2R 로봇, θ1 = 90°, θ2 = 0°. 끝단은 (0, 2)에 있다.</p>
+    <ol><li>J와 det J를 구하라.</li><li>끝단이 움직일 수 <b>없는</b> 방향은?</li></ol></div></div>
+    <div class="ans"><div class="row"><svg data-fig="a5"></svg><div>
+      <p class="head">답: J = [−2 −1; 0 0], det J = 0 (특이점), 위아래(y) 방향 불가</p>
+      <div class="calc">s1 = 1, c1 = 0, s12 = 1, c12 = 0
+J = [ −1−1   −1 ]  =  [ <span class="c1">−2</span>  <span class="c2">−1</span> ]     det = (−2)(0) − (−1)(0) = 0
+    [  0+0    0 ]     [  <span class="c1">0</span>   <span class="c2">0</span> ]</div>
+      <p>두 열 <span class="c1">(−2, 0)</span>, <span class="c2">(−1, 0)</span>이 둘 다 왼쪽을 향합니다(나란함). 어떻게 섞어도 y 성분이 0이라 팔 길이 방향(위아래)으로는 움직일 수 없습니다. 일반식으로도 det J = L1L2·sin θ2 = sin 0° = 0입니다.</p></div></div></div></div>
+
+  <div class="q"><div class="row"><svg data-fig="q6"></svg><div class="qt">
+    <h3><span class="num">6</span>수평으로 뻗은 팔의 토크</h3>
+    <p>2R 로봇, θ1 = 0°, θ2 = 0°(오른쪽으로 쭉 폄, 끝단 (2, 0)).</p>
+    <ol><li>끝단에서 위로 F = (0, 1)을 낼 때 τ는?</li><li>끝단에서 오른쪽으로 F = (1, 0)을 낼 때 τ는?</li></ol></div></div>
+    <div class="ans"><div class="row"><svg data-fig="a6"></svg><div>
+      <p class="head">답: ① τ = (2, 1) &nbsp; ② τ = (0, 0)</p>
+      <div class="calc">J = [ 0  0 ]     Jᵀ = [ 0  2 ]
+    [ 2  1 ]          [ 0  1 ]
+① Jᵀ·(0, 1) = (2, 1)      ② Jᵀ·(1, 0) = (0, 0)</div>
+      <p>① 위로 미는 힘: 어깨는 거리 2, 팔꿈치는 거리 1 → 어깨가 두 배로 힘듭니다.</p>
+      <p>② 팔 방향으로 미는 힘은 모든 관절을 지나가는 작용선 위에 있어서 <b>토크 0</b>. 특이 자세에서는 그 방향 힘을 구조(링크)가 그대로 받아냅니다.</p></div></div></div></div>
+
+  <div class="q"><div class="row"><svg data-fig="q7"></svg><div class="qt">
+    <h3><span class="num">7</span>평면 3R의 자코비안</h3>
+    <p>3R 로봇, θ1 = 0°, θ2 = 90°, θ3 = −90°. 관절은 (0,0), (1,0), (1,1)에 있고 끝단은 (2, 1)이다. 출력 (ẋ, ẏ, α̇)에 대한 3×3 자코비안을 그림으로 구하라.</p></div></div>
+    <div class="ans"><div class="row"><svg data-fig="a7"></svg><div>
+      <p class="head">답: J = [−1 −1 0; 2 1 1; 1 1 1]</p>
+      <div class="calc">관절1 (0,0)→끝단 (2,1) → <span class="c1">(−1, 2)</span>
+관절2 (1,0)→끝단 (1,1) → <span class="c2">(−1, 1)</span>
+관절3 (1,1)→끝단 (1,0) → <span class="c3">( 0, 1)</span>
+각속도 줄 α̇ = θ̇1+θ̇2+θ̇3 → (1, 1, 1)
+
+J = [ <span class="c1">−1</span>  <span class="c2">−1</span>   <span class="c3">0</span> ]
+    [  <span class="c1">2</span>   <span class="c2">1</span>   <span class="c3">1</span> ]
+    [  1   1   1 ]</div>
+      <p>공식 확인: s1 = 0, c1 = 1, s12 = 1, c12 = 0, s123 = 0, c123 = 1 → 1행 (−0−1−0, −1−0, −0), 2행 (1+0+1, 0+1, 1) ✓</p></div></div></div></div>
+
+  <div class="q"><div class="row"><svg data-fig="q8"></svg><div class="qt">
+    <h3><span class="num">8</span>속력만 빨리 구하기</h3>
+    <p>2R 로봇, θ1 = 0°, θ2 = 90°(끝단 (1, 1)). 관절 1만 2 rad/s로 돌릴 때 끝단의 <b>속력</b>과 방향은? (J를 다 쓰지 말고 v = rω로)</p></div></div>
+    <div class="ans"><div class="row"><svg data-fig="a8"></svg><div>
+      <p class="head">답: 속력 2√2, 방향 (−1, 1) (왼쪽 위 45°)</p>
+      <div class="calc">r = |(1, 1)| = √2,   v = r·ω = √2 · 2 = 2√2
+방향: (1, 1)을 90° 돌린 (−1, 1)
+→ v = 2·(−1, 1) = (−2, 2)</div>
+      <p>J의 1열 (−1, 1)에 θ̇1 = 2를 곱한 것과 같습니다.</p></div></div></div></div>
+</main>
+
+<script>
+(function(){
+  const cb=document.getElementById('hideAns');
+  try{ if(localStorage.getItem('jpHide')==='1'){cb.checked=true;document.body.classList.add('hide');} }catch(e){}
+  cb.addEventListener('change',()=>{document.body.classList.toggle('hide',cb.checked);try{localStorage.setItem('jpHide',cb.checked?'1':'0');}catch(e){}});
+
+  const NS='http://www.w3.org/2000/svg', D=Math.PI/180;
+  const el=(n,a,t)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;return e;};
+  let uid=0;
+  function fig(svg,box){ // box: [xmin,xmax,ymin,ymax]
+    const [x0,x1,y0,y1]=box, W=240, S=W/(x1-x0), H=Math.round((y1-y0)*S);
+    svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('role','img');
+    const defs=el('defs',{}); svg.appendChild(defs); const id='f'+(uid++);
+    ['c1','c2','c3','v','f','arm'].forEach(n=>{const m=el('marker',{id:id+n,viewBox:'0 0 10 10',refX:'8',refY:'5',markerWidth:'5',markerHeight:'5',orient:'auto-start-reverse'});m.appendChild(el('path',{d:'M0 0 L10 5 L0 10 z',style:`fill:var(--${n})`}));defs.appendChild(m);});
+    const P=(x,y)=>[(x-x0)*S,(y1-y)*S];
+    const g={
+      line(a,b,st,m){const p=P(...a),q=P(...b);const l=el('line',{x1:p[0],y1:p[1],x2:q[0],y2:q[1],style:st});if(m)l.setAttribute('marker-end',`url(#${id+m})`);svg.appendChild(l);},
+      txt(a,s,st,anc,dx,dy){const p=P(...a);svg.appendChild(el('text',{x:p[0]+(dx||0),y:p[1]+(dy||0),'font-size':'12','text-anchor':anc||'middle',style:(st||'fill:var(--fg)')+';paint-order:stroke;stroke:var(--bg);stroke-width:3px'},s));},
+      dot(a,r,st){const p=P(...a);svg.appendChild(el('circle',{cx:p[0],cy:p[1],r,style:st}));},
+      axes(){g.line([x0,0],[x1,0],'stroke:var(--ax-x);stroke-width:1;opacity:.5');g.line([0,y0],[0,y1],'stroke:var(--ax-y);stroke-width:1;opacity:.5');
+        for(let x=Math.ceil(x0);x<=Math.floor(x1);x++) if(x) g.txt([x,0],String(x),'fill:var(--muted);font-size:10px','middle',0,13);
+        for(let y=Math.ceil(y0);y<=Math.floor(y1);y++) if(y) g.txt([0,y],String(y),'fill:var(--muted);font-size:10px','end',-5,4);},
+      chain(ths){let p=[0,0],a=0;const pts=[p];ths.forEach(t=>{a+=t;p=[p[0]+Math.cos(a*D),p[1]+Math.sin(a*D)];pts.push(p);});
+        for(let i=0;i<pts.length-1;i++) g.line(pts[i],pts[i+1],'stroke:var(--arm);stroke-width:6;stroke-linecap:round');
+        pts.slice(0,-1).forEach(q=>g.dot(q,5,'fill:var(--paper);stroke:var(--fg);stroke-width:1.6')); g.dot(pts[pts.length-1],4,'fill:var(--fg)'); return pts;},
+      vec(from,v,c,lab,anc,dx,dy,sc){sc=sc||0.5;const to=[from[0]+v[0]*sc,from[1]+v[1]*sc];g.line(from,to,`stroke:var(--${c});stroke-width:3`,c);if(lab)g.txt(to,lab,`fill:var(--${c});font-weight:700`,anc||'middle',dx||0,dy==null?-7:dy);return to;},
+      dash(a,b,c){g.line(a,b,`stroke:var(--${c});stroke-width:1.2;stroke-dasharray:4 3`);},
+      arc(c,r,a0,a1,col){const p0=P(c[0]+r*Math.cos(a0*D),c[1]+r*Math.sin(a0*D)),p1=P(c[0]+r*Math.cos(a1*D),c[1]+r*Math.sin(a1*D));
+        svg.appendChild(el('path',{d:`M${p0[0]} ${p0[1]} A${r*S} ${r*S} 0 0 ${a1>a0?0:1} ${p1[0]} ${p1[1]}`,fill:'none',style:`stroke:var(--${col});stroke-width:1.8`,'marker-end':`url(#${id+col})`}));}
+    };
+    return g;
+  }
+  const F={
+    q1(s){const g=fig(s,[-2.6,1.4,-0.5,2.7]);g.axes();g.line([0,0],[0,2],'stroke:var(--arm);stroke-width:6;stroke-linecap:round');g.dot([0,0],5,'fill:var(--paper);stroke:var(--fg);stroke-width:1.6');g.dot([0,2],4,'fill:var(--fg)');g.arc([0,0],0.5,10,80,'arm');g.txt([0.3,0.5],'θ̇ = 1','fill:var(--arm)','start',4,0);g.txt([0,1],'r = 2','fill:var(--muted)','start',8,0);g.txt([0,2],'?','fill:var(--v);font-weight:700;font-size:16px','end',-10,4);},
+    a1(s){const g=fig(s,[-2.6,1.4,-0.5,2.7]);g.axes();g.line([0,0],[0,2],'stroke:var(--arm);stroke-width:6;stroke-linecap:round');g.dot([0,0],5,'fill:var(--paper);stroke:var(--fg);stroke-width:1.6');g.vec([0,2],[-2,0],'v','(−2, 0)','middle',0,-8,1);},
+    q2(s){const g=fig(s,[-2.2,1.2,-0.8,2.2]);g.axes();g.chain([90,90]);g.txt([0,1],'관절2','fill:var(--muted)','start',8,-4);g.txt([-1,1],'(−1, 1)','fill:var(--fg)','middle',0,-10);},
+    a2(s){const g=fig(s,[-2.2,1.2,-0.8,2.2]);g.axes();const p=g.chain([90,90]);g.dash([0,0],p[2],'c1');g.dash(p[1],p[2],'c2');
+      const a=g.vec(p[2],[-1,-1],'c1','1열','end',-4,10);g.vec(a,[0,-1],'c2','2열','start',6,2);g.vec(p[2],[-1,-2],'v','v','end',-6,4);},
+    q3(s){const g=fig(s,[-2.2,1.2,-0.8,2.2]);g.axes();const p=g.chain([90,90]);g.vec(p[2],[1,0],'v','원하는 v = (1, 0)','start',-30,-10,0.7);},
+    a3(s){const g=fig(s,[-2.2,1.2,-0.8,2.2]);g.axes();const p=g.chain([90,90]);const a=g.vec(p[2],[1,1],'c1','−1 × 1열','start',4,-4);g.vec(a,[0,-1],'c2','1 × 2열','start',8,14);g.vec(p[2],[1,0],'v','','middle');},
+    q4(s){const g=fig(s,[-2.2,1.2,-0.8,2.2]);g.axes();const p=g.chain([90,90]);g.line(p[2],[p[2][0],p[2][1]+0.7],'stroke:var(--f);stroke-width:3','f');g.txt([p[2][0],p[2][1]+0.7],'F = (0, 2)','fill:var(--f);font-weight:700','start',6,4);},
+    a4(s){const g=fig(s,[-2.2,1.2,-0.8,2.2]);g.axes();const p=g.chain([90,90]);g.line([-1,-0.7],[-1,2.15],'stroke:var(--f);stroke-width:1.2;stroke-dasharray:5 4');g.line(p[2],[-1,1.7],'stroke:var(--f);stroke-width:3','f');
+      g.line([-1,0.15],[0,0.15],'stroke:var(--c1);stroke-width:2.2');g.txt([-0.5,0.15],'거리 1','fill:var(--c1);font-weight:700','middle',0,-6);
+      g.line([-1,0.85],[0,0.85],'stroke:var(--c2);stroke-width:2.2');g.txt([-0.5,0.85],'거리 1','fill:var(--c2);font-weight:700','middle',0,-6);},
+    q5(s){const g=fig(s,[-1.8,1.2,-0.4,2.6]);g.axes();g.chain([90,0]);g.txt([0,2],'(0, 2)','fill:var(--fg)','start',8,4);},
+    a5(s){const g=fig(s,[-1.8,1.2,-0.4,2.6]);g.axes();const p=g.chain([90,0]);g.vec(p[2],[-2,0],'c1','1열','end',-4,4,0.7);g.vec(p[2],[-1,0],'c2','2열','middle',0,16,0.7);
+      g.line([0,2],[0,2.5],'stroke:var(--f);stroke-width:2;stroke-dasharray:4 3');g.txt([0,2.42],'✕ 위아래 불가','fill:var(--f);font-weight:700','start',6,4);},
+    q6(s){const g=fig(s,[-0.4,2.6,-1,1.4]);g.axes();g.chain([0,0]);g.txt([2,0],'(2, 0)','fill:var(--fg)','middle',0,-12);},
+    a6(s){const g=fig(s,[-0.4,2.6,-1,1.4]);g.axes();const p=g.chain([0,0]);g.line(p[2],[2,0.8],'stroke:var(--f);stroke-width:3','f');g.txt([2,0.8],'① F','fill:var(--f);font-weight:700','end',-6,4);
+      g.line(p[2],[2.5,0],'stroke:var(--f);stroke-width:3;opacity:.6','f');g.txt([2.45,0],'②','fill:var(--f);font-weight:700','middle',0,16);
+      g.line([0,-0.35],[2,-0.35],'stroke:var(--c1);stroke-width:2.2');g.txt([1,-0.35],'어깨 거리 2','fill:var(--c1);font-weight:700','middle',0,16);
+      g.line([1,-0.7],[2,-0.7],'stroke:var(--c2);stroke-width:2.2');g.txt([1.5,-0.7],'팔꿈치 거리 1','fill:var(--c2);font-weight:700','middle',0,16);},
+    q7(s){const g=fig(s,[-0.8,2.8,-0.6,2.4]);g.axes();g.chain([0,90,-90]);g.txt([2,1],'(2, 1)','fill:var(--fg)','middle',0,-10);},
+    a7(s){const g=fig(s,[-0.8,2.8,-0.6,2.4]);g.axes();const p=g.chain([0,90,-90]);g.dash(p[0],p[3],'c1');g.dash(p[1],p[3],'c2');g.dash(p[2],p[3],'c3');
+      g.vec(p[3],[-1,2],'c1','1열','end',-4,0);g.vec(p[3],[-1,1],'c2','2열','end',-6,8);g.vec(p[3],[0,1],'c3','3열','start',6,4);},
+    q8(s){const g=fig(s,[-1.6,1.6,-0.6,2.6]);g.axes();g.chain([0,90]);g.arc([0,0],0.4,8,80,'arm');g.txt([0.35,0.35],'ω = 2','fill:var(--arm)','start',4,0);},
+    a8(s){const g=fig(s,[-1.6,1.6,-0.6,2.6]);g.axes();const p=g.chain([0,90]);g.dash(p[0],p[2],'c1');g.txt([0.5,0.5],'r = √2','fill:var(--c1)','end',-4,-4);g.vec(p[2],[-2,2],'v','2√2','end',-4,0,0.5);},
+  };
+  document.querySelectorAll('svg[data-fig]').forEach(s=>{F[s.dataset.fig](s); s.setAttribute('aria-label','예제 그림 '+s.dataset.fig);});
+})();
+</script>
