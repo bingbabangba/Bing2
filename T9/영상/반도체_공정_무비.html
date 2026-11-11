@@ -20,6 +20,7 @@ h1{font-size:clamp(20px,3.4vw,28px);margin:0;letter-spacing:-.01em}
 .sub{color:var(--mute);font-size:14px;margin:4px 0 0}
 .tracks{display:flex;flex-wrap:wrap;gap:6px;background:var(--panel);padding:4px;border-radius:10px;border:1px solid var(--line)}
 .tracks button{font:600 14px var(--body);color:var(--mute);background:none;border:0;padding:8px 14px;border-radius:7px;cursor:pointer}
+.tracks .dl{font:700 12px var(--mono);color:var(--cu);padding:8px 6px 8px 10px;align-self:center}
 .tracks button.on{background:var(--cu);color:#1a1006}
 .stage{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .stage svg{display:block;width:100%;height:auto}
@@ -50,7 +51,8 @@ body.rec .stage{border:0;border-radius:0}
 <div class="wrap">
 <header>
   <div><h1>반도체 공정 무비</h1><p class="sub">웨이퍼 한 장이 일반 반도체 패키지, 또는 HBM이 되어 AI 가속기에 들어가기까지. 트랜지스터와 하이브리드 본딩은 확대해서 따로 봅니다.</p></div>
-  <div class="tracks" role="tablist" aria-label="트랙 선택"><button type="button" id="tg" class="on" role="tab">일반 반도체</button><button type="button" id="th" role="tab">HBM</button><button type="button" id="tt" role="tab">트랜지스터</button><button type="button" id="tb" role="tab">하이브리드 본딩</button></div>
+  <div class="tracks" role="tablist" aria-label="트랙 선택"><button type="button" data-k="gen" class="on" role="tab">일반 반도체</button><button type="button" data-k="hbm" role="tab">HBM</button><button type="button" data-k="tr" role="tab">트랜지스터</button><button type="button" data-k="hb" role="tab">하이브리드 본딩</button></div>
+  <div class="tracks deep" role="tablist" aria-label="심화 트랙"><span class="dl">심화</span><button type="button" data-k="dthin" role="tab">박막화</button><button type="button" data-k="ddice" role="tab">다이싱</button><button type="button" data-k="dcow" role="tab">CoW 적층</button><button type="button" data-k="dwarp" role="tab">리플로우·휨</button><button type="button" data-k="dmold" role="tab">몰드</button><button type="button" data-k="dtest" role="tab">테스트</button><button type="button" data-k="dheat" role="tab">방열</button><button type="button" data-k="dfa" role="tab">불량 분석</button><button type="button" data-k="dall" role="tab">심화 전체</button></div>
 </header>
 <div class="stage"><svg id="sv" viewBox="0 0 960 540" role="img" aria-label="반도체 공정 애니메이션"></svg></div>
 <div class="ctrl">
@@ -481,47 +483,360 @@ S.b8=['결과: 낮고, 촘촘하고, 시원하게','T','칩 사이의 범프·�
   o+=T(480,96,'높이↓ · 연결 간격↓ · 열↓',{a:'middle',c:C.cu,s:18,w:700,op:sg(t,.7,.9)});}
  return o;}];
 
+
+/* ===================== 심화 트랙: 원리 → 문제 → 해결 → 최신 → 최신 과제 ===================== */
+function chart(x,y,w,h,pts,prog,col,xl,yl){var o=Ln(x,y+h,x+w,y+h,C.mute,1.5)+Ln(x,y,x,y+h,C.mute,1.5);
+ var n=Math.max(2,Math.floor(pts.length*prog)),d='';for(var i=0;i<n&&i<pts.length;i++){var px=x+pts[i][0]*w,py=y+h-pts[i][1]*h;d+=(i?'L':'M')+px+' '+py+' ';}
+ o+='<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="3"/>';if(xl)o+=T(x+w,y+h+18,xl,{a:'end',c:C.mute,s:12});if(yl)o+=T(x-6,y-6,yl,{c:C.mute,s:12});return o;}
+function box(x,y,w,h,col,title,lines,op){var o='<g opacity="'+(op===undefined?1:op)+'">'+R(x,y,w,h,'#0f1822','rx="10" stroke="'+col+'" stroke-width="2"')+T(x+14,y+26,title,{c:col,s:15,w:700});
+ (lines||[]).forEach(function(l,i){o+=T(x+14,y+52+i*22,l,{c:C.ink,s:13});});return o+'</g>';}
+function stackDraw(x,y0,n,w,lh,gap,col){var o='';for(var i=0;i<n;i++){o+=R(x,y0-(i+1)*(lh+gap),w,lh,C.si)+(gap?R(x,y0-(i+1)*(lh+gap)+lh,w,gap,col||'#9f8ce0','opacity=".8"'):'');}return o;}
+function heatCol(v){var r=Math.round(L(90,255,v)),g=Math.round(L(140,90,v)),b=Math.round(L(220,60,v));return 'rgb('+r+','+g+','+b+')';}
+
+/* --- A. 박막화 --- */
+S.a1=['박막화 원리','T','회로면을 테이프로 보호하고 뒤집어, 다이아몬드 휠로 뒷면을 갈아 냅니다. 거친 휠로 빨리, 고운 휠로 마무리하고, 연삭 손상층을 없앱니다.','휠 회전수·이송 속도·냉각수, 척 평탄도가 두께 균일도(TTV)를 정합니다.',function(t){return S.bg[4](t);},'원리'];
+S.a2=['문제: 휨 · 크랙 · TTV','T','얇아질수록 회로면과 뒷면의 응력 차이로 웨이퍼가 휘고, 가장자리 미세 크랙이 퍼져 깨지기 쉽습니다. 두께 편차(TTV)는 쌓을수록 누적됩니다.','원인: 잔류응력, 연삭 손상층, 척 평탄도, 테이프 장력. 수십 ㎛면 종이처럼 휨.',function(t){
+ var w=ez(sg(t,0,.5)),c=sg(t,.45,.85),o='',cx=480,y=280,half=300,sag=70*w;
+ o+='<path d="M'+(cx-half)+' '+(y-sag)+' Q'+cx+' '+(y+sag)+' '+(cx+half)+' '+(y-sag)+' L'+(cx+half)+' '+(y-sag+14)+' Q'+cx+' '+(y+sag+14)+' '+(cx-half)+' '+(y-sag+14)+'Z" fill="'+C.si+'"/>';
+ if(c>0){[[cx-half+10,y-sag+4],[cx+half-14,y-sag+6]].forEach(function(p,i){o+='<path d="M'+p[0]+' '+p[1]+' l'+(i?-1:1)*30*c+' '+12*c+' l'+(i?-1:1)*20*c+' '+(-8*c)+' l'+(i?-1:1)*26*c+' '+14*c+'" fill="none" stroke="'+C.bad+'" stroke-width="2.5"/>';});
+  o+=T(cx-half,y-sag-20,'가장자리 크랙',{c:C.bad,s:14,w:700,op:c});}
+ o+=T(cx,y+sag+50,'휨 (Warpage)',{a:'middle',c:C.cu,s:15,w:700,op:w});
+ var tv=sg(t,.7,1);o+='<g opacity="'+tv+'">'+'<path d="M640 150 L880 150 L880 178 L640 166Z" fill="'+C.si+'"/>'+T(760,140,'TTV: 한 장 안 두께 차',{a:'middle',c:C.bad,s:13,w:600})+'</g>';
+ return o;},'문제'];
+S.a3=['해결: 순서·지지·손상 제거','T','① DBG: 먼저 반쯤 자르고 나중에 갈아 자연 분리 ② 임시 캐리어: 단단한 판에 붙여 얇게 가공 ③ Stress Relief: 연삭 손상층을 연마·식각으로 제거해 강도 회복.','부작용: DBG는 칩 위치 밀림(다이 시프트) 관리, 캐리어는 붙였다 떼는 공정 추가, 손상 제거는 시간·비용 증가.',function(t){
+ var o='',a=sg(t,0,.33),b=sg(t,.33,.66),c=sg(t,.66,1);
+ o+=box(40,100,280,300,a>0?C.good:C.mute,'① DBG',['먼저 반 자르기','→ 뒷면 연삭','→ 저절로 분리'],.35+.65*Math.min(1,a*3));
+ o+=R(70,290,220,40,C.si);for(var i=1;i<4;i++)o+=R(70+i*55-2,290,4,20+20*ez(a),C.bg);o+=R(70,330-40*ez(a)*0,220,0,C.si);
+ o+=box(340,100,280,300,b>0?C.good:C.mute,'② 임시 캐리어',['유리판에 접합','→ 얇아도 단단히','→ 가공 후 분리'],.35+.65*Math.min(1,b*3));
+ o+=R(370,320,220,18,C.glass)+R(370,308,220,12,C.pr)+R(370,L(260,292,ez(b)),220,L(48,16,ez(b)),C.si);
+ o+=box(640,100,280,300,c>0?C.good:C.mute,'③ Stress Relief',['연삭 자국·미세 크랙층','→ 연마·건식 식각 제거','→ 칩 강도 회복'],.35+.65*Math.min(1,c*3));
+ o+=R(670,300,220,30,C.si);for(var k=0;k<14;k++)o+=Ci(678+k*15,300,2.5,C.bad,'opacity="'+(1-ez(c))+'"');
+ return o;},'해결'];
+S.a4=['최신: 16단 HBM · 후면 전력','T','HBM은 정해진 높이 안에 12단에서 16단으로 더 많이 쌓아야 해서 칩을 더 얇게 갈아야 합니다. 전공정의 후면 전력 공급도 웨이퍼를 아주 얇게 갈고 뒷면에 배선합니다.','같은 높이 규격에 층이 늘수록 칩·접합층 모두 박막화 압박.',function(t){
+ var o='',by=420,H=240,a=ez(sg(t,.1,.8));
+ o+=R(200,by-H,180,H,'none','stroke="'+C.cu+'" stroke-width="2" stroke-dasharray="6 5"')+R(580,by-H,180,H,'none','stroke="'+C.cu+'" stroke-width="2" stroke-dasharray="6 5"');
+ o+=T(480,by-H-14,'같은 높이 규격 (JEDEC)',{a:'middle',c:C.cu,s:14,w:700});
+ var n1=12,lh1=H/n1;for(var i=0;i<n1;i++)o+=R(210,by-(i+1)*lh1+2,160,lh1-4,C.si);
+ var n2=Math.round(L(12,16,a)),lh2=H/n2;for(var j=0;j<n2;j++)o+=R(590,by-(j+1)*lh2+2,160,lh2-4,j>=12?C.cu:C.si);
+ o+=T(290,by+22,'12단',{a:'middle',s:15,w:700})+T(670,by+22,n2+'단 → 칩 더 얇게',{a:'middle',s:15,w:700,c:n2>12?C.cu:C.ink});
+ return o;},'최신'];
+S.a5=['최신 과제: 분리 크랙 · 두께 편차','T','초박막 웨이퍼는 캐리어를 떼는 순간 쉽게 깨지고, 접착층 두께 편차가 그대로 연삭 두께 편차와 TSV 노출 높이 편차가 됩니다. 레이저 분리, 접착층 두께 관리, 연삭 중 두께 실시간 측정으로 대응합니다.','기계 연결: 박리 역학(붙였다 떼기), 얇은 판의 처짐·진동, 계측 피드백 제어.',function(t){
+ var o='',a=ez(sg(t,0,.45)),b=ez(sg(t,.5,1));
+ o+=T(250,110,'기계적으로 떼기',{a:'middle',s:15,w:700,c:C.bad})+T(710,110,'레이저로 떼기',{a:'middle',s:15,w:700,c:C.good});
+ o+=R(100,320,300,20,C.glass)+'<path d="M100 '+(318-40*a)+' Q250 '+(318)+' 400 318 L400 306 Q250 306 100 '+(306-40*a)+'Z" fill="'+C.si+'"/>';
+ if(a>.6)o+='<path d="M180 300 l14 10 l-8 8 l16 10" fill="none" stroke="'+C.bad+'" stroke-width="2.5"/>'+T(250,380,'휘면서 크랙',{a:'middle',c:C.bad,s:14,w:600});
+ o+=R(560,320+30*b,300,20,C.glass,'opacity="'+(1-b*.6)+'"')+R(560,300,300,14,C.si);
+ if(b<1){var lx=L(560,860,b);o+=Ln(lx,200,lx,318,C.pl,3);}
+ o+=T(710,380,'빛으로 접착층만 분해 → 힘 없이 분리',{a:'middle',c:C.good,s:14,w:600,op:b});
+ return o;},'최신 과제'];
+
+/* --- B. 다이싱 --- */
+S.c1=['다이싱 원리','T','회전하는 얇은 다이아몬드 블레이드가 스크라이브 라인을 따라 웨이퍼를 자르고, 물로 열과 가루를 씻어 냅니다. 테이프는 끝까지 자르지 않고 일부만 잘라 칩을 붙잡아 둡니다.','블레이드 두께(커프), 회전수·이송 속도, 냉각수, 테이프 점착력.',function(t){
+ var o='',a=ez(sg(t,0,.7)),bx=L(X0-40,X1,a);
+ o+=R(X0,350,X1-X0,14,C.tape)+R(X0,300,X1-X0,50,C.si);
+ o+=R(X0,300,Math.max(0,bx-X0),50,C.si)+R(X0,300,Math.max(0,bx-X0-8),0,C.si);
+ o+=R(X0,300,Math.max(0,bx-X0),50,'none');o+=Ln(X0,325,Math.max(X0,bx),325,C.bg,6);
+ o+=Ci(bx,280,60,'#cfd6de','opacity=".9"')+Ci(bx,280,8,'#6b7684');
+ for(var i=0;i<8;i++){var ang=t*40+i;o+=Ln(bx,280,bx+52*Math.cos(ang),280+52*Math.sin(ang),'#9aa6b4',1.5);}
+ for(var k=0;k<6;k++)o+='<path d="M'+(bx+60)+' '+(200+k*6)+' q20 10 30 40" fill="none" stroke="'+C.light+'" stroke-width="2" opacity=".6"/>';
+ o+=T(bx,190,'블레이드',{a:'middle',c:C.mute,s:13})+T(X1+10,360,'테이프',{c:C.tape,s:13,w:600});
+ return o;},'원리'];
+S.c2=['문제: 치핑 · 칩 플라잉','T','블레이드가 닳으면 절삭력과 진동이 커져 칩 모서리가 이빨 빠지듯 깨집니다(치핑). 작은 칩은 테이프 점착력보다 절단력·물살이 커지면 떨어져 날아갑니다(칩 플라잉).','원인: 블레이드 마모·눈막힘, 빠른 이송, 얇은 칩, 약한 테이프, 강한 세정수.',function(t){
+ var o='',w=sg(t,0,.5),f=sg(t,.5,1);
+ o+=T(260,110,'치핑 (블레이드 마모에 따라 증가)',{a:'middle',s:15,w:700,c:C.bad});
+ o+=R(120,250,120,40,C.si)+R(270,250,120,40,C.si);var n=Math.floor(w*6);
+ for(var i=0;i<n;i++){o+='<path d="M'+(240-6)+' '+(252+i*6)+' l6 3 l-6 3Z" fill="'+C.bg+'"/><path d="M'+(270)+' '+(252+i*6)+' l6 3 l-6 3Z" fill="'+C.bg+'"/>';}
+ o+=chart(120,320,270,90,[[0,.1],[.2,.15],[.4,.25],[.6,.4],[.8,.6],[1,.85]],w,C.bad,'블레이드 사용량','치핑률');
+ o+=T(700,110,'칩 플라잉',{a:'middle',s:15,w:700,c:C.bad,op:f>0?1:.4});
+ o+=R(560,330,280,10,C.tape);for(var k=0;k<5;k++)if(k!==2)o+=R(570+k*54,306,40,24,C.si);
+ var fx=L(678,780,ez(f)),fy=L(306,170,ez(f));o+='<g transform="rotate('+(f*200)+' '+(fx+20)+' '+(fy+12)+')">'+R(fx,fy,40,24,C.si)+'</g>';
+ if(f>0){for(var j=0;j<5;j++)o+=Ln(640+j*8,200,670+j*8,300,C.light,2,'opacity=".6"');o+=T(700,400,'점착력 < 절단력 + 물살',{a:'middle',c:C.mute,s:14});}
+ return o;},'문제'];
+S.c3=['해결: 조건 · 관리 · 테이프','T','블레이드 교체·드레싱 주기를 치핑률 데이터로 관리하고, 얕게→깊게 두 번 나눠 자르며(스텝 컷), 이송 속도와 물살을 조정합니다. 테이프는 자를 땐 강하게 붙고 집을 땐 약해지도록 자외선으로 조절합니다.','부작용: 속도↓ = 생산성↓, 잦은 교체 = 소모품 비용·정지 시간↑, 점착력↑ = 픽업 시 크랙.',function(t){
+ var o='',a=ez(sg(t,0,.5)),b=sg(t,.5,1);
+ o+=T(260,110,'스텝 컷',{a:'middle',s:15,w:700,c:C.good});
+ o+=R(120,300,280,50,C.si)+R(120,350,280,10,C.tape);
+ o+=R(255,300,10,22*Math.min(1,a*2),C.bg)+R(257,300,6,50*Math.max(0,a*2-1),C.bg);
+ o+=Ci(260,L(250,280,Math.min(1,a*2)),30,'#cfd6de','opacity="'+(a<.5?1:.3)+'"')+Ci(260,L(250,300,Math.max(0,a*2-1)),24,'#b0bac6','opacity="'+(a>=.5?1:.3)+'"');
+ o+=T(260,400,'1차 넓게·얕게 → 2차 얇게·깊게',{a:'middle',c:C.mute,s:13});
+ o+=T(700,110,'자외선 테이프',{a:'middle',s:15,w:700,c:C.good});
+ o+=R(560,330,280,10,C.tape)+R(640,306,60,24,C.si);
+ o+=T(700,290,b<.5?'자를 때: 강한 점착':'자외선 조사 → 점착력↓ → 쉽게 픽업',{a:'middle',c:b<.5?C.ink:C.good,s:14,w:600});
+ if(b>.5){for(var i=0;i<6;i++){var x=580+i*44;o+=arrow(x,440,x,346,'#a99cf0');}}
+ return o;},'해결'];
+S.c4=['최신: 스텔스 · 플라즈마 다이싱','T','스텔스: 레이저 초점을 웨이퍼 속에 맞춰 개질층을 만든 뒤 테이프를 당겨 분리합니다. 플라즈마: 모든 길을 동시에 식각합니다. 둘 다 물·가루·치핑이 거의 없어 얇은 칩과 하이브리드 본딩에 유리합니다.','작은 칩이 많을수록 플라즈마가 유리(길 수와 무관하게 동시 처리), 절단 폭도 좁아 웨이퍼당 칩 수↑.',function(t){
+ var o='',a=sg(t,0,.5),b=sg(t,.5,1);
+ o+=T(260,110,'스텔스 다이싱',{a:'middle',s:15,w:700});
+ o+=R(110,300,300,40,C.si)+R(110,340,300,10,C.tape);
+ for(var i=0;i<3;i++){var x=185+i*75;if(a>i/3){o+=Ln(x,302,x,338,C.light,2,'stroke-dasharray="3 3"');}}
+ if(a<1){var lx=185+Math.floor(a*3)*75;o+=Ln(lx,150,lx,320,C.pl,3)+Ci(lx,320,6,'#ffd2c4');}
+ o+=T(260,400,'내부 개질 → 테이프 확장 분리',{a:'middle',c:C.mute,s:13});
+ o+=T(700,110,'플라즈마 다이싱',{a:'middle',s:15,w:700});
+ o+=R(550,300,300,40,C.si)+R(550,340,300,10,C.tape);for(var k=0;k<5;k++){var x2=550+k*75;o+=R(x2,292,60,8,C.emc,'opacity="'+(b>0?1:.3)+'"');o+=R(x2+60,300,15,40*ez(b),C.bg);}
+ for(var j=0;j<14;j++){var px=560+rnd(j)*280,py=150+((t*400+j*23)%130);o+=Ci(px,py,3,C.pl,'opacity="'+(b>0?.8:0)+'"');}
+ o+=T(700,400,'마스크 + 모든 길 동시 식각',{a:'middle',c:C.mute,s:13});
+ return o;},'최신'];
+S.c5=['최신 과제: 비용 · 금속 · 마스크','T','플라즈마는 마스크 공정과 장비 투자가 필요하고, 길에 금속 패턴이 있으면 레이저·플라즈마가 잘 안 먹힙니다. 그래서 레이저 그루빙으로 배선층을 먼저 열고 플라즈마·블레이드로 마무리하는 조합 공정, 다이싱 후 정밀 세정을 함께 씁니다.','공정기술 역할: 제품마다 품질·속도·비용 트레이드오프를 보고 방식 조합을 선택.',function(t){
+ var o='',st=[['레이저 그루빙','배선층 열기'],['플라즈마 / 블레이드','실리콘 절단'],['정밀 세정','입자 제거'],['검사','치핑·입자 확인']];
+ st.forEach(function(s,i){var p=sg(t,i*.22,i*.22+.2);o+=box(60+i*220,200,190,120,p>0?C.good:C.mute,s[0],[s[1]],.35+.65*p);if(i<3)o+=arrow(252+i*220,260,278+i*220,260,p>.9?C.good:C.mute);});
+ o+=T(480,140,'조합 공정으로 품질·비용 균형',{a:'middle',s:17,w:700,c:C.cu});
+ return o;},'최신 과제'];
+
+/* --- C. CoW 적층 --- */
+S.d1=['TC-NCF 본딩 원리','T','본딩 헤드가 코어 다이를 집어 아래 칩에 정렬하고, 열과 압력으로 누릅니다. 비전도성 필름(NCF)이 녹아 흐르며 범프 사이를 채우고, 솔더가 녹아 위아래 범프가 붙은 뒤 굳습니다.','헤드 온도·압력·시간 프로파일, 헤드–스테이지 평행도, 정렬 정밀도.',function(t){
+ var o='',d=ez(sg(t,0,.35)),m=sg(t,.35,.8),by=360;
+ o+=R(200,by,300,30,C.si)+[0,1,2,3,4].map(function(i){return R(220+i*60,by-8,24,8,C.cu);}).join('');
+ var y=L(160,by-8-40,d);o+=R(190,y-50,320,40,'#5b6676','rx="5"')+T(350,y-24,'본딩 헤드',{a:'middle',s:13,w:600});
+ o+=R(200,y-10,300,30,C.si)+R(200,y+20,300,12*(1-.5*m),'#9f8ce0','opacity=".85"');
+ [0,1,2,3,4].forEach(function(i){o+=R(220+i*60,y+20,24,10,C.cu)+R(220+i*60,y+30,24,4*(1-m),C.sol);});
+ if(m>0)o+=R(180,y-60,340,140,C.heat,'opacity="'+(.2*Math.sin(m*Math.PI))+'" rx="10"');
+ o+=chart(600,170,280,160,[[0,.1],[.2,.3],[.35,.8],[.6,.85],[.75,.5],[1,.15]],sg(t,.2,1),C.heat,'시간','헤드 온도');
+ o+=T(740,370,'가열 → 유지 → 냉각',{a:'middle',c:C.mute,s:13});
+ return o;},'원리'];
+S.d2=['문제: 위층으로 갈수록 불량','T','층마다 미세한 기울기·위치 오차가 쌓이고, 아래층은 반복 가열을 받으며, 스택 휨이 커집니다. 필름이 범프 사이에 끼거나(트랩) 덜 녹으면 접합이 안 됩니다.','원인 후보: 누적 기울기, 스택 휨, 층별 온도 차, NCF 흐름, 칩 두께 편차, X-ray 판독 오류(측정).',function(t){
+ var o='',n=Math.min(12,Math.floor(sg(t,0,.6)*12.99)),by=410;
+ for(var i=0;i<n;i++){var dx=i*i*.35,y=by-(i+1)*24;o+=R(160+dx,y,180,20,i>=8?C.bad:C.si)+R(160+dx,y+20,180,4,'#9f8ce0');}
+ o+=T(250,95,'누적 기울기 (과장)',{a:'middle',s:14,w:700,c:C.bad});
+ var vals=[2,2,3,3,4,5,6,8,11,15,21,30],k=Math.floor(sg(t,.4,1)*12);
+ for(var j=0;j<k;j++){var h=vals[j]*5;o+=R(520+j*30,400-h,22,h,j>=8?C.bad:C.si);}
+ o+=T(690,120,'층별 불량 (예시)',{a:'middle',s:14,w:700})+T(520,425,'1층',{c:C.mute,s:12})+T(860,425,'12층',{a:'end',c:C.mute,s:12});
+ return o;},'문제'];
+S.d3=['해결: 층마다 재고 보정','T','층을 쌓을 때마다 높이·기울기를 측정하고 다음 층의 위치·헤드 각도를 보정합니다(피드백). 위층용 온도·압력 프로파일을 따로 두고, 필름을 얇게 바꿉니다. 같은 자재를 두 장비에 나눠 넣어 장비 원인을 가립니다.','부작용: 측정·보정으로 UPH↓, 레시피 복잡. → 로봇팔 정밀도 개선과 같은 "측정 → 보정" 사고.',function(t){
+ var o='',n=Math.min(12,Math.floor(sg(t,0,.85)*12.99)),by=410;
+ for(var i=0;i<n;i++){var y=by-(i+1)*24;o+=R(200,y,180,20,C.si)+R(200,y+20,180,3,'#9f8ce0');}
+ var ly=by-n*24-10;o+=Ln(440,ly,390,ly,C.good,2,'stroke-dasharray="5 4"')+Ci(450,ly,8,C.good)+T(462,ly+5,'레이저 높이·기울기 측정',{c:C.good,s:13,w:600});
+ o+=box(620,150,300,200,C.good,'층마다 피드백',['① 높이·기울기 측정','② 다음 층 위치·각도 보정','③ 위층 전용 온도·압력','④ 얇은 NCF로 누적↓']);
+ o+=T(290,120,'기울기 누적 없음',{a:'middle',s:14,w:700,c:C.good,op:sg(t,.6,1)});
+ return o;},'해결'];
+S.d4=['최신: 16단 · 하이브리드 본딩 · 생산성','T','HBM4는 12~16단, 다음 세대는 하이브리드 본딩이 검토됩니다. TC-NCF의 느린 속도를 보완하려고 여러 헤드로 동시에 붙이거나, 가접합 후 한 번에 누르는 방식도 나옵니다.','삼성 HBM4: 12단 36GB, 4나노 베이스 다이 (2026.02). 차세대 3D Cube-H = 하이브리드 구리 본딩.',function(t){
+ var o='',a=sg(t,0,.5),b=sg(t,.5,1);
+ o+=T(260,110,'한 헤드씩 vs 여러 헤드 동시',{a:'middle',s:15,w:700});
+ for(var h=0;h<4;h++){var x=110+h*75,act=b>0||h===Math.floor(a*4)%4;o+=R(x,L(170,230,act?Math.abs(Math.sin(t*8)):0),56,24,'#5b6676','rx="4"')+R(x,280,56,16,C.si);}
+ o+=T(260,330,b>0?'동시 본딩 → UPH↑':'순차 본딩',{a:'middle',c:b>0?C.good:C.mute,s:14,w:600});
+ o+=T(700,110,'적층 방식 변화',{a:'middle',s:15,w:700});
+ o+=stackDraw(580,400,8,90,18,8,'#9f8ce0')+stackDraw(720,400,8,90,22,1,C.cu);
+ o+=T(625,425,'범프+필름',{a:'middle',c:C.mute,s:12})+T(765,425,'하이브리드',{a:'middle',c:C.cu,s:12,w:600});
+ return o;},'최신'];
+S.d5=['최신 과제: 청정 · 평탄 · 장비 매칭','T','하이브리드 본딩은 입자·평탄도·정렬 요구가 nm~㎛ 수준이라 플라즈마 다이싱, CMP, 정밀 세정, 고정밀 본더가 함께 바뀌어야 합니다. 장비 공급사를 늘리면 장비마다 실제 온도·압력이 달라 결과를 맞추는 매칭이 과제입니다.','보도 기준: TC 본더 공급망 다변화(한미반도체·세메스·ASMPT 등), 하이브리드 본더 개발. 해결: 설정값이 아니라 칩에 전달되는 실제 조건을 측정해 맞춤.',function(t){
+ var o='';o+=T(480,110,'장비 A와 B가 같은 결과를 내려면',{a:'middle',s:16,w:700,c:C.cu});
+ var a=ez(sg(t,.2,.8));
+ o+=box(120,160,300,200,C.mute,'장비 A',['설정 260℃ → 실측 252℃','평행도 2㎛']);o+=box(540,160,300,200,C.mute,'장비 B',['설정 260℃ → 실측 '+Math.round(L(268,252,a))+'℃','평행도 '+L(5,2,a).toFixed(1)+'㎛']);
+ o+=T(480,400,a>.95?'실측 기준으로 매칭 완료':'열전대·감압지로 실측 → 보정',{a:'middle',c:a>.95?C.good:C.ink,s:15,w:700});
+ return o;},'최신 과제'];
+
+/* --- D. 리플로우·휨 --- */
+S.e1=['리플로우 원리','T','솔더를 녹는점 위로 가열했다가 식혀 붙입니다. 예열 → 소킹(플럭스 활성화·온도 균일) → 피크 → 냉각 순서이고, 녹아 있는 시간과 냉각 속도가 접합 조직을 정합니다.','피크 온도·녹는점 이상 유지 시간(TAL)·냉각 속도. 무연 솔더 녹는점 약 217℃.',function(t){
+ var o='',p=sg(t,0,1),pts=[[0,0],[.15,.35],[.45,.5],[.62,.95],[.72,.95],[.9,.4],[1,.15]];
+ o+=chart(120,140,460,240,pts,p,C.heat,'시간','온도');o+=Ln(120,140+240-.8*240,580,140+240-.8*240,C.cu,1.5,'stroke-dasharray="5 4"')+T(585,140+240-.8*240+4,'녹는점',{c:C.cu,s:12});
+ var melt=p>.55&&p<.85;o+=R(660,250,220,50,C.emc,'stroke="'+C.emcs+'"')+R(660,300,220,10,C.sub);
+ for(var i=0;i<5;i++)o+=Ci(682+i*44,320,melt?12:11,C.sol,melt?'stroke="#fff" stroke-opacity=".5"':'');
+ o+=R(650,340,240,10,'#1f5a3d');o+=T(770,380,melt?'솔더 녹음 → 젖어 붙음':'고체',{a:'middle',c:melt?C.heat:C.mute,s:14,w:600});
+ return o;},'원리'];
+S.e2=['문제: 휨 → 모서리 오픈','T','고온에서 패키지 가장자리가 들리게 휘면 모서리 볼이 보드에서 떠 녹은 채로 붙지 못합니다(Non-wet). 반대로 가운데가 눌리면 이웃 볼끼리 붙습니다(브리지).','원인: 칩·EMC·기판의 CTE 차이, Tg 이상에서 EMC CTE 급증, 경화 수축, 두께 비대칭.',function(t){
+ var o='',w=ez(sg(t,.1,.7)),cx=480,half=260,sag=60*w;
+ o+=R(170,390,620,14,'#1f5a3d');
+ o+='<path d="M'+(cx-half)+' '+(330-sag)+' Q'+cx+' '+(330+sag)+' '+(cx+half)+' '+(330-sag)+' L'+(cx+half)+' '+(300-sag)+' Q'+cx+' '+(300+sag)+' '+(cx-half)+' '+(300-sag)+'Z" fill="'+C.emc+'" stroke="'+C.emcs+'"/>';
+ for(var i=0;i<9;i++){var x=cx-half+30+i*62.5,u=(x-cx)/half,yb=330-sag+sag*2*(1-u*u)*.5+sag*(1-u*u)*0+12;var lift=Math.abs(u)>.75;o+=Ci(x,Math.min(yb+8,384),10,lift&&w>.5?C.bad:C.sol);}
+ o+=T(cx,160,'피크 온도에서 휨 (과장)',{a:'middle',s:16,w:700,c:C.cu,op:w});
+ o+=T(cx-half,430,'모서리 볼 오픈',{c:C.bad,s:14,w:700,op:sg(t,.6,1)})+T(cx+half,430,'모서리 볼 오픈',{a:'end',c:C.bad,s:14,w:700,op:sg(t,.6,1)});
+ return o;},'문제'];
+S.e3=['해결: 재료 · 구조 · 조건 · 예측','T','필러를 늘린 저CTE·고Tg EMC, 칩·몰드·기판 두께 비율(중립면) 조정, 경화·리플로우 프로파일 최적화, 공정 중 캐리어·클램프 고정, FEM 해석으로 재료 조합을 미리 선별합니다.','부작용: 필러↑ → 점도↑ → 충전 불량·와이어 스위핑. → AGV 리프트 정적 해석처럼 해석으로 먼저 예측.',function(t){
+ var o='',it=[['재료','저CTE·고Tg EMC',C.good],['구조','두께 비율 대칭',C.good],['조건','경화·냉각 프로파일',C.good],['예측','FEM 휨 해석',C.good]];
+ it.forEach(function(s,i){var p=sg(t,i*.2,i*.2+.18);o+=box(40+i*230,130,210,110,p>0?s[2]:C.mute,s[0],[s[1]],.35+.65*p);});
+ var f=sg(t,.75,1);for(var gx=0;gx<12;gx++)for(var gy=0;gy<4;gy++){var u=(gx-5.5)/5.5,v=1-u*u;o+=R(240+gx*40,290+gy*30,38,28,heatCol(v*(1-.6*f)),'opacity=".9"');}
+ o+=T(480,425,f>.5?'조건 변경 후 휨 분포 감소 (FEM 예시)':'FEM 휨 분포 (가운데 큼)',{a:'middle',c:C.mute,s:13});
+ return o;},'해결'];
+S.e4=['최신: 대형 2.5D · 레이저 보조 본딩','T','GPU와 HBM 여러 개를 올리는 AI 패키지는 인터포저와 기판이 커져 휨이 훨씬 커집니다. 레이저 보조 본딩(LAB)은 칩만 짧게 가열해 기판이 덜 뜨거워지고 덜 휩니다.','패키지가 커질수록 휨은 크기에 비례해 커짐 → 조립 수율의 핵심 변수.',function(t){
+ var o='',a=ez(sg(t,0,.5)),b=sg(t,.5,1),W=L(200,560,a);
+ o+=R(480-W/2,320-20*a,W,24,C.sub)+R(480-W/2+20,300-20*a,W-40,16,C.glass);
+ o+=T(480,140,'패키지가 커질수록 휨↑',{a:'middle',s:16,w:700,c:C.cu,op:a});
+ if(b>0){o+=R(430,250,100,40,'#2a2f37','stroke="#6b7686"');o+=Ln(480,120,480,250,C.pl,4,'opacity="'+(b<.8?1:0)+'"')+R(410,240,140,60,C.heat,'opacity="'+(.3*Math.sin(b*Math.PI))+'" rx="8"');
+  o+=T(480,400,'LAB: 칩만 국부 가열 → 기판 휨↓',{a:'middle',c:C.good,s:15,w:700});}
+ return o;},'최신'];
+S.e5=['최신 과제: 유리 기판 · 패널','T','유리 코어 기판은 매우 평평하고 CTE를 실리콘에 가깝게 조절할 수 있지만, 잘 깨집니다. 가장자리 처리와 핸들링 설계, 유리 관통 구멍(TGV) 가공이 과제입니다. 큰 사각 패널은 면적 효율이 좋지만 대면적 휨을 잡아야 합니다.','삼성 요코하마 APL(2026.09 개소)이 유리기판·웨이퍼 본딩 연구를 계획. 기계 연결: 취성 파괴, 판 처짐.',function(t){
+ var o='',a=sg(t,0,.5),b=sg(t,.5,1);
+ o+=T(260,110,'유리 코어 기판',{a:'middle',s:15,w:700});o+=R(110,250,300,30,C.glass);for(var i=0;i<8;i++)o+=R(130+i*36,250,6,30,C.cu);
+ if(a>.5)o+='<path d="M110 262 l18 6 l-10 6 l16 8" fill="none" stroke="'+C.bad+'" stroke-width="2.5"/>'+T(260,320,'가장자리 크랙 위험',{a:'middle',c:C.bad,s:13,w:600});
+ o+=T(260,350,'평탄·CTE 조절 / 취성',{a:'middle',c:C.mute,s:13});
+ o+=T(700,110,'패널 레벨',{a:'middle',s:15,w:700});var sg2=40*ez(b);
+ o+='<path d="M540 '+(270-sg2)+' Q700 '+(270+sg2)+' 860 '+(270-sg2)+' L860 '+(290-sg2)+' Q700 '+(290+sg2)+' 540 '+(290-sg2)+'Z" fill="'+C.sub+'"/>';
+ o+=T(700,350,'면적 효율 / 대면적 휨',{a:'middle',c:C.mute,s:13});
+ return o;},'최신 과제'];
+
+/* --- E. 몰드 --- */
+S.f1=['몰드 원리','T','금형을 닫고 데운 EMC를 게이트로 밀어 넣으면 수지가 칩과 와이어 사이를 흘러 채우고, 공기는 반대편 벤트로 빠집니다. 굳힌 뒤 오븐에서 완전히 경화합니다.','금형 온도, 주입 속도·압력, EMC 점도, 진공, 벤트 상태.',function(t){
+ var o='',f=ez(sg(t,.1,.9)),sy=360;o+=R(120,sy,720,20,C.sub);
+ for(var i=0;i<6;i++){var x=150+i*115;o+=R(x,sy-36,70,36,C.si)+'<path d="M'+(x+10)+' '+(sy-36)+' Q'+(x-10)+' '+(sy-90)+' '+(x-20)+' '+sy+'" fill="none" stroke="'+C.cu+'" stroke-width="2"/>';}
+ o+=R(120,sy-120,720*f,120,C.emc,'opacity=".85"')+R(120+720*f-6,sy-120,6,120,'#7d8896');
+ o+=arrow(70,sy-60,115,sy-60,C.cu)+T(40,sy-80,'게이트',{c:C.cu,s:13,w:600})+arrow(845,sy-60,890,sy-60,C.mute)+T(860,sy-80,'벤트',{c:C.mute,s:13});
+ o+=T(480,180,'흐름 앞부분(플로우 프런트)이 진행',{a:'middle',c:C.mute,s:14});
+ return o;},'원리'];
+S.f2=['문제: 와이어 스위핑 · 보이드','T','게이트 쪽은 흐름이 빨라 와이어가 옆으로 쓰러지고(스위핑), 흐름의 끝인 벤트 쪽은 수지가 식어 점도가 오르며 공기가 갇혀 보이드가 생깁니다. 같은 흐름의 앞과 끝에서 반대 문제가 납니다.','원인: 주입 속도, 점도, 경화 진행, 벤트 막힘, EMC 흡습(가스).',function(t){
+ var o='',f=ez(sg(t,.05,.85)),sy=360;o+=R(120,sy,720,20,C.sub);
+ for(var i=0;i<6;i++){var x=150+i*115,sw=(i<2?28:i<3?12:0)*f;o+=R(x,sy-36,70,36,C.si)+'<path d="M'+(x+10)+' '+(sy-36)+' Q'+(x-10+sw)+' '+(sy-90)+' '+(x-20)+' '+sy+'" fill="none" stroke="'+(i<2&&f>.3?C.bad:C.cu)+'" stroke-width="2"/>';}
+ o+=R(120,sy-120,720*f,120,C.emc,'opacity=".85"');
+ if(f>.9){[[790,sy-80,14],[740,sy-40,9],[805,sy-30,7]].forEach(function(v){o+=Ci(v[0],v[1],v[2],'#ffffff','opacity=".5"');});o+=T(780,200,'벤트 쪽 보이드',{a:'middle',c:C.bad,s:14,w:700});}
+ o+=T(220,200,'게이트 쪽 스위핑',{a:'middle',c:C.bad,s:14,w:700,op:sg(t,.3,.6)});
+ return o;},'문제'];
+S.f3=['해결: 다단 속도 · 진공 · 컴프레션','T','처음엔 천천히, 끝에선 빠르게 넣는 다단 주입, 금형 진공으로 공기 제거, 벤트 개선, 저점도 EMC를 씁니다. 근본적으로는 수지를 깔고 위에서 누르는 컴프레션 몰딩으로 흐름 거리를 줄입니다.','부작용: 진공·컴프레션은 설비 투자, 너무 깊은 벤트는 수지 넘침(플래시). → 사출성형·유동 해석 지식 그대로 적용.',function(t){
+ var o='',a=sg(t,0,.5),b=ez(sg(t,.5,1)),sy=360;
+ o+=chart(120,150,300,140,[[0,.1],[.3,.2],[.6,.3],[.75,.7],[1,.9]],a*2>1?1:a*2,C.good,'시간','주입 속도');o+=T(270,330,'다단 주입 속도',{a:'middle',c:C.good,s:14,w:600});
+ o+=T(700,130,'컴프레션 몰딩',{a:'middle',s:15,w:700});o+=R(540,sy,320,16,C.sub);for(var i=0;i<3;i++)o+=R(570+i*100,sy-30,60,30,C.si);
+ o+=R(540,L(200,sy-80,b),320,24,'#5b6676','rx="4"')+R(540,L(sy-60,sy-80,b)+24*0,320,L(30,80,b)*0+80,'none');
+ o+=R(540,sy-L(30,80,b)+0,320,L(30,80,b),C.emc,'opacity=".8"');
+ o+=T(700,410,'위에서 눌러 짧고 균일하게',{a:'middle',c:C.good,s:14,w:600,op:b});
+ return o;},'해결'];
+S.f4=['최신: MUF · HBM 좁은 틈','T','몰드가 언더필 역할까지 한 번에 하는 MUF로 공정을 줄이고, HBM처럼 칩 사이 틈이 수십 ㎛ 이하인 구조까지 수지로 채웁니다(SK하이닉스 MR-MUF는 액상 몰드로 층 사이를 채움).','틈이 좁고 층이 많을수록 끝까지 못 채운 보이드 위험↑.',function(t){
+ var o='',f=ez(sg(t,.1,.9));for(var i=0;i<8;i++){var y=380-i*30;o+=R(380,y,200,22,C.si);o+=R(380,y+22,200*Math.min(1,f*1.2-i*.05),8,C.emc);}
+ o+=arrow(330,260,375,260,C.cu)+T(300,240,'수지',{a:'end',c:C.cu,s:13,w:600});
+ o+=T(480,130,'칩 사이 좁은 틈까지 채우기',{a:'middle',s:16,w:700});
+ if(f>.9)o+=Ci(560,262,6,'#ffffff','opacity=".6"')+T(650,265,'끝까지 못 채우면 보이드',{c:C.bad,s:13,w:600});
+ return o;},'최신'];
+S.f5=['최신 과제: 좁은 틈 충전','T','더 미세한 필러와 저점도 수지, 진공 보조, 주입 경로 설계, 흐름 시뮬레이션으로 충전 순서를 미리 확인합니다. 그래도 어려우면 칩 사이를 필름으로 채우는 NCF나 틈 자체를 없애는 하이브리드 본딩으로 갑니다.','트레이드오프: 미세 필러·저점도 ↔ 열팽창·강도. 결국 재료·공정·구조를 함께 바꾸는 문제.',function(t){
+ var o='',it=[['미세 필러 EMC','좁은 틈 통과'],['진공 보조','공기 제거'],['흐름 시뮬레이션','충전 순서 예측'],['구조 변경','NCF / 하이브리드']];
+ it.forEach(function(s,i){var p=sg(t,i*.22,i*.22+.2);o+=box(40+i*230,180,210,120,p>0?C.good:C.mute,s[0],[s[1]],.35+.65*p);});
+ o+=T(480,140,'재료 → 공정 → 예측 → 구조',{a:'middle',s:16,w:700,c:C.cu});
+ return o;},'최신 과제'];
+
+/* --- F. 테스트 --- */
+S.g1=['테스트 원리','T','핸들러 로봇이 패키지를 소켓에 꽂고, 테스터(ATE)가 신호를 넣어 응답을 판정한 뒤, 결과에 따라 BIN으로 분류합니다. 번인으로 초기 불량을 미리 걸러냅니다.','동시 측정 수, 테스트 시간, 핸들러 잼률, 소켓 수명.',function(t){return S.ftest[4](t);},'원리'];
+S.g2=['문제: 테스트 수율이 갑자기 하락','T','어느 날부터 수율이 약 3%p 떨어졌고, 불량이 특정 테스터(T3)에 몰려 있습니다. 불량 칩을 다시 테스트하면 대부분 양품이 나옵니다. 칩이 아니라 접촉이 문제라는 신호입니다(과검).','원인 후보: 소켓 포고 핀 오염·마모, 핸들러 누름 압력, 고온 챔버 온도, 테스터 채널.',function(t){
+ var o='',p=sg(t,0,.6),pts=[];for(var i=0;i<14;i++)pts.push([i/13,i<7?.8+rnd(i)*.06:.35+rnd(i)*.06]);
+ o+=chart(100,140,380,230,pts,p,C.light,'일','수율');o+=Ln(100+380*6.5/13,140,100+380*6.5/13,370,C.mute,1,'stroke-dasharray="4 4"');
+ var b=sg(t,.5,1),v=[2.6,2.8,9.5,2.7];v.forEach(function(x,i){var h=x*18*ez(b);o+=R(580+i*70,370-h,46,h,i===2?C.bad:C.si)+T(603+i*70,392,'T'+(i+1),{a:'middle',c:C.mute,s:13});});
+ o+=T(720,140,'테스터별 불량률',{a:'middle',s:14,w:700,op:b})+T(720,420,'T3 재테스트 → 약 70% 양품',{a:'middle',c:C.bad,s:14,w:700,op:sg(t,.8,1)});
+ return o;},'문제'];
+S.g3=['해결: 측정부터 의심하기','T','T3를 멈추고 소켓을 세정·교체하고 누름 압력·평행도를 맞춘 뒤 기준 양품(골든 샘플)으로 검증합니다. 재발 방지로 테스터별 재테스트율·접촉 저항을 SPC로 감시하고, 기준을 넘으면 자동 정지(인터락)합니다.','→ 열화상 연구에서 "제품 문제인가, 측정 환경 문제인가"를 구분한 경험과 같은 사고.',function(t){
+ var o='',p=sg(t,0,1),pts=[];for(var i=0;i<20;i++)pts.push([i/19,.5+(i>12&&i<15?.3:0)+(rnd(i)-.5)*.12]);
+ o+=chart(100,150,500,220,pts,p,C.light,'시간','재테스트율');
+ o+=Ln(100,150+220-.72*220,600,150+220-.72*220,C.bad,1.5,'stroke-dasharray="6 4"')+T(605,150+220-.72*220+4,'관리 한계',{c:C.bad,s:12});
+ if(p>.68)o+=R(640,200,240,90,'#3a1a18','rx="10" stroke="'+C.bad+'" stroke-width="2"')+T(760,238,'인터락: 장비 자동 정지',{a:'middle',c:C.bad,s:15,w:700})+T(760,264,'→ 소켓 세정 후 재가동',{a:'middle',c:C.ink,s:13});
+ return o;},'해결'];
+S.g4=['최신: HBM 테스트 · 무인화','T','HBM은 쌓은 뒤 고칠 수 없어 쌓기 전 칩(KGD)과 쌓은 뒤 스택을 모두 고속으로 검사해야 합니다. 후공정 테스트에도 자동 물류와 무인화 설비가 들어오고 있습니다(세메스 SEDEX 2026 보도).','곱셈 수율: 칩당 99%라도 12단이면 약 88.6%, 16단이면 약 85.1%.',function(t){
+ var o='',a=sg(t,0,1);o+=R(80,380,800,12,'#3a4654');
+ var x=L(80,800,(t*1.4)%1);o+=R(x,330,70,50,'#5b6676','rx="6"')+R(x+10,316,50,14,C.emc)+T(x+35,410,'자동 물류',{a:'middle',c:C.mute,s:12});
+ for(var i=0;i<3;i++){o+=R(160+i*250,170,170,110,'#1c2836','rx="8" stroke="#2f4054"')+T(245+i*250,200,['KGD 테스트','스택 테스트','최종 테스트'][i],{a:'middle',s:14,w:600})+Ci(245+i*250,240,10,a>(i+1)/3.5?C.good:C.mute);}
+ o+=T(480,130,'사람 손 없이 이동·검사',{a:'middle',s:16,w:700,c:C.cu});
+ return o;},'최신'];
+S.g5=['최신 과제: 시간 · 비용','T','핀이 많고 빠른 제품일수록 테스트 시간과 장비 비용이 커집니다. 한 번에 여러 개를 동시에 재고(병렬도↑), 번인 중에 테스트도 하고(MBT), 데이터로 불필요한 항목을 줄이는 방향으로 대응합니다.','미검(불량 통과) 위험은 늘리지 않는 범위에서 줄여야 함 → 커버리지 관리.',function(t){
+ var o='',n=Math.max(1,Math.round(L(1,16,ez(sg(t,.1,.8)))));o+=T(480,130,'동시 측정 수 '+n+'개',{a:'middle',s:18,w:700,c:C.cu});
+ for(var i=0;i<16;i++){var x=220+(i%8)*68,y=200+Math.floor(i/8)*80;o+=R(x,y,52,52,i<n?C.emc:'#1c2836','stroke="'+(i<n?C.good:'#2f4054')+'" stroke-width="2" rx="6"');}
+ o+=T(480,400,'같은 시간에 더 많이 = 개당 테스트 비용↓',{a:'middle',c:C.good,s:15,w:600,op:sg(t,.7,1)});
+ return o;},'최신 과제'];
+
+/* --- G. 방열 --- */
+S.h1=['방열 원리: 열저항 직렬','T','칩의 열은 대부분 위쪽 히트싱크로 빠집니다. 지나가는 층마다 열저항(R = 두께 / 열전도율×면적)이 직렬로 더해지고, 같은 열에서 온도 상승 = 열 × 총 열저항입니다.','열전도율이 낮은 층(고분자 접합층, TIM)이 얇아도 큰 저항이 됨.',function(t){
+ var o='',ly=[['히트싱크','#5b6676',30],['TIM','#e0b36a',10],['실리콘','#8ea7c0',40],['접합층(고분자)','#9f8ce0',10],['실리콘','#8ea7c0',40],['열원(칩 회로)','#ff7a59',14]],y=120;
+ ly.forEach(function(l){o+=R(260,y,260,l[2],l[1])+T(530,y+l[2]/2+5,l[0],{c:C.ink,s:13});y+=l[2]+4;});
+ var p=sg(t,0,1);for(var i=0;i<4;i++){var yy=L(300,110,(p*2+i*.25)%1);o+=arrow(360+i*50,yy+30,360+i*50,yy,C.heat);}
+ var rv=[.05,.25,.03,.6,.03];o+=T(760,120,'층별 열저항 (상대, 예시)',{a:'middle',s:13,w:600});rv.forEach(function(v,i){o+=R(680,140+i*40,160*v*ez(sg(t,.3,.8)),24,v>.5?C.bad:C.cu)+T(675,158+i*40,['싱크','TIM','Si','접합층','Si'][i],{a:'end',c:C.mute,s:12});});
+ return o;},'원리'];
+S.h2=['문제: HBM 가운데·아래층이 뜨겁다','T','HBM은 층마다 열이 위로 빠져야 해서 아래층일수록 지나갈 층이 많고, 옆 GPU 열까지 들어옵니다. 층 사이 고분자 접합층이 열의 병목이고, DRAM은 뜨거울수록 리프레시가 잦아져 성능·전력이 나빠집니다.','층이 12→16단으로 늘수록 악화.',function(t){
+ var o='',p=sg(t,.1,.9);for(var i=0;i<12;i++){var v=L(.2,1,(11-i)/11)*p+.1;o+=R(300,400-(i+1)*26,240,22,heatCol(Math.min(1,v)))+R(300,400-(i+1)*26+22,240,4,'#9f8ce0');}
+ o+=R(600,300,180,100,'#2a2f37','stroke="#6b7686"')+T(690,356,'GPU',{a:'middle',c:'#c9d2dc',s:16,w:700})+arrow(600,350,548,350,C.heat);
+ o+=T(420,80,'뜨거움 ↑ (아래층·GPU 쪽)',{a:'middle',c:C.heat,s:14,w:600,op:p});
+ return o;},'문제'];
+S.h3=['해결: 얇게 · 열 기둥 · 노출','T','접합층을 얇게 하거나 열전도 높은 재료로 바꾸고, 신호 없이 열만 나르는 더미 범프·TSV를 넣고, 맨 위 칩을 몰드 없이 노출하거나 두껍게 둬 히트싱크까지 열을 잘 넘깁니다. 설계 단계에서 방열 시뮬레이션으로 핫스팟을 먼저 찾습니다.','부작용: 더미 TSV는 면적·배선 공간 소모, 노출 다이는 보호·휨 관리. TSP 메모리PKG개발팀 현직자 업무 = 방열 시뮬레이션.',function(t){
+ var o='',p=ez(sg(t,.1,.9));for(var i=0;i<12;i++){var v=(L(.2,1,(11-i)/11)*(1-.55*p))+.1;o+=R(300,400-(i+1)*26,240,22,heatCol(Math.min(1,v)))+R(300,400-(i+1)*26+22,240,4*(1-.6*p),'#9f8ce0');}
+ for(var k=0;k<4;k++)o+=R(330+k*60,400-12*26,6,12*26,C.cu,'opacity="'+p+'"');
+ o+=T(420,80,'더미 TSV(열 기둥) + 얇은 접합층',{a:'middle',c:C.good,s:14,w:700,op:p})+T(700,250,'온도 ↓',{a:'middle',c:C.good,s:22,w:700,op:p});
+ return o;},'해결'];
+S.h4=['최신: zHBM — 열이 메모리를 지나간다','T','zHBM은 HBM을 AI 칩 위에 직접 쌓아 연결 거리를 최소화합니다. 대신 가장 뜨거운 AI 칩의 열이 메모리 스택을 통과해 위로 빠져야 합니다(삼성 뉴스룸 2026.10).','데이터 이동 에너지↓ ↔ 열 경로 악화: 성능과 열의 트레이드오프.',function(t){return S.next[4](t);},'최신'];
+S.h5=['최신 과제: 높이·구조·공동 설계','T','삼성은 필요한 메모리 밀도와 열 성능 사이에서 스택 높이를 최적화하는 접근을 제시합니다. 하이브리드 본딩으로 접합층 열저항을 줄이고, 고객 AI 칩의 발열·전력·배치를 처음부터 함께 설계합니다.','기계 연결: 열전달(전도·열저항망), 열변형. → 열화상 카메라 측정 경험은 방열 검증과 연결.',function(t){
+ var o='',n=Math.round(L(10,6,ez(sg(t,.1,.6))));o+=R(330,360,300,60,'#2a2f37','stroke="#6b7686"')+T(480,396,'AI 칩',{a:'middle',c:'#c9d2dc',s:16,w:700});
+ for(var i=0;i<n;i++)o+=R(370,360-(i+1)*24,220,21,C.si)+R(370,360-(i+1)*24+21,220,2,C.cu);
+ o+=T(480,90,'스택 높이 '+n+'층 ↔ 열 성능 균형',{a:'middle',c:C.cu,s:16,w:700});
+ o+=box(680,150,250,160,C.good,'함께 바꾸기',['스택 높이 최적화','하이브리드 본딩','고객 칩과 공동 설계'],sg(t,.5,1));
+ return o;},'최신 과제'];
+
+/* --- H. 불량 분석 --- */
+S.i1=['불량 분석 ① 현상 정의','T','어떤 불량이, 언제부터, 어디에서 나는지 먼저 정합니다. 웨이퍼 맵에 위치 패턴(가장자리·한쪽 치우침)이 보이면 장비의 물리적 분포 문제를, 무작위면 입자·자재 같은 확률적 원인을 의심합니다.','현상을 숫자와 위치로 정의해야 원인 범위가 좁아짐.',function(t){
+ var o='',cx=320,cy=270,r=170,s=24,k=0;o+=Ci(cx,cy,r,'#2a3846');var nv=sg(t,0,.8);
+ for(var y=cy-r;y<cy+r;y+=s)for(var x=cx-r;x<cx+r;x+=s){var mx=x+s/2-cx,my=y+s/2-cy,d=Math.sqrt(mx*mx+my*my);if(d>r-12)continue;k++;var bad=(d>r-46&&rnd(k)<(mx<-20?.8:.35))||rnd(k+99)<.02;o+=R(x+2,y+2,s-4,s-4,rnd(k+7)<nv?(bad?C.bad:C.good):C.sid,'rx="2"');}
+ o+=box(560,170,330,170,C.cu,'패턴 읽기',['가장자리 + 왼쪽 치우침','→ 원형(온도·휨) + 방향(기울기)','→ 장비 요인 1순위'],sg(t,.6,1));
+ return o;},'원리'];
+S.i2=['불량 분석 ② 4M 층별','T','설비·자재·방법·사람(+측정)으로 나눠 공통점을 찾습니다. 장비 A에서만 불량이 나고 자재 로트와는 무관하면 장비가 원인입니다. 같은 자재를 두 장비에 나눠 넣는 교차 실험으로 확인합니다.','4M + Measurement. 장비 이력(PM), 자재 로트 변경, 레시피 변경 시점과 대조.',function(t){
+ var o='',groups=[['설비',[['A',9],['B',1.5]]],['자재 로트',[['L1',5],['L2',5.2]]],['교대조',[['주',5.1],['야',5]]]];
+ groups.forEach(function(g,i){var p=sg(t,i*.25,i*.25+.25),x=110+i*270;o+=T(x+80,130,g[0],{a:'middle',s:15,w:700,op:.4+.6*p});
+  g[1].forEach(function(b,j){var h=b[1]*20*ez(p);o+=R(x+30+j*70,380-h,50,h,(i===0&&j===0)?C.bad:C.si)+T(x+55+j*70,402,b[0],{a:'middle',c:C.mute,s:13});});});
+ o+=T(480,440,'→ 설비 A만 차이: 장비 원인',{a:'middle',c:C.cu,s:15,w:700,op:sg(t,.8,1)});
+ return o;},'문제'];
+S.i3=['불량 분석 ③ 물리 확인','T','부수지 않는 검사부터 합니다. X-ray로 범프·와이어 형상, 초음파(SAT)로 박리·보이드를 보고, 그래도 모르면 잘라서(단면) 전자현미경으로 봅니다.','비파괴 → 파괴 순서. 측정 장비 자체의 오차(과검)도 교차 검증.',function(t){
+ var o='',st=[['X-ray','금속·범프 형상'],['SAT 초음파','박리·보이드'],['단면 + SEM','접합 조직·크랙']];
+ st.forEach(function(s,i){var p=sg(t,i*.3,i*.3+.28);o+=box(70+i*290,170,250,170,p>0?C.good:C.mute,s[0],[s[1]],.35+.65*p);if(i<2)o+=arrow(326+i*290,255,354+i*290,255,p>.9?C.good:C.mute);});
+ o+=T(480,130,'비파괴 → 파괴',{a:'middle',s:16,w:700,c:C.cu});
+ return o;},'해결'];
+S.i4=['불량 분석 ④ DOE와 재발 방지','T','의심 인자(온도·압력·평행도)를 실험계획법(DOE)으로 바꿔 가며 재현합니다. 원인을 고친 뒤 관리 항목을 SPC로 감시하고, 한계를 넘으면 장비가 스스로 멈추게(인터락) 하고 표준 문서로 남깁니다.','→ 로봇팔 개선 때 "변수를 나눠 측정 → 조건 변경 → 검증" 했던 흐름과 같음.',function(t){
+ var o='',p=sg(t,0,.5);o+=T(240,130,'DOE (2인자 예시)',{a:'middle',s:15,w:700});
+ var cells=[[0,0,.3],[1,0,.5],[0,1,.6],[1,1,.95]];cells.forEach(function(c,i){if(p>i/4)o+=R(140+c[0]*110,170+c[1]*110,100,100,heatCol(c[2]),'rx="8"')+T(190+c[0]*110,225+c[1]*110,Math.round(c[2]*100)+'%',{a:'middle',c:'#1a1006',s:16,w:700});});
+ o+=T(245,410,'온도 →',{a:'middle',c:C.mute,s:13})+T(118,280,'압력',{a:'end',c:C.mute,s:13});
+ var q=sg(t,.5,1),pts=[];for(var i=0;i<20;i++)pts.push([i/19,.5+(rnd(i)-.5)*.15]);o+=chart(540,170,340,200,pts,q,C.good,'시간','관리 항목');
+ o+=Ln(540,170+200-.75*200,880,170+200-.75*200,C.bad,1.5,'stroke-dasharray="5 4"')+Ln(540,170+200-.25*200,880,170+200-.25*200,C.bad,1.5,'stroke-dasharray="5 4"');
+ o+=T(710,130,'SPC + 인터락',{a:'middle',s:15,w:700,op:q});
+ return o;},'해결'];
+S.i5=['최신: 자동 검사 · 공정 간 데이터 연결','T','검사 이미지를 사람이 아니라 비전 알고리즘으로 자동 판정하고, EDS→범핑→적층→테스트 데이터를 칩 단위로 이어 원인을 거꾸로 추적합니다. TSP 직무 설명의 "계측·검사 자동화"가 이 방향입니다.','과제: 애매한 불량의 판정 기준(과검↔미검), 데이터 연결 체계. → 열화상 탐지율 약 40→70% 개선 경험과 연결.',function(t){
+ var o='',st=['EDS','범핑','적층','몰드','테스트'];st.forEach(function(s,i){var x=90+i*165;o+=R(x,170,130,60,'#1c2836','rx="8" stroke="#2f4054"')+T(x+65,206,s,{a:'middle',s:14,w:600});if(i<4)o+=Ln(x+130,200,x+165,200,C.cu,2);});
+ var p=sg(t,0,1),px=L(155,815,p);o+=Ci(px,250,7,C.cu);
+ for(var k=0;k<6;k++){var x2=150+k*110,ok=rnd(k)>.25;o+=R(x2,290,80,80,'#26323f','rx="6"')+R(x2+8,298,64,64,ok?'#3a5f4a':'#5f3a3a','opacity="'+sg(t,k*.12,k*.12+.2)+'"')+T(x2+40,392,ok?'양품':'불량',{a:'middle',c:ok?C.good:C.bad,s:12,w:600,op:sg(t,k*.12,k*.12+.2)});}
+ o+=T(480,130,'칩 단위 데이터 추적 + 비전 자동 판정',{a:'middle',s:16,w:700,c:C.cu});
+ return o;},'최신'];
+
 var TR={
  gen:{name:'일반 반도체',scenes:['wafer','ox','photo','etch','dep','beol','eds','bg','saw','da','wb','mold','mark','sba','sing','ftest','done']},
  tr:{name:'트랜지스터',scenes:['t1','t2','t3','t4','t5','t6','t7','t8']},
  hb:{name:'하이브리드 본딩',scenes:['b1','b2','b3','b4','b5','b6','b7','b8']},
- hbm:{name:'HBM',scenes:['wafer','ox','photo','etch','dep','tsv','beol','eds','bump','thin','debond','cow','hmold','htest','integ','next']}
+ dthin:{name:'심화 · 박막화',dur:9000,scenes:['a1','a2','a3','a4','a5']},
+ hbm:{name:'HBM',scenes:['wafer','ox','photo','etch','dep','tsv','beol','eds','bump','thin','debond','cow','hmold','htest','integ','next']},
+ ddice:{name:'심화 · 다이싱',dur:9000,scenes:['c1','c2','c3','c4','c5']},
+ dcow:{name:'심화 · CoW 적층',dur:9000,scenes:['d1','d2','d3','d4','d5']},
+ dwarp:{name:'심화 · 리플로우·휨',dur:9000,scenes:['e1','e2','e3','e4','e5']},
+ dmold:{name:'심화 · 몰드',dur:9000,scenes:['f1','f2','f3','f4','f5']},
+ dtest:{name:'심화 · 테스트',dur:9000,scenes:['g1','g2','g3','g4','g5']},
+ dheat:{name:'심화 · 방열',dur:9000,scenes:['h1','h2','h3','h4','h5']},
+ dfa:{name:'심화 · 불량 분석',dur:9000,scenes:['i1','i2','i3','i4','i5']}
 };
+TR.dall={name:'심화 전체',dur:9000,scenes:[].concat(TR.dthin.scenes,TR.ddice.scenes,TR.dcow.scenes,TR.dwarp.scenes,TR.dmold.scenes,TR.dtest.scenes,TR.dheat.scenes,TR.dfa.scenes)};
 var DUR=6000,track='gen',idx=0,tIn=0,playing=false,last=0,speed=1;
 var sv=document.getElementById('sv'),desc=document.getElementById('desc'),point=document.getElementById('point'),bar=document.getElementById('bar'),time=document.getElementById('time'),list=document.getElementById('list'),playB=document.getElementById('play');
 function wrap(s,n){var out=[],cur='';s.split(' ').forEach(function(w){if((cur+' '+w).trim().length>n){out.push(cur.trim());cur=w;}else cur+=' '+w;});if(cur.trim())out.push(cur.trim());return out;}
+function D(){return TR[track].dur||6000;}
 function fmt(ms){var s=Math.round(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
 function render(){
- var tr=TR[track],key=tr.scenes[idx],sc=S[key],t=cl(tIn/DUR,0,1),phase=sc[1]==='F';
+ var tr=TR[track],key=tr.scenes[idx],sc=S[key],t=cl(tIn/D(),0,1),phase=sc[1]==='F';
  var o='<rect width="960" height="540" fill="'+C.bg+'"/>';
  for(var gx=0;gx<960;gx+=40)o+=Ln(gx,56,gx,452,C.grid,1);
  o+=R(0,0,960,56,'#0d141c');
- o+=R(20,16,phase?118:118,26,phase?'#24364a':C.cu,'rx="13"')+T(79,34,phase?'전공정 FAB':'후공정 TSP',{a:'middle',c:phase?'#bcd3ea':'#1a1006',s:13,w:700});
+ var stg=sc[5];
+ if(stg){var SC={'원리':['#24364a','#bcd3ea'],'문제':[C.bad,'#1a0806'],'해결':[C.good,'#06180e'],'최신':[C.cu,'#1a1006'],'최신 과제':['#b9a6ee','#140c2a']};
+  o+=R(20,16,118,26,SC[stg][0],'rx="13"')+T(79,34,stg,{a:'middle',c:SC[stg][1],s:13,w:700});o+=T(156,35,sc[0],{s:19,w:700});
+  ['원리','문제','해결','최신','최신 과제'].forEach(function(n,i){var on=n===stg,x=600+i*68;o+=R(x,46,62,4,on?SC[n][0]:'#223040','rx="2"');});
+  o+=T(940,35,tr.name.replace('심화 · ','')+' · '+(idx+1)+' / '+tr.scenes.length,{a:'end',c:C.mute,s:13});}
+ else{o+=R(20,16,118,26,phase?'#24364a':C.cu,'rx="13"')+T(79,34,phase?'전공정 FAB':'후공정 TSP',{a:'middle',c:phase?'#bcd3ea':'#1a1006',s:13,w:700});
  o+=T(156,35,sc[0],{s:19,w:700});
- o+=T(940,35,tr.name+' · '+(idx+1)+' / '+tr.scenes.length,{a:'end',c:C.mute,s:14});
+ o+=T(940,35,tr.name+' · '+(idx+1)+' / '+tr.scenes.length,{a:'end',c:C.mute,s:14});}
  o+='<g>'+sc[4](t,track)+'</g>';
  o+=R(0,452,960,88,'#0d141c');
- wrap(sc[2],58).slice(0,3).forEach(function(l,i){o+=T(24,478+i*24,l,{s:15,c:'#d5dde7'});});
+ if(stg&&t>=.55){o+=T(24,474,'▶ 관리·직무 포인트',{s:13,w:700,c:C.cu});wrap(sc[3],62).slice(0,2).forEach(function(l,i){o+=T(24,500+i*23,l,{s:15,c:'#f0d9c2'});});}
+ else wrap(sc[2],stg?64:58).slice(0,3).forEach(function(l,i){o+=T(24,478+i*24,l,{s:15,c:'#d5dde7'});});
  o+=R(0,537,960*((idx+t)/tr.scenes.length),3,C.cu);
  sv.innerHTML=o;
  desc.textContent=sc[2];point.textContent=sc[3];
- var total=tr.scenes.length*DUR,el=idx*DUR+tIn;bar.style.width=(100*el/total)+'%';time.textContent=fmt(el)+' / '+fmt(total);
+ var total=tr.scenes.length*D(),el=idx*D()+tIn;bar.style.width=(100*el/total)+'%';time.textContent=fmt(el)+' / '+fmt(total);
  [].forEach.call(list.children,function(b,i){b.classList.toggle('on',i===idx);});
 }
 function buildList(){list.innerHTML='';TR[track].scenes.forEach(function(k,i){var b=document.createElement('button');b.type='button';b.textContent=(i+1)+'. '+S[k][0];if(S[k][1]==='F')b.className='fab';b.addEventListener('click',function(){idx=i;tIn=0;render();});list.appendChild(b);});}
-function setTrack(k){track=k;idx=0;tIn=0;[['tg','gen'],['th','hbm'],['tt','tr'],['tb','hb']].forEach(function(p){document.getElementById(p[0]).classList.toggle('on',k===p[1]);});buildList();render();}
-function loop(ts){if(!playing)return;var dt=last?ts-last:16;last=ts;tIn+=dt*speed;if(tIn>=DUR){if(idx<TR[track].scenes.length-1){idx++;tIn=0;}else{tIn=DUR;setPlay(false);}}render();requestAnimationFrame(loop);}
-function setPlay(p){playing=p;playB.textContent=p?'일시정지':'재생';if(p){last=0;if(idx===TR[track].scenes.length-1&&tIn>=DUR){idx=0;tIn=0;}requestAnimationFrame(loop);}}
+function setTrack(k){track=k;idx=0;tIn=0;[].forEach.call(document.querySelectorAll('.tracks button'),function(b){b.classList.toggle('on',b.dataset.k===k);});buildList();render();}
+function loop(ts){if(!playing)return;var dt=last?ts-last:16;last=ts;tIn+=dt*speed;if(tIn>=D()){if(idx<TR[track].scenes.length-1){idx++;tIn=0;}else{tIn=D();setPlay(false);}}render();requestAnimationFrame(loop);}
+function setPlay(p){playing=p;playB.textContent=p?'일시정지':'재생';if(p){last=0;if(idx===TR[track].scenes.length-1&&tIn>=D()){idx=0;tIn=0;}requestAnimationFrame(loop);}}
 playB.addEventListener('click',function(){setPlay(!playing);});
 document.getElementById('prev').addEventListener('click',function(){idx=Math.max(0,idx-1);tIn=0;render();});
 document.getElementById('next').addEventListener('click',function(){idx=Math.min(TR[track].scenes.length-1,idx+1);tIn=0;render();});
 document.getElementById('spd').addEventListener('change',function(e){speed=parseFloat(e.target.value)||1;});
-document.getElementById('tg').addEventListener('click',function(){setTrack('gen');});document.getElementById('tt').addEventListener('click',function(){setTrack('tr');});document.getElementById('tb').addEventListener('click',function(){setTrack('hb');});
-document.getElementById('th').addEventListener('click',function(){setTrack('hbm');});
-window.__movie={show:function(k,i,f){setPlay(false);setTrack(k);idx=i;tIn=DUR*f;render();},setTrack:setTrack,play:function(){idx=0;tIn=0;setPlay(true);},total:function(){return TR[track].scenes.length*DUR;}};
+[].forEach.call(document.querySelectorAll('.tracks button'),function(b){b.addEventListener('click',function(){setTrack(b.dataset.k);});});
+window.__movie={show:function(k,i,f){setPlay(false);setTrack(k);idx=i;tIn=D()*f;render();},setTrack:setTrack,play:function(){idx=0;tIn=0;setPlay(true);},total:function(){return TR[track].scenes.length*D();}};
 if(location.hash==='#record')document.body.classList.add('rec');
 setTrack('gen');
-tIn=DUR*0.6;render();tIn=0;
+tIn=D()*0.6;render();tIn=0;
 var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 if(!reduce&&location.hash!=='#record')setPlay(true);
 })();
