@@ -18,7 +18,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);margin:0}
 header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
 h1{font-size:clamp(20px,3.4vw,28px);margin:0;letter-spacing:-.01em}
 .sub{color:var(--mute);font-size:14px;margin:4px 0 0}
-.tracks{display:flex;gap:6px;background:var(--panel);padding:4px;border-radius:10px;border:1px solid var(--line)}
+.tracks{display:flex;flex-wrap:wrap;gap:6px;background:var(--panel);padding:4px;border-radius:10px;border:1px solid var(--line)}
 .tracks button{font:600 14px var(--body);color:var(--mute);background:none;border:0;padding:8px 14px;border-radius:7px;cursor:pointer}
 .tracks button.on{background:var(--cu);color:#1a1006}
 .stage{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
@@ -49,8 +49,8 @@ body.rec .stage{border:0;border-radius:0}
 
 <div class="wrap">
 <header>
-  <div><h1>반도체 공정 무비</h1><p class="sub">웨이퍼 한 장이 일반 반도체 패키지, 또는 HBM이 되어 AI 가속기에 들어가기까지</p></div>
-  <div class="tracks" role="tablist" aria-label="트랙 선택"><button type="button" id="tg" class="on" role="tab">일반 반도체</button><button type="button" id="th" role="tab">HBM</button></div>
+  <div><h1>반도체 공정 무비</h1><p class="sub">웨이퍼 한 장이 일반 반도체 패키지, 또는 HBM이 되어 AI 가속기에 들어가기까지. 트랜지스터와 하이브리드 본딩은 확대해서 따로 봅니다.</p></div>
+  <div class="tracks" role="tablist" aria-label="트랙 선택"><button type="button" id="tg" class="on" role="tab">일반 반도체</button><button type="button" id="th" role="tab">HBM</button><button type="button" id="tt" role="tab">트랜지스터</button><button type="button" id="tb" role="tab">하이브리드 본딩</button></div>
 </header>
 <div class="stage"><svg id="sv" viewBox="0 0 960 540" role="img" aria-label="반도체 공정 애니메이션"></svg></div>
 <div class="ctrl">
@@ -341,8 +341,150 @@ S.next=['다음 단계: zHBM','T','삼성이 개발 중인 zHBM은 HBM을 GPU �
  o+=T(480,90,'옆(2.5D) → 위(3D)',{a:'middle',c:C.ink,s:18,w:700});
  return o;}];
 
+
+/* ===== 트랜지스터 (FEOL) ===== */
+var TY=280;
+function fe2(o,st){
+ o+=R(X0,TY,X1-X0,140,C.si);
+ if(st.well)o+=R(280,TY,400,110,'#ff8fb3','opacity="'+(.22*st.well)+'"');
+ if(st.sti){o+=R(230,TY,50,60*st.sti,C.ox)+R(680,TY,50,60*st.sti,C.ox);}
+ if(st.sd){o+=R(300,TY,120,38,'#ff5f93','opacity="'+(.75*st.sd)+'"')+R(540,TY,120,38,'#ff5f93','opacity="'+(.75*st.sd)+'"');}
+ if(st.gox)o+=R(420,TY-6*st.gox,120,6*st.gox,'#f2e28a');
+ if(st.gate){var gh=64*st.gate;o+=R(430,TY-6-gh,100,gh,'#a58fd9');}
+ if(st.sp){o+='<path d="M430 '+(TY-6)+' L'+(430-22*st.sp)+' '+(TY)+' L430 '+(TY-70)+'Z" fill="#cfd6de" opacity=".85"/><path d="M530 '+(TY-6)+' L'+(530+22*st.sp)+' '+(TY)+' L530 '+(TY-70)+'Z" fill="#cfd6de" opacity=".85"/>';}
+ if(st.sil){o+=R(300,TY-5*st.sil,100,5*st.sil,'#56606c')+R(560,TY-5*st.sil,100,5*st.sil,'#56606c')+R(430,TY-70-5*st.sil,100,5*st.sil,'#56606c');}
+ if(st.ct){var h=90*st.ct;o+=R(342,TY-5-h,16,h,'#b8c2cc')+R(602,TY-5-h,16,h,'#b8c2cc')+R(472,TY-75-h+60,16,h-60>0?h-60:0,'#b8c2cc');}
+ return o;}
+function lab(o,arr){arr.forEach(function(a){o+=T(a[0],a[1],a[2],{c:a[3]||C.mute,s:13,w:600,a:a[4]||'middle',op:a[5]===undefined?1:a[5]});});return o;}
+S.t1=['소자 분리 (STI)','F','이웃한 트랜지스터끼리 전기가 새지 않도록, 실리콘에 얕은 홈을 파고 산화막으로 채운 뒤 CMP로 평평하게 만듭니다.','홈 식각 깊이·모양, 채움 보이드, CMP 평탄도.',function(t){
+ var e=ez(sg(t,0,.35)),f=ez(sg(t,.4,.75)),c=ez(sg(t,.8,1)),o='';
+ o+=R(X0,TY,X1-X0,140,C.si)+R(230,TY,50,60*e,C.bg)+R(680,TY,50,60*e,C.bg);
+ if(f>0){o+=R(230,TY+60-60*Math.min(1,f*1.2),50,60*Math.min(1,f*1.2),C.ox)+R(680,TY+60-60*Math.min(1,f*1.2),50,60*Math.min(1,f*1.2),C.ox);
+  o+=R(X0,TY-16*f*(1-c),X1-X0,16*f*(1-c),C.ox);}
+ if(c>0&&c<1){var px=L(X0,X1-120,c);o+=R(px,TY-34,120,14,'#6b7a8c','rx="3"');}
+ o=lab(o,[[255,TY+90,'STI',C.ox],[705,TY+90,'STI',C.ox],[480,TY-60,t<.4?'얕은 홈 식각':(t<.8?'산화막 채우기':'CMP 평탄화'),C.ink]]);
+ o+=T(480,TY+120,'↑ 이 사이가 트랜지스터 한 개 자리',{a:'middle',c:C.mute,s:13,op:sg(t,.8,1)});
+ return o;}];
+S.t2=['웰 형성 (이온주입)','F','트랜지스터가 놓일 바탕 영역에 붕소(B)나 인(P) 이온을 주입해 p형 또는 n형 우물(웰)을 만듭니다. 여기서는 n형 트랜지스터용 p-웰입니다.','이온 양(도즈)과 깊이, 주입 후 열처리로 결정 손상 회복.',function(t){
+ var w=ez(sg(t,.05,.85)),o=fe2('',{sti:1,well:w});
+ if(t<.85){for(var i=0;i<8;i++){var x=300+i*50,y=L(110,TY-4,(t*3+i*.11)%1);o+=arrow(x,y-24,x,y,C.light);}o+=T(480,96,'붕소(B) 이온 주입',{a:'middle',c:C.light,s:14,w:600});}
+ o+=T(480,TY+80,'p-웰',{a:'middle',c:'#ff8fb3',s:15,w:700,op:w});
+ return o;}];
+S.t3=['게이트 절연막','F','채널이 생길 자리 위에 아주 얇은 절연막을 기릅니다. 요즘은 누설을 줄이려고 유전율이 높은 high-k 막을 씁니다.','막 두께가 nm 수준이라 누설 전류(터널링)와 균일도가 핵심.',function(t){
+ var g=ez(sg(t,.1,.8)),o=fe2('',{sti:1,well:1,gox:g});
+ o+=R(400,TY-60,160,40,'none','stroke="'+C.cu+'" stroke-width="2" stroke-dasharray="5 4" rx="6" opacity="'+sg(t,.5,.9)+'"');
+ o+=T(480,TY-70,'게이트 절연막 (수 nm)',{a:'middle',c:'#f2e28a',s:14,w:600,op:g});
+ return o;}];
+S.t4=['게이트 형성','F','게이트 재료(폴리실리콘·금속)를 증착하고, 포토·식각으로 필요한 모양만 남깁니다. 게이트 길이가 공정 세대(노드)를 대표하던 값입니다.','게이트 길이(선폭) 편차, 측벽 각도.',function(t){
+ var d=ez(sg(t,0,.35)),e=ez(sg(t,.45,.9)),o=fe2('',{sti:1,well:1,gox:1});
+ if(e<1)o+=R(X0,TY-6-64*d,X1-X0,64*d,'#a58fd9','opacity="'+(1-e)+'"');
+ o+=R(430,TY-70,100,64,'#a58fd9','opacity="'+e+'"');
+ if(t>.38&&t<.9){for(var i=0;i<14;i++){var px=X0+rnd(i)*(X1-X0);if(px>420&&px<540)continue;var py=100+((t*500+i*31)%(TY-130));o+=Ci(px,py,3,C.pl);}}
+ o+=T(480,TY-84,t<.4?'게이트 재료 증착':'포토·식각 → 게이트',{a:'middle',c:'#a58fd9',s:14,w:600});
+ return o;}];
+S.t5=['스페이서 · 소스/드레인','F','게이트 양옆에 스페이서를 세우고, 인(P)·비소(As) 이온을 주입해 소스와 드레인(n+)을 만듭니다. 게이트가 마스크 역할을 해서 위치가 저절로 맞습니다(자기 정렬).','도핑 깊이·농도, 열처리(활성화) 조건.',function(t){
+ var sp=ez(sg(t,0,.3)),sd=ez(sg(t,.35,.85)),o=fe2('',{sti:1,well:1,gox:1,gate:1,sp:sp,sd:sd});
+ if(t>.35&&t<.85){[320,360,400,560,600,640].forEach(function(x,i){var y=L(110,TY-4,(t*3+i*.13)%1);o+=arrow(x,y-24,x,y,C.light);});}
+ o=lab(o,[[360,TY+60,'소스 (n+)','#ff5f93',null,sd],[600,TY+60,'드레인 (n+)','#ff5f93',null,sd],[480,TY-90,'게이트','#a58fd9'],[400,TY-30,'스페이서','#cfd6de','end',sp]]);
+ return o;}];
+S.t6=['실리사이드 · 컨택','F','소스·드레인·게이트 표면에 금속 화합물(실리사이드)을 만들어 저항을 낮추고, 텅스텐 기둥(컨택)을 세워 위의 배선과 연결합니다. 여기까지가 FEOL입니다.','컨택 저항, 정렬 오차. 이 위로 금속배선(BEOL)이 올라갑니다.',function(t){
+ var si2=ez(sg(t,0,.35)),ct=ez(sg(t,.4,.9)),o=fe2('',{sti:1,well:1,gox:1,gate:1,sp:1,sd:1,sil:si2,ct:ct});
+ o+=R(X0,TY-120,X1-X0,40,'#3a4a5c','opacity="'+sg(t,.85,1)+'"');
+ o=lab(o,[[480,TY-130,'→ 이 위로 금속배선(BEOL)',C.cu,null,sg(t,.85,1)],[690,TY-60,'컨택 (텅스텐)','#b8c2cc','start',ct]]);
+ return o;}];
+S.t7=['트랜지스터는 스위치','F','게이트에 전압을 걸지 않으면 소스와 드레인 사이가 막혀 전류가 흐르지 않습니다(0). 전압을 걸면 게이트 아래에 전자가 모여 길(채널)이 생기고 전류가 흐릅니다(1).','게이트 절연막이 얇을수록 제어가 강하지만, 너무 얇으면 전자가 새어 나옵니다(터널링·누설).',function(t){
+ var on=t>.5,o=fe2('',{sti:1,well:1,gox:1,gate:1,sp:1,sd:1,sil:1,ct:1});
+ if(on){o+=R(420,TY,120,8,'#7fd3ff','opacity=".9"');o+=R(430,TY-70,100,64,'#ffd36b','opacity="'+(.35+.15*Math.sin(t*30))+'"');
+  for(var i=0;i<7;i++){var x=330+((t*700+i*48)%300);o+=Ci(x,TY+4,4,'#7fd3ff');}}
+ o+=T(480,110,on?'게이트 ON → 채널 생김 → 전류 흐름 = 1':'게이트 OFF → 막힘 → 전류 없음 = 0',{a:'middle',c:on?'#7fd3ff':C.mute,s:18,w:700});
+ o+=T(480,140,'게이트 전압: '+(on?'+V':'0V'),{a:'middle',c:on?'#ffd36b':C.mute,s:14,w:600});
+ return o;}];
+S.t8=['구조의 진화: Planar → FinFET → GAA','F','작아질수록 게이트가 채널을 제어하기 어려워 누설이 늘었습니다. 그래서 채널을 세우고(FinFET), 아예 게이트로 사방을 감싸는(GAA) 구조로 바뀌었습니다. 삼성은 3나노부터 GAA(MBCFET)를 적용했습니다.','미세할수록 공정 단계와 비용이 급증 → 성능 향상의 무게가 패키징으로도 옮겨가는 배경.',function(t){
+ var o='',a=sg(t,0,.3),b=sg(t,.3,.6),c=sg(t,.6,.9);
+ function base(x){return R(x,330,220,40,C.si);}
+ o+=base(40)+R(120,306,60,24,'#a58fd9','opacity="'+a+'"')+R(100,326,100,4,'#7fd3ff','opacity="'+a+'"');
+ o+=T(150,410,'Planar',{a:'middle',s:16,w:700,op:a})+T(150,432,'위에서만 제어',{a:'middle',c:C.mute,s:13,op:a});
+ o+=base(370)+R(465,250,30,80,C.sid,'opacity="'+b+'"')+'<path d="M450 330 V240 H510 V330" fill="none" stroke="#a58fd9" stroke-width="10" opacity="'+b+'"/>';
+ o+=T(480,410,'FinFET',{a:'middle',s:16,w:700,op:b})+T(480,432,'3면 제어',{a:'middle',c:C.mute,s:13,op:b});
+ o+=base(700)+R(770,230,80,100,'#a58fd9','rx="8" opacity="'+c+'"');
+ for(var i=0;i<3;i++)o+=R(760,248+i*26,100,12,C.sid,'opacity="'+c+'"');
+ o+=T(810,410,'GAA (MBCFET)',{a:'middle',s:16,w:700,op:c})+T(810,432,'4면 감쌈',{a:'middle',c:C.mute,s:13,op:c});
+ return o;}];
+
+/* ===== 하이브리드 본딩 ===== */
+var DI='#b9c7d8';
+function hbLayer(o,y,h,recess,flip){o+=R(X0,y,X1-X0,h,DI);for(var i=0;i<6;i++){var x=X0+40+i*100;o+=R(x,y+(flip?0:recess),44,h-recess,C.cu);}return o;}
+S.b1=['구리 패드 + CMP','T','절연막에 홈을 파고 구리로 채운 뒤 CMP로 평평하게 갈아 냅니다. 이때 구리를 절연막보다 수 nm 살짝 들어가게(리세스) 만드는 것이 핵심입니다.','구리 리세스가 너무 깊으면 안 붙고(오픈), 튀어나오면 절연막이 안 닿아 보이드.',function(t){
+ var e=sg(t,0,.25),f=ez(sg(t,.3,.55)),c=ez(sg(t,.6,1)),o=R(X0,TY+30,X1-X0,110,C.si)+R(X0,TY,X1-X0,30,DI);
+ for(var i=0;i<6;i++){var x=X0+40+i*100;o+=R(x,TY,44,30*e,C.bg);if(f>0)o+=R(x,TY+30-30*Math.min(1,f*1.3),44,30*Math.min(1,f*1.3),C.cu);}
+ if(f>0)o+=R(X0,TY-18*f*(1-c),X1-X0,18*f*(1-c),C.cu);
+ if(c>0&&c<1){var px=L(X0,X1-140,c);o+=R(px,TY-36,140,16,'#6b7a8c','rx="3"');}
+ if(c>.9){o+=R(560,110,220,110,'#0d141c','stroke="'+C.cu+'" stroke-width="2" rx="8"')+R(580,160,180,40,DI)+R(640,164,60,36,C.cu)+R(638,160,64,4,C.bg)+T(670,150,'리세스 수 nm',{a:'middle',c:C.cu,s:13,w:700})+T(670,214,'확대',{a:'middle',c:C.mute,s:12});}
+ o+=T(300,140,t<.3?'절연막에 홈':(t<.6?'구리 도금':'CMP 평탄화'),{a:'middle',c:C.ink,s:16,w:600});
+ return o;}];
+S.b2=['절단: 입자가 없게','T','하이브리드 본딩은 범프가 없어 입자 하나가 그대로 불량이 됩니다. 그래서 가루가 튀는 블레이드 대신 플라즈마·레이저 다이싱을 검토합니다.','삼성도 하이브리드 본딩을 위해 레이저 그루빙·플라즈마 다이싱과 CMP를 핵심으로 꼽았습니다(보도 기준).',function(t){
+ var o='',a=sg(t,0,1);
+ o+=R(80,250,330,40,C.si)+R(530,250,330,40,C.si);
+ o+=T(245,175,'블레이드',{a:'middle',s:16,w:700})+T(695,175,'플라즈마',{a:'middle',s:16,w:700});
+ o+=Ci(245,230,26,'#cfd6de')+R(240,250,10,40*a,C.bg);
+ for(var i=0;i<20;i++){var ang=rnd(i)*Math.PI,r=30+((t*300+i*20)%140);o+=Ci(245+Math.cos(ang)*r*(rnd(i+7)>.5?1:-1),270-Math.sin(ang)*r*.6,3,C.bad);}
+ for(var j=0;j<12;j++){var py=120+((t*400+j*23)%120);o+=Ci(695+(rnd(j)-.5)*14,py,3,C.pl,'opacity=".8"');}o+=R(690,250,10,40*a,C.bg);
+ o+=T(245,340,'입자·치핑 발생',{a:'middle',c:C.bad,s:14,w:600})+T(695,340,'입자 거의 없음',{a:'middle',c:C.good,s:14,w:600});
+ return o;}];
+S.b3=['세정 · 표면 활성화','T','남은 입자와 유기물을 세정으로 없애고, 플라즈마로 절연막 표면을 붙기 쉬운 상태(-OH)로 만듭니다. 활성화한 뒤에는 정해진 시간 안에 붙여야 합니다.','세정 후 물자국, 활성화 후 대기 시간(Q-time) 초과 시 접합력 저하.',function(t){
+ var cl2=sg(t,0,.45),ac=sg(t,.5,1),o=hbLayer(R(X0,TY+30,X1-X0,110,C.si),TY,30,4);
+ for(var i=0;i<10;i++)o+=Ci(X0+40+rnd(i)*540,TY-6,5,C.bad,'opacity="'+(1-cl2)+'"');
+ if(t<.45){for(var k=0;k<6;k++){var x=X0+60+k*100;o+='<path d="M'+x+' 150 q12 30 0 60" fill="none" stroke="'+C.light+'" stroke-width="3"/>';}}
+ if(ac>0){for(var j=0;j<10;j++){var px=X0+40+j*60,py=L(100,TY-6,(t*2.5+j*.1)%1);o+=Ln(px,py-20,px,py,'#a99cf0',3);}
+  for(var m=0;m<24;m++)o+=Ci(X0+14+m*25.5,TY-5,3,'#7fb3ff','opacity="'+ac+'"');}
+ o+=T(480,96,t<.5?'세정: 입자 제거':'플라즈마 활성화 → 표면 -OH',{a:'middle',c:C.ink,s:16,w:600});
+ return o;}];
+S.b4=['정렬','T','위 칩을 뒤집어 아래 웨이퍼의 패드와 겹치도록 맞춥니다. 패드 간격이 수 ㎛ 이하라 정렬 오차는 그보다 훨씬 작아야 합니다.','비전 보정 오차, 온도에 따른 열팽창, 칩 휨 → 정렬 오차.',function(t){
+ var a=ez(sg(t,.1,.85)),dx=L(46,0,a),dy=L(-30,0,a),o=hbLayer(R(X0,330,X1-X0,90,C.si),300,30,4);
+ o+='<g transform="translate('+dx+','+dy+')">'+R(X0+80,150,460,90,C.si)+R(X0+80,240,460,26,DI);
+ for(var i=0;i<5;i++)o+=R(X0+140+i*100-60,240,44,22,C.cu);o+='</g>';
+ o+='<g stroke="#ffd36b" stroke-width="2" fill="none"><circle cx="'+(820+dx)+'" cy="'+(200+dy)+'" r="16"/><line x1="'+(800+dx)+'" y1="'+(200+dy)+'" x2="'+(840+dx)+'" y2="'+(200+dy)+'"/><line x1="'+(820+dx)+'" y1="'+(180+dy)+'" x2="'+(820+dx)+'" y2="'+(220+dy)+'"/></g>';
+ o+='<g stroke="'+C.good+'" stroke-width="2" fill="none"><circle cx="820" cy="200" r="22"/></g>';
+ o+=T(820,250,a>.95?'정렬 완료':'정렬 중…',{a:'middle',c:a>.95?C.good:'#ffd36b',s:14,w:700});
+ return o;}];
+S.b5=['상온 접합','T','위 칩을 눌러 놓으면 활성화된 절연막끼리 상온에서 바로 달라붙습니다. 구리 패드는 리세스 때문에 아직 수 nm 떨어져 있습니다.','입자 하나가 끼면 그 주변이 텐트처럼 들려 넓은 보이드가 됩니다.',function(t){
+ var d=ez(sg(t,0,.5)),o=hbLayer(R(X0,330,X1-X0,90,C.si),300,30,4),ty=L(150,270,d);
+ o+=R(X0+80,ty-90,460,90,C.si)+R(X0+80,ty,460,30,DI);for(var i=0;i<5;i++)o+=R(X0+120+i*90,ty,44,26,C.cu);
+ if(d>.98){o+=Ln(X0+80,300,X0+540,300,'#7fb3ff',2,'stroke-dasharray="6 4"');
+  o+=R(600,110,220,120,'#0d141c','stroke="'+C.cu+'" stroke-width="2" rx="8" opacity="'+sg(t,.55,.8)+'"');
+  o+='<g opacity="'+sg(t,.55,.8)+'">'+R(620,140,180,30,DI)+R(620,170,180,30,DI)+R(680,140,60,26,C.cu)+R(680,174,60,26,C.cu)+T(710,216,'구리 사이 틈 (수 nm)',{a:'middle',c:C.cu,s:12,w:700})+'</g>';}
+ o+=T(300,110,d<.98?'눌러서 접촉':'절연막끼리 상온 접합',{a:'middle',c:C.ink,s:16,w:600});
+ return o;}];
+S.b6=['열처리 (어닐)','T','가열하면 절연막 결합이 단단해지고, 구리가 절연막보다 더 많이 팽창해 틈을 메우며 위아래 구리가 하나로 붙습니다. 범프·솔더·필름이 없는 접합이 완성됩니다.','열처리 응력과 휨, 막에서 나오는 가스에 의한 보이드.',function(t){
+ var h=sg(t,.05,.9),o=R(X0,330,X1-X0,90,C.si)+R(X0,270,X1-X0,60,DI)+R(X0+80,180,460,90,C.si);
+ for(var i=0;i<5;i++){var x=X0+120+i*90,g=4*(1-h);o+=R(x,270,44,26,C.cu)+R(x,300-0+g,44,26-g,C.cu);}
+ o+=R(X0-30,150,X1-X0+60,290,C.heat,'opacity="'+(.18*Math.sin(h*Math.PI))+'" rx="12"');
+ o+=R(600,100,220,120,'#0d141c','stroke="'+C.cu+'" stroke-width="2" rx="8"')+R(620,130,180,30,DI)+R(620,160,180,30,DI)+R(680,130,60,30-4*(1-h),C.cu)+R(680,160+4*(1-h),60,30-4*(1-h),C.cu)+R(680,156,60,8,C.cu,'opacity="'+h+'"');
+ o+=T(710,210,h>.95?'Cu–Cu 결합 완료':'구리 팽창 중…',{a:'middle',c:h>.95?C.good:C.cu,s:13,w:700});
+ o+=T(300,120,'열처리',{a:'middle',c:C.heat,s:18,w:700});
+ return o;}];
+S.b7=['불량: 입자 하나의 위력','T','범프가 있으면 솔더와 필름이 작은 오차를 흡수하지만, 하이브리드 본딩은 틈이 0이라 입자 하나가 주변을 넓게 들어 올려 접합되지 않는 영역(보이드)을 만듭니다.','초음파 검사(SAT)로 보이드를 찾고, 다이싱·세정·클린룸 등급으로 입자를 관리합니다.',function(t){
+ var a=ez(sg(t,.1,.7)),o='';
+ o+=T(245,140,'정상',{a:'middle',s:16,w:700,c:C.good})+T(715,140,'입자 1개',{a:'middle',s:16,w:700,c:C.bad});
+ o+=R(90,300,310,50,C.si)+R(90,280,310,20,DI)+R(90,L(200,260,a),310,20,DI)+R(90,L(150,210,a),310,50,C.si);
+ o+=R(560,300,310,50,C.si)+R(560,280,310,20,DI)+Ci(715,276,6,C.bad);
+ var lift=L(0,1,a);o+='<path d="M560 '+L(220,260,a)+' Q715 '+L(210,232,a)+' 870 '+L(220,260,a)+' L870 '+(L(220,260,a)-60)+' Q715 '+(L(210,232,a)-60)+' 560 '+(L(220,260,a)-60)+'Z" fill="'+C.si+'"/>';
+ if(a>.9){o+='<ellipse cx="715" cy="272" rx="110" ry="8" fill="#ffffff" opacity=".35"/>'+T(715,380,'입자보다 수십~수백 배 넓은 보이드',{a:'middle',c:C.bad,s:14,w:600})+T(245,380,'전면 접합',{a:'middle',c:C.good,s:14,w:600});}
+ return o;}];
+S.b8=['결과: 낮고, 촘촘하고, 시원하게','T','칩 사이의 범프·필름 층이 사라져 같은 단수에서 스택이 낮아지고, 연결 간격을 수 ㎛ 이하로 줄이며, 열도 잘 빠집니다. 차세대 HBM과 zHBM(삼성 3D Cube-H)의 핵심 기술입니다.','삼성 주도 IEEE 논문에서 HBM에 적용 시 스택 높이 약 15% 감소·열 특성 개선이 보고됨(보도 기준).',function(t){
+ var a=ez(sg(t,.05,.6)),o='',by=410;
+ o+=T(280,120,'마이크로범프 + 필름',{a:'middle',s:15,w:700})+T(680,120,'하이브리드 본딩',{a:'middle',s:15,w:700,c:C.cu});
+ var n=Math.max(1,Math.round(8*a));
+ for(var i=0;i<n;i++){o+=R(200,by-(i+1)*30,160,20,C.si)+R(200,by-(i+1)*30+20,160,10,'#9f8ce0','opacity=".7"');}
+ for(var j=0;j<n;j++){o+=R(600,by-(j+1)*23,160,21,C.si)+R(600,by-(j+1)*23+21,160,2,DI);}
+ if(a>.95){o+=Ln(380,by-8*30,380,by,C.mute,2)+T(392,by-120,'높음',{c:C.mute,s:13})+Ln(780,by-8*23,780,by,C.cu,2)+T(792,by-90,'낮음',{c:C.cu,s:13,w:700});
+  o+=T(480,96,'높이↓ · 연결 간격↓ · 열↓',{a:'middle',c:C.cu,s:18,w:700,op:sg(t,.7,.9)});}
+ return o;}];
+
 var TR={
  gen:{name:'일반 반도체',scenes:['wafer','ox','photo','etch','dep','beol','eds','bg','saw','da','wb','mold','mark','sba','sing','ftest','done']},
+ tr:{name:'트랜지스터',scenes:['t1','t2','t3','t4','t5','t6','t7','t8']},
+ hb:{name:'하이브리드 본딩',scenes:['b1','b2','b3','b4','b5','b6','b7','b8']},
  hbm:{name:'HBM',scenes:['wafer','ox','photo','etch','dep','tsv','beol','eds','bump','thin','debond','cow','hmold','htest','integ','next']}
 };
 var DUR=6000,track='gen',idx=0,tIn=0,playing=false,last=0,speed=1;
@@ -367,14 +509,14 @@ function render(){
  [].forEach.call(list.children,function(b,i){b.classList.toggle('on',i===idx);});
 }
 function buildList(){list.innerHTML='';TR[track].scenes.forEach(function(k,i){var b=document.createElement('button');b.type='button';b.textContent=(i+1)+'. '+S[k][0];if(S[k][1]==='F')b.className='fab';b.addEventListener('click',function(){idx=i;tIn=0;render();});list.appendChild(b);});}
-function setTrack(k){track=k;idx=0;tIn=0;document.getElementById('tg').classList.toggle('on',k==='gen');document.getElementById('th').classList.toggle('on',k==='hbm');buildList();render();}
+function setTrack(k){track=k;idx=0;tIn=0;[['tg','gen'],['th','hbm'],['tt','tr'],['tb','hb']].forEach(function(p){document.getElementById(p[0]).classList.toggle('on',k===p[1]);});buildList();render();}
 function loop(ts){if(!playing)return;var dt=last?ts-last:16;last=ts;tIn+=dt*speed;if(tIn>=DUR){if(idx<TR[track].scenes.length-1){idx++;tIn=0;}else{tIn=DUR;setPlay(false);}}render();requestAnimationFrame(loop);}
 function setPlay(p){playing=p;playB.textContent=p?'일시정지':'재생';if(p){last=0;if(idx===TR[track].scenes.length-1&&tIn>=DUR){idx=0;tIn=0;}requestAnimationFrame(loop);}}
 playB.addEventListener('click',function(){setPlay(!playing);});
 document.getElementById('prev').addEventListener('click',function(){idx=Math.max(0,idx-1);tIn=0;render();});
 document.getElementById('next').addEventListener('click',function(){idx=Math.min(TR[track].scenes.length-1,idx+1);tIn=0;render();});
 document.getElementById('spd').addEventListener('change',function(e){speed=parseFloat(e.target.value)||1;});
-document.getElementById('tg').addEventListener('click',function(){setTrack('gen');});
+document.getElementById('tg').addEventListener('click',function(){setTrack('gen');});document.getElementById('tt').addEventListener('click',function(){setTrack('tr');});document.getElementById('tb').addEventListener('click',function(){setTrack('hb');});
 document.getElementById('th').addEventListener('click',function(){setTrack('hbm');});
 window.__movie={show:function(k,i,f){setPlay(false);setTrack(k);idx=i;tIn=DUR*f;render();},setTrack:setTrack,play:function(){idx=0;tIn=0;setPlay(true);},total:function(){return TR[track].scenes.length*DUR;}};
 if(location.hash==='#record')document.body.classList.add('rec');
