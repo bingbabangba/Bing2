@@ -1,0 +1,386 @@
+<title>반도체 공정 무비</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: 클린룸 모니터처럼 어두운 무대 하나 + 아래 조작 줄과 장면 목록. 의도적으로 어두운 단일 테마 */
+:root{
+  --bg:#0a0f15; --panel:#111a24; --line:#223040; --ink:#e7edf4; --mute:#8b9bb0;
+  --cu:#e0954f; --good:#4fd18b; --bad:#ff6b5b;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);margin:0}
+.wrap{max-width:1060px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px;display:grid;gap:14px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-size:clamp(20px,3.4vw,28px);margin:0;letter-spacing:-.01em}
+.sub{color:var(--mute);font-size:14px;margin:4px 0 0}
+.tracks{display:flex;gap:6px;background:var(--panel);padding:4px;border-radius:10px;border:1px solid var(--line)}
+.tracks button{font:600 14px var(--body);color:var(--mute);background:none;border:0;padding:8px 14px;border-radius:7px;cursor:pointer}
+.tracks button.on{background:var(--cu);color:#1a1006}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto}
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.ctrl button{font:600 14px var(--body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;min-width:44px}
+.ctrl button.play{background:var(--cu);color:#1a1006;border-color:var(--cu);min-width:92px}
+.bar{flex:1;min-width:160px;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--cu)}
+.time{font:500 13px var(--mono);color:var(--mute);font-variant-numeric:tabular-nums}
+select{font:500 13px var(--body);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 8px}
+button:focus-visible,select:focus-visible{outline:2px solid var(--cu);outline-offset:2px}
+.info{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:760px){.info{grid-template-columns:1.2fr 1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.card h2{font-size:13px;letter-spacing:.08em;color:var(--mute);margin:0 0 8px;font-weight:600}
+.card p{margin:0;line-height:1.7;font-size:15px}
+.pt{color:var(--cu)}
+.list{display:flex;flex-wrap:wrap;gap:6px}
+.list button{font:500 12.5px var(--body);background:none;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:5px 10px;cursor:pointer}
+.list button.fab{border-style:dashed}
+.list button.on{color:#1a1006;background:var(--cu);border-color:var(--cu)}
+.note{color:var(--mute);font-size:12.5px;margin:0}
+body.rec .wrap{max-width:none;padding:0}
+body.rec header,body.rec .ctrl,body.rec .info,body.rec .note{display:none}
+body.rec .stage{border:0;border-radius:0}
+</style>
+
+<div class="wrap">
+<header>
+  <div><h1>반도체 공정 무비</h1><p class="sub">웨이퍼 한 장이 일반 반도체 패키지, 또는 HBM이 되어 AI 가속기에 들어가기까지</p></div>
+  <div class="tracks" role="tablist" aria-label="트랙 선택"><button type="button" id="tg" class="on" role="tab">일반 반도체</button><button type="button" id="th" role="tab">HBM</button></div>
+</header>
+<div class="stage"><svg id="sv" viewBox="0 0 960 540" role="img" aria-label="반도체 공정 애니메이션"></svg></div>
+<div class="ctrl">
+  <button type="button" id="prev" aria-label="이전 장면">◀</button>
+  <button type="button" id="play" class="play">재생</button>
+  <button type="button" id="next" aria-label="다음 장면">▶</button>
+  <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+  <span class="time" id="time">0:00 / 0:00</span>
+  <label class="time" for="spd">속도</label>
+  <select id="spd"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option></select>
+</div>
+<div class="info">
+  <div class="card"><h2>이 장면</h2><p id="desc"></p></div>
+  <div class="card"><h2>관리 포인트 · 불량</h2><p id="point" class="pt"></p></div>
+</div>
+<div class="card"><h2>장면 목록 (점선 = 전공정 FAB, 실선 = 후공정 TSP)</h2><div class="list" id="list"></div></div>
+<p class="note">개념도 애니메이션입니다. 실제 장비 모양·치수·비율과 다르며, 공정 순서는 대표적인 흐름을 단순화했습니다.</p>
+</div>
+
+<script>
+(function(){
+var C={bg:'#111a24',grid:'#1b2733',ink:'#e7edf4',mute:'#8b9bb0',si:'#8ea7c0',sid:'#6f879f',ox:'#b9a6ee',pr:'#e8c25a',prx:'#f6e7b8',mask:'#2c3644',light:'#9fd8ff',pl:'#ff7a59',cu:'#e0954f',sub:'#3f8f63',subd:'#2f6e4b',emc:'#2b3038',emcs:'#5d6876',sol:'#cfd5dc',good:'#4fd18b',bad:'#ff6b5b',tape:'#7c6fb8',glass:'#a9d3e8',heat:'#ff9a3c'};
+function cl(v,a,b){return Math.max(a,Math.min(b,v));}
+function sg(t,a,b){return cl((t-a)/(b-a),0,1);}
+function ez(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+function L(a,b,t){return a+(b-a)*t;}
+function R(x,y,w,h,f,ex){return '<rect x="'+x+'" y="'+y+'" width="'+Math.max(0,w)+'" height="'+Math.max(0,h)+'" fill="'+f+'" '+(ex||'')+'/>';}
+function T(x,y,s,o){o=o||{};return '<text x="'+x+'" y="'+y+'" fill="'+(o.c||C.ink)+'" font-size="'+(o.s||14)+'" font-weight="'+(o.w||500)+'" text-anchor="'+(o.a||'start')+'" font-family="IBM Plex Sans KR, sans-serif"'+(o.op!==undefined?' opacity="'+o.op+'"':'')+'>'+s+'</text>';}
+function Ln(x1,y1,x2,y2,c,w,ex){return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c+'" stroke-width="'+(w||2)+'" '+(ex||'')+'/>';}
+function Ci(x,y,r,f,ex){return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+f+'" '+(ex||'')+'/>';}
+function rnd(i){var x=Math.sin(i*12.9898+78.233)*43758.5453;return x-Math.floor(x);}
+function arrow(x1,y1,x2,y2,c){var a=Math.atan2(y2-y1,x2-x1),h=9;return Ln(x1,y1,x2,y2,c,2.5)+'<path d="M'+x2+' '+y2+' L'+(x2-h*Math.cos(a-0.45))+' '+(y2-h*Math.sin(a-0.45))+' L'+(x2-h*Math.cos(a+0.45))+' '+(y2-h*Math.sin(a+0.45))+'Z" fill="'+c+'"/>';}
+// 공통 단면 바탕: 실리콘 블록
+var X0=170,X1=790,SY=300,SH=110;
+function si(y,h){return R(X0,y||SY,X1-X0,h||SH,C.si);}
+function fe(){return R(X0,SY,X1-X0,10,'#4c5f74');}
+
+/* ===== 장면 정의: [제목, 단계(F/T), 설명, 관리포인트, draw(t)] ===== */
+var S={};
+S.wafer=['웨이퍼 만들기','F','고순도 실리콘을 녹여 둥근 기둥(잉곳)으로 키운 뒤 얇게 썰고 연마해 지름 300mm, 두께 약 775㎛의 웨이퍼를 만듭니다.','결정 결함, 두께·평탄도 편차. 이 두께를 나중에 후공정이 다시 갈아냅니다.',function(t){
+ var a=ez(sg(t,0,.3)),b=sg(t,.3,.55),c=ez(sg(t,.5,.95)),o='';
+ var iw=300*a; o+='<ellipse cx="'+(140+iw)+'" cy="270" rx="22" ry="80" fill="'+C.sid+'"/>'+R(140,190,iw,160,C.si)+'<ellipse cx="140" cy="270" rx="22" ry="80" fill="#a9bdd1"/>';
+ o+=T(170,170,'실리콘 잉곳',{c:C.mute,s:14,op:a});
+ if(b>0&&c<1){var sx=L(440,420,b);o+=Ln(sx,170,sx,370,C.pl,3,'opacity="'+(1-c)+'"');}
+ if(c>0){var cx=L(430,700,c),rx=L(18,130,c);o+='<ellipse cx="'+cx+'" cy="270" rx="'+rx+'" ry="'+L(80,130,c)+'" fill="#b7c8da" stroke="#dce6f0" stroke-width="2"/>';
+  if(c>.8){o+='<ellipse cx="'+cx+'" cy="270" rx="'+(rx*.7)+'" ry="'+(rx*.7)+'" fill="none" stroke="#ffffff" stroke-opacity=".25" stroke-width="2"/>';}
+  o+=T(cx,430,'웨이퍼 · 300mm · 약 775㎛',{a:'middle',s:15,w:600,op:c});}
+ return o;}];
+S.ox=['산화','F','고온에서 산소를 흘려 실리콘 표면에 얇은 산화막(SiO₂)을 길러 냅니다. 회로를 보호하고 절연하는 막입니다.','막 두께 균일도, 계면 결함.',function(t){
+ var h=2+18*ez(sg(t,.15,.9)),g=.25+.25*Math.sin(t*20),o='';
+ o+=R(X0-20,140,X1-X0+40,40,C.heat,'opacity="'+g*sg(t,0,.2)+'" rx="8"')+T(480,166,'고온 산화로 · O₂',{a:'middle',c:'#1a1006',w:600,op:sg(t,0,.2)});
+ o+=si()+R(X0,SY-h,X1-X0,h,C.ox)+T(X1+12,SY-h/2+5,'SiO₂',{c:C.ox,s:14,w:600})+T(X1+12,SY+60,'Si',{c:C.si,s:14,w:600});
+ for(var i=0;i<14;i++){var px=X0+30+i*42,py=200+((t*260+i*37)%90);o+=Ci(px,py,3,C.light,'opacity="'+(.6*sg(t,0,.85))+'"');}
+ return o;}];
+S.photo=['포토 (노광)','F','감광막(PR)을 바르고, 회로 무늬가 그려진 마스크 위로 빛을 쏘아 감광막에 패턴을 찍습니다.','초점·정렬 오차, 선폭 편차. 범핑·RDL 같은 후공정도 같은 원리를 씁니다.',function(t){
+ var o=si()+R(X0,SY-20,X1-X0,20,C.ox),p=sg(t,0,.25);
+ o+=R(X0,SY-38,(X1-X0)*ez(p),18,C.pr)+T(X1+12,SY-24,'감광막',{c:C.pr,s:13,w:600,op:p});
+ var m=ez(sg(t,.25,.45)),my=L(60,150,m);
+ if(m>0){o+=R(X0,my,X1-X0,14,C.mask,'opacity="'+m+'"')+R(420,my,120,14,C.bg,'opacity="'+m+'"')+T(X0,my-8,'마스크',{c:C.mute,s:13,op:m});}
+ var l=sg(t,.45,.75);
+ if(l>0){for(var i=0;i<7;i++){var x=428+i*17;o+=Ln(x,90,x,L(90,SY-38,l),C.light,3,'opacity=".85"');}}
+ var e=sg(t,.6,.9); o+=R(420,SY-38,120,18,C.prx,'opacity="'+e+'"');
+ if(e>.5)o+=T(480,SY-46,'빛 받은 부분',{a:'middle',c:C.prx,s:13,op:e});
+ return o;}];
+S.etch=['식각','F','빛 받은 감광막을 현상해 없애고, 드러난 산화막을 플라즈마로 깎아 패턴을 새깁니다. 남은 감광막은 벗겨 냅니다.','식각 깊이·측벽 각도, 과식각. TSV와 플라즈마 다이싱이 같은 원리입니다.',function(t){
+ var dv=sg(t,0,.2),et=ez(sg(t,.25,.7)),st=sg(t,.75,1),o=si();
+ o+=R(X0,SY-20,420-X0,20,C.ox)+R(540,SY-20,X1-540,20,C.ox)+R(420,SY-20+20*et,120,20-20*et,C.ox);
+ o+='<g opacity="'+(1-st)+'">'+R(X0,SY-38,420-X0,18,C.pr)+R(540,SY-38,X1-540,18,C.pr)+R(420,SY-38,120,18*(1-dv),C.prx)+'</g>';
+ if(t>.22&&t<.75){for(var i=0;i<18;i++){var px=425+rnd(i)*110,py=100+((t*500+i*29)%(SY-140));o+=Ci(px,py,3.5,C.pl,'opacity=".9"');}o+=T(480,90,'플라즈마',{a:'middle',c:C.pl,s:14,w:600});}
+ if(st>.5)o+=T(480,SY+140-150,'',{});
+ return o;}];
+S.dep=['이온주입 · 증착','F','먼저 불순물 이온을 가속해 실리콘 안에 박아 전기 특성(n형·p형)을 만들고, 그 위에 필요한 막을 고르게 쌓습니다(CVD·PVD·ALD).','이온주입: 양(도즈)과 깊이, 열처리로 손상 회복. 증착: 두께 균일도, 막 응력, 입자.',function(t){
+ var o=si()+R(X0,SY-20,420-X0,20,C.ox)+R(540,SY-20,X1-540,20,C.ox),im=sg(t,0,.45),dp=ez(sg(t,.5,.95));
+ if(t<.5){for(var i=0;i<6;i++){var x=432+i*20,y=L(80,SY-6,(im*3+i*.13)%1);o+=arrow(x,y-26,x,y,C.light);}o+=T(480,70,'이온 (B, P, As)',{a:'middle',c:C.light,s:14,w:600});}
+ var dn=Math.floor(im*40);for(var j=0;j<dn;j++)o+=Ci(426+rnd(j+3)*108,SY+6+rnd(j+50)*34,2.6,'#ff8fb3');
+ if(im>.4)o+=T(480,SY+70,'도핑 영역',{a:'middle',c:'#ff8fb3',s:13,w:600,op:im});
+ if(dp>0){o+=R(X0,SY-20-12*dp,420-X0,12*dp,'#7fc7d9')+R(420,SY-12*dp,120,12*dp,'#7fc7d9')+R(540,SY-20-12*dp,X1-540,12*dp,'#7fc7d9');
+  for(var k=0;k<16;k++){var px=X0+20+k*38,py=90+((t*380+k*23)%(SY-130));o+=Ci(px,py,3,'#7fc7d9','opacity="'+(1-dp)*.9+'"');}
+  o+=T(X1+12,SY-26,'증착막',{c:'#7fc7d9',s:13,w:600,op:dp});}
+ return o;}];
+S.tsv=['TSV 형성 (HBM)','F','트랜지스터를 만든 뒤 칩에 깊은 구멍을 뚫고, 절연막·장벽막을 입힌 다음 구리로 채웁니다. 나중에 위아래 칩을 직접 잇는 기둥이 됩니다.','구리 채움 보이드, 열처리 시 구리 돌출(CTE 차이), 주변 응력 → 회로 금지 구역.',function(t){
+ var o=si(SY-60,SH+60)+R(X0,SY-60,X1-X0,10,'#4c5f74'),d=ez(sg(t,0,.35)),ln=sg(t,.35,.5),cu=ez(sg(t,.55,.9)),top=SY-50,dep=140;
+ var xs=[300,480,660];
+ xs.forEach(function(x){o+=R(x-14,top,28,dep*d,C.bg);
+  if(ln>0)o+=R(x-14,top,28,dep*d,'none','stroke="'+C.ox+'" stroke-width="'+(4*ln)+'"');
+  if(cu>0)o+=R(x-11,top+dep-dep*cu,22,dep*cu,C.cu);});
+ if(t<.35)o+=T(480,top-20,'깊은 구멍 식각',{a:'middle',c:C.pl,s:14,w:600});
+ else if(t<.55)o+=T(480,top-20,'절연막(라이너) · 장벽막',{a:'middle',c:C.ox,s:14,w:600});
+ else o+=T(480,top-20,'구리 전기도금 → CMP',{a:'middle',c:C.cu,s:14,w:600});
+ return o;}];
+S.beol=['금속배선 (BEOL)','F','트랜지스터 위에 구리 배선을 여러 층 쌓아 서로 연결합니다. 층마다 절연막·식각·도금·CMP를 반복합니다.','배선층의 약한 Low-k 막은 나중에 다이싱·본딩 때 박리의 원인이 됩니다.',function(t,tr){
+ var o=si()+fe(),n=5;
+ if(tr==='hbm'){[300,480,660].forEach(function(x){o+=R(x-11,SY+10,22,SH-10,C.cu);});}
+ for(var i=0;i<n;i++){var p=sg(t,i/n,(i+.85)/n);if(p<=0)continue;var y=SY-(i+1)*26;
+  o+=R(X0,y,X1-X0,26*p,'#3a4a5c');
+  for(var k=0;k<6;k++){var x=X0+40+k*100+(i%2)*30;o+=R(x,y+6,60,8*p,C.cu)+R(x+26,y+14,8,12*p,C.cu);}
+  if(p<1){var px=L(X0,X1-80,p);o+=R(px,y-12,80,10,'#6b7a8c','rx="3"');}}
+ o+=T(X1+12,SY-60,'배선 여러 층',{c:C.cu,s:13,w:600,op:sg(t,.2,.4)});
+ return o;}];
+S.eds=['EDS 테스트','F','웨이퍼 상태로 칩마다 바늘(프로브)을 대고 전기 검사를 합니다. 양품·불량을 웨이퍼 맵으로 기록하고, 고칠 수 있는 칩은 수리합니다.','프로브 마크, 접촉 불량, 과검·미검. HBM은 쌓기 전 양품 칩(KGD) 확보가 핵심입니다.',function(t){
+ var o='',cx=420,cy=270,r=175,s=26,cells=[];
+ o+=Ci(cx,cy,r,'#2a3846');
+ for(var y=cy-r;y<cy+r;y+=s)for(var x=cx-r;x<cx+r;x+=s){var mx=x+s/2-cx,my=y+s/2-cy;if(mx*mx+my*my<(r-14)*(r-14))cells.push([x,y]);}
+ var nv=Math.floor(sg(t,.05,.92)*cells.length),g=0,b=0;
+ cells.forEach(function(c,i){var col=C.sid;if(i<nv){var bad=rnd(i)<.1;col=bad?C.bad:C.good;bad?b++:g++;}o+=R(c[0]+2,c[1]+2,s-4,s-4,col,'rx="2" opacity="'+(i<nv?.9:.7)+'"');});
+ if(nv<cells.length){var cc=cells[Math.min(nv,cells.length-1)];o+=R(cc[0]-6,cc[1]-30,s+12,22,'#d8dee6','rx="3"');for(var k=0;k<4;k++)o+=Ln(cc[0]+3+k*6,cc[1]-8,cc[0]+5+k*6,cc[1]+6,C.cu,1.5);}
+ o+=T(660,200,'프로브 카드로 칩마다 검사',{c:C.mute,s:14});
+ o+=Ci(672,240,8,C.good)+T(690,246,'양품 '+g,{s:15,w:600})+Ci(672,274,8,C.bad)+T(690,280,'불량 '+b,{s:15,w:600});
+ o+=T(660,330,'→ 웨이퍼 맵(BIN) 저장',{c:C.mute,s:14});
+ return o;}];
+
+/* ===== 일반 반도체 후공정 (와이어 본딩 BGA) ===== */
+S.bg=['백그라인딩','T','회로면을 테이프로 보호하고 뒤집어, 다이아몬드 휠로 뒷면을 갈아 얇게 만듭니다.','두께 편차(TTV), 휨, 크랙. 얇아질수록 웨이퍼를 옮기기도 어렵습니다.',function(t){
+ var th=L(100,36,ez(sg(t,.2,.9))),o='',by=360;
+ o+=R(X0-20,by+14,X1-X0+40,24,'#3a4654','rx="4"')+T(X0-20,by+60,'진공 척',{c:C.mute,s:13});
+ o+=R(X0,by,X1-X0,14,C.tape)+T(X1+12,by+12,'보호 테이프',{c:C.tape,s:13,w:600});
+ o+=R(X0,by-10,X1-X0,10,'#3a4a5c')+R(X0,by-10-th,X1-X0,th,C.si);
+ var wy=by-10-th-46,wx=L(X0,X1-200,(Math.sin(t*9)+1)/2);
+ o+=R(wx,wy,200,30,'#9aa6b4','rx="6"')+R(wx,wy+30,200,12,'#d7dde5');
+ for(var i=0;i<8;i++){var dx=wx+((t*900+i*25)%200);o+=Ln(dx,wy+4,dx,wy+26,'#6b7684',2);}
+ o+=T(wx+100,wy-10,'다이아몬드 휠',{a:'middle',c:C.mute,s:13});
+ o+=T(X1+12,by-10-th/2+5,Math.round(L(775,100,ez(sg(t,.2,.9))))+'㎛',{c:C.si,s:16,w:600});
+ return o;}];
+S.saw=['다이싱 (Saw)','T','칩 사이의 길(스크라이브 라인)을 따라 웨이퍼를 잘라 칩을 하나씩 분리합니다.','치핑, 크랙, 칩 플라잉. 얇고 작은 칩은 레이저·스텔스·플라즈마 다이싱을 씁니다.',function(t){
+ var o='',x0=250,y0=110,n=8,s=46,h=sg(t,0,.45),v=sg(t,.45,.9);
+ o+=Ci(x0+n*s/2,y0+n*s/2,n*s/2+40,'#2a3846')+R(x0-50,y0-50,n*s+100,n*s+100,'none','stroke="'+C.tape+'" stroke-width="4" rx="20"');
+ for(var i=0;i<n;i++)for(var j=0;j<n;j++){var cx=x0+j*s,cy=y0+i*s,dx=(j-n/2+.5)*4*sg(t,.9,1),dy=(i-n/2+.5)*4*sg(t,.9,1);o+=R(cx+3+dx,cy+3+dy,s-6,s-6,C.si,'rx="2"');}
+ var hn=Math.floor(h*(n+1)),vn=Math.floor(v*(n+1));
+ for(var a=0;a<hn;a++)o+=Ln(x0-20,y0+a*s,x0+n*s+20,y0+a*s,C.bg,4);
+ for(var b2=0;b2<vn;b2++)o+=Ln(x0+b2*s,y0-20,x0+b2*s,y0+n*s+20,C.bg,4);
+ if(t<.45){var yy=y0+h*(n)*s;o+=Ci(x0+n*s+30,yy,18,'#cfd6de')+Ln(x0-20,yy,x0+n*s+20,yy,C.pl,2,'opacity=".7"');}
+ else if(t<.9){var xx=x0+v*n*s;o+=Ci(xx,y0+n*s+30,18,'#cfd6de')+Ln(xx,y0-20,xx,y0+n*s+20,C.pl,2,'opacity=".7"');}
+ o+=T(720,200,'블레이드 회전·절단',{c:C.mute,s:14})+T(720,230,'+ 물로 냉각·세정',{c:C.mute,s:14});
+ return o;}];
+S.da=['다이 어태치','T','테이프 아래에서 핀이 칩을 밀어 올리면, 흡착 노즐(콜렛)이 칩을 집어 기판 위 정해진 자리에 접착 필름으로 붙입니다.','정렬 오차, 기울기, 접착층 보이드, 얇은 칩의 픽업 크랙.',function(t){
+ var o='';o+=R(110,330,300,12,C.tape)+T(110,370,'다이싱 테이프',{c:C.tape,s:13});
+ for(var i=0;i<4;i++){if(i===1)continue;o+=R(120+i*72,306,60,24,C.si);}
+ o+=R(560,330,300,22,C.sub)+T(560,380,'기판 (서브스트레이트)',{c:C.sub,s:13,w:600});
+ var p=ez(sg(t,0,.25)),lift=ez(sg(t,.3,.4)),mv=ez(sg(t,.4,.7)),dn=ez(sg(t,.7,.85)),up=ez(sg(t,.88,1));
+ var dieTop=306-14*p,x=222,bot;
+ o+=R(200,342-14*p,14,14*p+2,'#d8dee6');
+ if(t<.3){bot=L(200,dieTop,p);o+=R(x-30,dieTop,60,24,C.si);}
+ else if(t<.4){bot=L(dieTop,200,lift);}
+ else if(t<.7){bot=200;x=L(222,710,mv);}
+ else if(t<.88){bot=L(200,306,dn);x=710;}
+ else {bot=L(306,200,up);x=710;}
+ if(t>=.3&&t<.88)o+=R(x-30,bot,60,24,C.si);
+ if(t>=.85)o+=R(680,306,60,24,C.si)+R(680,328,60,3,C.ox);
+ o+=R(x-14,bot-60,28,60,'#9aa6b4','rx="4"')+R(x-22,bot-6,44,6,'#cfd6de');
+ o+=T(x,bot-70,'콜렛 (진공 흡착)',{a:'middle',c:C.mute,s:13});
+ o+=T(205,290-14*p,'',{});
+ return o;}];
+S.wb=['와이어 본딩','T','캐필러리가 금·구리선 끝에 볼을 만들어 칩 패드에 붙이고(볼 본드), 기판 단자까지 끌고 가서 눌러 붙입니다(스티치 본드).','볼 리프트, 넥 크랙, 루프 높이, 캐필러리 마모. 고속 신호에는 인덕턴스가 커서 불리합니다.',function(t){
+ var o='',sy=360;o+=R(140,sy,680,24,C.sub);
+ for(var i=0;i<4;i++)o+=R([175,265,665,755][i],sy-4,30,4,C.cu);
+ o+=R(330,sy-50,300,50,C.si);
+ var pads=[345,385,575,615];pads.forEach(function(x){o+=R(x-8,sy-54,16,4,C.cu);});
+ var fs=[190,280,680,770],n=4;
+ for(var k=0;k<n;k++){var p=sg(t,k/n,(k+.9)/n);if(p<=0)continue;var x1=pads[k],y1=sy-54,x2=fs[k],y2=sy-4,cxp=(x1+x2)/2,cyp=y1-90;
+  var d='M'+x1+' '+y1+' Q'+cxp+' '+cyp+' '+x2+' '+y2;o+='<path d="'+d+'" fill="none" stroke="'+C.cu+'" stroke-width="2.5" pathLength="100" stroke-dasharray="'+(100*p)+' 100"/>'+Ci(x1,y1-2,4,C.cu);
+  if(p<1){var u=p,qx=(1-u)*(1-u)*x1+2*(1-u)*u*cxp+u*u*x2,qy=(1-u)*(1-u)*y1+2*(1-u)*u*cyp+u*u*y2;o+='<path d="M'+(qx-10)+' '+(qy-40)+' L'+(qx+10)+' '+(qy-40)+' L'+(qx+3)+' '+qy+' L'+(qx-3)+' '+qy+'Z" fill="#cfd6de"/>';}}
+ o+=T(480,150,'캐필러리로 한 가닥씩 (1초에 수십 개)',{a:'middle',c:C.mute,s:14});
+ return o;}];
+S.mold=['몰드','T','금형을 닫고 녹인 에폭시 수지(EMC)를 흘려 넣어 칩과 와이어를 감싸 굳힙니다. 이후 오븐에서 완전히 경화합니다.','휨(CTE 차이·경화 수축), 보이드, 와이어 스위핑, 박리.',function(t){
+ var o='',sy=360,c=ez(sg(t,0,.25)),f=ez(sg(t,.3,.85)),up=ez(sg(t,.88,1));
+ o+=R(140,sy,680,24,C.sub)+R(330,sy-50,300,50,C.si);
+ [[345,190],[385,280],[575,680],[615,770]].forEach(function(p){o+='<path d="M'+p[0]+' '+(sy-54)+' Q'+((p[0]+p[1])/2)+' '+(sy-144)+' '+p[1]+' '+(sy-4)+'" fill="none" stroke="'+C.cu+'" stroke-width="2.5"/>';});
+ o+=R(160,sy-130,640*f,130,C.emc,'opacity=".96"');
+ var my=L(120,sy-150,c)-up*60;o+=R(130,my,700,20,'#5b6676','rx="4"')+T(480,my-10,'금형',{a:'middle',c:C.mute,s:13});
+ if(t>.3&&t<.86){o+=arrow(100,sy-70,150,sy-70,C.cu)+T(60,sy-84,'EMC 주입',{c:C.cu,s:13,w:600});}
+ if(up>0)o+=R(160,sy-130,640,130,'none','stroke="'+C.emcs+'" stroke-width="2"');
+ return o;}];
+S.mark=['마킹','T','레이저로 패키지 윗면에 제품명·로트·날짜를 새깁니다. 제품 추적의 출발점입니다.','각인 깊이 부족, 판독 불가, 위치 틀어짐 → 비전(OCR) 검사.',function(t){
+ var o='',w=ez(sg(t,.1,.85));o+=R(260,170,440,200,C.emc,'rx="8" stroke="'+C.emcs+'" stroke-width="2"');
+ o+='<clipPath id="mk"><rect x="300" y="200" width="'+(360*w)+'" height="140"/></clipPath>';
+ o+='<g clip-path="url(#mk)">'+T(480,262,'SAMPLE',{a:'middle',c:'#c9d2dc',s:46,w:700})+T(480,312,'2611 · LOT 0042',{a:'middle',c:'#9aa6b4',s:20})+'</g>';
+ if(t>.1&&t<.85){var lx=300+360*w;o+=Ln(lx,40,lx,270,C.pl,3)+Ci(lx,270,6,'#ffd2c4');}
+ o+=T(480,410,'레이저 각인',{a:'middle',c:C.mute,s:14});
+ return o;}];
+S.sba=['솔더볼 부착','T','패키지 바닥 단자에 플럭스를 찍고 솔더볼을 올린 뒤, 리플로우로 녹여 붙입니다. 이 볼이 완성품의 다리입니다.','볼 빠짐, 브리지, 볼 높이 불균일(동평면도), 플럭스 잔류물.',function(t){
+ var o='',py=200;o+=R(180,py,600,90,C.emc,'stroke="'+C.emcs+'" stroke-width="2"')+R(180,py+90,600,20,C.sub);
+ var n=10,dp=sg(t,.15,.6),rf=sg(t,.62,.85);
+ for(var i=0;i<n;i++){var x=210+i*60,fy=py+110;o+=R(x-10,fy,20,3,'#e7d39a','opacity="'+sg(t,0,.15)+'"');
+  var tt=cl(dp*1.6-i*.06,0,1),y=L(60,fy+12,ez(tt));if(tt>0)o+=Ci(x,y,L(11,12,rf),C.sol,rf>0?'stroke="#ffffff" stroke-opacity="'+(.4*rf)+'"':'');}
+ if(rf>0&&rf<1)o+=R(170,py+100,620,50,C.heat,'opacity="'+(.25*Math.sin(rf*Math.PI))+'"');
+ o+=T(480,400,t<.62?'플럭스 → 볼 올리기':'리플로우 (약 240~250℃)',{a:'middle',c:C.mute,s:14});
+ return o;}];
+S.sing=['싱귤레이션','T','여러 패키지가 붙어 있는 스트립을 몰드와 기판째 잘라 낱개 패키지로 나눕니다.','모서리 칩핑, 구리 버, 가장자리 박리, 치수 편차.',function(t){
+ var o='',n=6,w=110,x0=150,y0=180,c=sg(t,0,.6),sp=ez(sg(t,.65,1));
+ if(sp<1)o+=R(x0-20,y0-30,n*w+40,200,C.sub,'opacity="'+(1-sp)+'"');
+ for(var i=0;i<n;i++){var dx=(i-(n-1)/2)*24*sp,dy=(i%2?1:-1)*14*sp;o+=R(x0+i*w+6+dx,y0+6+dy,w-12,128,C.emc,'stroke="'+C.emcs+'" stroke-width="2" rx="4"');}
+ var cn=Math.floor(c*(n-1+.999));
+ for(var k=1;k<=cn&&sp<.1;k++)o+=Ln(x0+k*w,y0-30,x0+k*w,y0+170,C.pl,3);
+ if(c<1&&c>0){var bx=x0+(cn+1)*w;o+=Ci(bx,y0-46,18,'#cfd6de');}
+ o+=T(480,410,sp>0?'낱개 패키지 → 세정·검사 → 트레이':'스트립 절단',{a:'middle',c:C.mute,s:14});
+ return o;}];
+S.ftest=['패키지 테스트 · 번인','T','핸들러가 패키지를 소켓에 꽂고, 테스터(ATE)가 전압·온도를 바꿔 가며 기능과 속도를 검사합니다. 번인으로 초기 불량을 걸러냅니다.','소켓 접촉 불량(재테스트하면 양품 = 과검), 테스트 시간·비용, 핸들러 잼.',function(t){
+ var o='',k=Math.floor(sg(t,.05,.95)*10);
+ o+=R(120,120,300,240,'#1c2836','rx="10" stroke="#2f4054"')+T(140,150,'테스터 (ATE)',{c:C.mute,s:13});
+ for(var i=0;i<k;i++){var bad=i===6;o+=T(140,180+i*18,'#'+String(i+1).padStart(2,'0')+'  '+(bad?'FAIL  BIN7':'PASS  BIN1'),{c:bad?C.bad:C.good,s:13,w:600});}
+ var px=L(520,700,(Math.sin(t*14)+1)/2);o+=R(480,320,320,14,'#3a4654','rx="3"')+R(620,300,60,20,'#2f6e4b','rx="2"')+T(650,360,'소켓',{a:'middle',c:C.mute,s:13});
+ o+=R(px-6,120,12,140,'#9aa6b4')+R(px-30,260,60,30,C.emc,'stroke="'+C.emcs+'" stroke-width="2"')+T(px,110,'핸들러',{a:'middle',c:C.mute,s:13});
+ return o;}];
+S.done=['완성 · 출하','T','검사를 통과한 패키지는 트레이·릴에 담겨 출하되고, 고객사 보드에 실장되어 스마트폰·PC·서버에 들어갑니다.','고객 실장 리플로우에서의 휨·팝콘 크랙을 막기 위해 흡습 관리(MSL)와 포장이 중요합니다.',function(t){
+ var o='',a=ez(sg(t,0,.5));o+=R(230,150,500,240,'#1f5a3d','rx="14"');
+ for(var i=0;i<6;i++)o+=R(260+i*72,330,40,22,'#3a4654','rx="3"');
+ o+=R(310,190,140,90,C.emc,'stroke="'+C.emcs+'" stroke-width="2" rx="4" opacity="'+a+'"')+T(380,242,'메모리',{a:'middle',c:'#c9d2dc',s:15,w:600,op:a});
+ o+=R(500,200,160,110,'#2a2f37','rx="4" stroke="#6b7686" stroke-width="2"')+T(580,262,'AP · CPU',{a:'middle',c:'#c9d2dc',s:15,w:600});
+ o+=T(480,430,'메인보드 PCB에 실장 → 스마트폰·PC·서버',{a:'middle',c:C.mute,s:15,op:sg(t,.4,.8)});
+ return o;}];
+
+/* ===== HBM 후공정 ===== */
+function tsvblock(o,top,h,carrier){return o;}
+S.bump=['앞면 범프 (HBM)','T','두꺼운 웨이퍼 상태에서 칩 앞면 패드 위에 구리 기둥과 솔더로 된 마이크로범프를 도금으로 세웁니다.','범프 높이 편차, 빠짐, 브리지. 높이가 조금만 달라도 적층 때 접합 불량이 납니다.',function(t){
+ var o=si()+fe(),g=ez(sg(t,.15,.75)),cap=ez(sg(t,.75,.95));[300,480,660].forEach(function(x){o+=R(x-11,SY+10,22,SH-10,C.cu);});
+ o+=R(X0,SY-40,X1-X0,40,'#3a4a5c');
+ [300,480,660].forEach(function(x){o+=R(x-16,SY-40-34*g,32,34*g,C.cu)+R(x-16,SY-40-34*g-12*cap,32,12*cap,C.sol);});
+ o+=T(480,SY-110,t<.75?'구리 기둥 도금':'솔더 캡',{a:'middle',c:t<.75?C.cu:C.sol,s:14,w:600});
+ return o;}];
+S.thin=['캐리어 접합 · 박막화 · TSV 노출','T','웨이퍼를 뒤집어 임시 캐리어(유리판)에 붙이고, 뒷면을 수십 ㎛까지 갈아 낸 뒤 실리콘만 살짝 식각해 TSV 구리 끝을 드러냅니다.','접착층 두께 편차 → 연삭 두께 편차 → TSV 노출 높이 불균일. 얇은 웨이퍼의 휨·크랙.',function(t){
+ var o='',cb=sg(t,0,.25),gr=ez(sg(t,.3,.75)),rv=ez(sg(t,.78,1)),by=400;
+ o+=R(X0-20,by,X1-X0+40,26,C.glass,'opacity="'+cb+'"')+T(X1+24,by+18,'유리 캐리어',{c:C.glass,s:13,op:cb});
+ o+=R(X0,by-14,X1-X0,14,C.pr,'opacity="'+cb+'"')+R(X0,by-50,X1-X0,36,'#3a4a5c');
+ [300,480,660].forEach(function(x){o+=R(x-16,by-14,32,14,C.cu);});
+ var sth=L(150,70,gr)-12*rv,top=by-50-sth;o+=R(X0,top,X1-X0,sth,C.si);
+ [300,480,660].forEach(function(x){var h=110;o+=R(x-11,by-50-h-12*rv,22,h+12*rv,C.cu);});
+ if(rv>.5)o+=R(X0,top-4,X1-X0,4,'#7cc0a0');
+ if(t>.3&&t<.75){var wy=top-40,wx=L(X0,X1-200,(Math.sin(t*12)+1)/2);o+=R(wx,wy,200,26,'#9aa6b4','rx="6"');}
+ o+=T(480,90,t<.3?'뒤집어 캐리어에 접합':(t<.78?'백그라인딩 → 수십 ㎛':'TSV 노출 (구리 끝이 솟음)'),{a:'middle',c:C.ink,s:16,w:600});
+ return o;}];
+S.debond=['뒷면 패드 · 분리 · 다이싱','T','드러난 TSV 끝에 뒷면 패드를 만들고, 캐리어를 떼어 낸 뒤 칩 단위로 자릅니다. 이제 위아래로 연결할 수 있는 코어 다이가 됩니다.','캐리어를 떼는 순간의 크랙, 접착제 잔류물, 다이싱 입자.',function(t){
+ var o='',pd=sg(t,0,.35),db=ez(sg(t,.4,.7)),dc=ez(sg(t,.72,1)),by=300;
+ o+=R(X0-20,by+100+60*db,X1-X0+40,26,C.glass,'opacity="'+(1-db)+'"');
+ var parts=3,w=(X1-X0)/parts;
+ for(var i=0;i<parts;i++){var dx=(i-1)*30*dc,x=X0+i*w+dx;
+  o+=R(x,by,w,60,C.si)+R(x,by+60,w,20,'#3a4a5c');var cx=x+w/2;
+  o+=R(cx-11,by,22,60,C.cu)+R(cx-16,by+80,32,12,C.cu)+R(cx-16,by+92,32,8,C.sol)+R(cx-20,by-10*pd,40,10*pd,C.ox);}
+ o+=T(480,180,t<.4?'뒷면 패드':(t<.72?'캐리어 분리':'칩 단위 절단 → 코어 다이'),{a:'middle',c:C.ink,s:16,w:600});
+ return o;}];
+S.cow=['CoW 적층 (TC-NCF)','T','베이스(로직) 다이 웨이퍼 위에 코어 DRAM 다이를 한 층씩 올리고, 비전도성 필름(NCF)을 사이에 둔 채 열과 압력으로 눌러 붙입니다. 12층을 반복합니다.','층마다 반복 가열 → 생산성(UPH), 위층 누적 휨·정렬 오차, NCF 보이드. 차세대는 하이브리드 본딩.',function(t){
+ var o='',by=410,n=Math.min(12,Math.floor(sg(t,.05,.95)*12.99)),lh=20;
+ o+=R(120,by,720,22,C.si)+T(130,by+36,'베이스 다이 웨이퍼 (로직)',{c:C.mute,s:13});
+ var stacks=[250,480,710];
+ stacks.forEach(function(sx){o+=R(sx-70,by-6,140,6,C.cu);
+  for(var i=0;i<n;i++){var y=by-6-(i+1)*lh;o+=R(sx-70,y,140,lh-4,C.si)+R(sx-70,y+lh-4,140,4,'#9f8ce0');}
+  for(var k=0;k<3;k++)o+=R(sx-46+k*40,by-6-n*lh,4,n*lh,C.cu,'opacity=".9"');});
+ var ph=(sg(t,.05,.95)*12.99)%1,sx2=stacks[1],ty=by-6-(n+1)*lh;
+ if(n<12){var hy=L(ty-120,ty,ez(Math.min(1,ph*2)));o+=R(sx2-80,hy-40,160,34,'#5b6676','rx="5"')+T(sx2,hy-18,'TC 본더',{a:'middle',c:C.ink,s:13,w:600});
+  o+=R(sx2-70,hy-6,140,lh-4,C.si);if(ph>.5)o+=R(sx2-90,hy-50,180,lh+60,C.heat,'opacity="'+(.18*Math.sin((ph-.5)*2*Math.PI))+'" rx="8"');}
+ o+=T(880,140,n+'/12',{a:'end',c:C.cu,s:28,w:700})+T(880,166,'단',{a:'end',c:C.mute,s:13});
+ return o;}];
+S.hmold=['몰드 · 연삭 · 스택 절단','T','쌓은 스택들을 몰드로 감싸고, 윗면을 갈아 높이 규격을 맞춘 뒤, 스택 단위로 잘라 HBM 하나하나를 만듭니다.','높이 규격(JEDEC), 좁은 틈 충전 보이드, 스택 휨.',function(t){
+ var o='',by=410,lh=20,f=ez(sg(t,0,.35)),gr=ez(sg(t,.38,.6)),ct=ez(sg(t,.65,1));
+ var stacks=[250,480,710];
+ stacks.forEach(function(sx,i){var dx=(i-1)*40*ct;
+  o+=R(sx-70+dx,by,140,22,C.si);
+  for(var k=0;k<12;k++){var y=by-6-(k+1)*lh;o+=R(sx-70+dx,y,140,lh-4,C.si)+R(sx-70+dx,y+lh-4,140,4,'#9f8ce0');}
+  if(ct>0)o+=R(sx-110+dx,by-6-12*lh-8+10*gr,220,12*lh+14-10*gr,C.emc,'opacity=".55" stroke="'+C.emcs+'"');});
+ if(ct===0)o+=R(120,L(by,by-6-12*lh-8,f)+10*gr,720,(by-L(by,by-6-12*lh-8,f))-10*gr,C.emc,'opacity=".55"');
+ if(t>.38&&t<.6){var wx=L(120,640,(Math.sin(t*20)+1)/2);o+=R(wx,by-6-12*lh-40,200,26,'#9aa6b4','rx="6"');}
+ o+=T(480,90,t<.38?'몰드로 감싸기':(t<.65?'윗면 연삭 → 높이 맞춤':'스택 단위 절단 → HBM'),{a:'middle',c:C.ink,s:16,w:600});
+ return o;}];
+S.htest=['HBM 테스트','T','완성된 HBM 스택을 고속·고온 조건에서 검사합니다. 쌓은 뒤에는 칩 하나만 고칠 수 없어서, 앞 단계의 KGD와 중간 테스트가 수율을 좌우합니다.','곱셈 수율: 칩당 99%라도 12단이면 약 88.6%. 테스트 시간·비용, 접촉 불량.',function(t){
+ var o='',k=Math.floor(sg(t,.1,.9)*12);
+ o+=R(380,140,200,260,'#2a3038','rx="6"');for(var i=0;i<12;i++){var y=370-i*20;o+=R(395,y,170,16,i<k?'#3f8f63':C.si,'rx="2"');}
+ o+=T(480,125,'HBM 스택',{a:'middle',c:C.mute,s:13});
+ o+=T(640,220,'층별 검사',{c:C.mute,s:14})+T(640,252,k+'/12 통과',{c:C.good,s:22,w:700});
+ o+=T(640,300,'0.99¹² ≈ 88.6%',{c:C.cu,s:16,w:600,op:sg(t,.6,.9)});
+ return o;}];
+S.integ=['2.5D 통합 · AI 가속기','T','패키지 기판 위 실리콘 인터포저에 GPU를 올리고, 그 옆에 HBM 스택들을 나란히 붙입니다. 인터포저 안의 수천 개 배선이 HBM과 GPU를 잇습니다.','대형 인터포저의 휨, 범프 접합, 방열. 삼성 2.5D Cube-S(구 I-Cube) 계열.',function(t){
+ var o='',ip=ez(sg(t,0,.2)),gp=ez(sg(t,.2,.4)),hb=sg(t,.4,.75),fl=sg(t,.78,1),by=400;
+ o+=R(120,by,720,30,C.sub)+T(130,by+44,'패키지 기판 · 그 위 하늘색 = 실리콘 인터포저',{c:C.sub,s:13,w:600});
+ o+=R(150,by-20,660,20,C.glass,'opacity="'+ip+'"');
+ var gy=L(120,by-120,gp);o+=R(380,gy,200,100,'#2a2f37','stroke="#6b7686" stroke-width="2" rx="6" opacity="'+gp+'"')+T(480,gy+56,'GPU',{a:'middle',c:'#c9d2dc',s:20,w:700,op:gp});
+ var hx=[190,280,620,710];
+ hx.forEach(function(x,i){var p=ez(cl(hb*4-i,0,1));if(p<=0)return;var y=L(80,by-160,p);
+  for(var k=0;k<8;k++)o+=R(x,y+k*18,70,15,C.si);o+=R(x,y+144,70,16,C.cu);});
+ if(fl>0){for(var j=0;j<6;j++){var yy=by-12-j*0;o+='<line x1="'+(hx[1]+70)+'" y1="'+(by-12)+'" x2="380" y2="'+(by-12)+'" stroke="'+C.cu+'" stroke-width="3" stroke-dasharray="6 8" stroke-dashoffset="'+(-t*200)+'"/>';o+='<line x1="580" y1="'+(by-12)+'" x2="'+hx[2]+'" y2="'+(by-12)+'" stroke="'+C.cu+'" stroke-width="3" stroke-dasharray="6 8" stroke-dashoffset="'+(t*200)+'"/>';}
+  o+=T(480,90,'HBM ⇄ GPU 초고대역폭 연결',{a:'middle',c:C.cu,s:18,w:700,op:fl});}
+ return o;}];
+S.next=['다음 단계: zHBM','T','삼성이 개발 중인 zHBM은 HBM을 GPU 옆이 아니라 위에 직접 쌓습니다. 웨이퍼 적층과 하이브리드 구리 본딩으로 경로를 최소화합니다.','AI 칩의 열이 메모리 스택을 통과해야 하는 열 관리, 고객 칩과의 공동 설계.',function(t){
+ var o='',mv=ez(sg(t,.15,.7)),ht=sg(t,.72,1),by=400;
+ o+=R(120,by,720,30,C.sub)+R(330,by-90,300,90,'#2a2f37','stroke="#6b7686" stroke-width="2" rx="6"')+T(480,by-38,'AI 칩',{a:'middle',c:'#c9d2dc',s:20,w:700});
+ var x=L(160,370,mv),y=L(by-160,by-90-150,mv);
+ for(var k=0;k<6;k++)o+=R(x,y+k*24,220,20,C.si);
+ for(var c2=0;c2<6;c2++)o+=R(x+20+c2*36,y,3,150,C.cu);
+ if(ht>0){o+=arrow(480,by-100,480,by-260-30*ht,C.heat)+T(560,by-200,'열이 메모리를 지나 위로',{c:C.heat,s:15,w:600,op:ht});}
+ o+=T(480,90,'옆(2.5D) → 위(3D)',{a:'middle',c:C.ink,s:18,w:700});
+ return o;}];
+
+var TR={
+ gen:{name:'일반 반도체',scenes:['wafer','ox','photo','etch','dep','beol','eds','bg','saw','da','wb','mold','mark','sba','sing','ftest','done']},
+ hbm:{name:'HBM',scenes:['wafer','ox','photo','etch','dep','tsv','beol','eds','bump','thin','debond','cow','hmold','htest','integ','next']}
+};
+var DUR=6000,track='gen',idx=0,tIn=0,playing=false,last=0,speed=1;
+var sv=document.getElementById('sv'),desc=document.getElementById('desc'),point=document.getElementById('point'),bar=document.getElementById('bar'),time=document.getElementById('time'),list=document.getElementById('list'),playB=document.getElementById('play');
+function wrap(s,n){var out=[],cur='';s.split(' ').forEach(function(w){if((cur+' '+w).trim().length>n){out.push(cur.trim());cur=w;}else cur+=' '+w;});if(cur.trim())out.push(cur.trim());return out;}
+function fmt(ms){var s=Math.round(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function render(){
+ var tr=TR[track],key=tr.scenes[idx],sc=S[key],t=cl(tIn/DUR,0,1),phase=sc[1]==='F';
+ var o='<rect width="960" height="540" fill="'+C.bg+'"/>';
+ for(var gx=0;gx<960;gx+=40)o+=Ln(gx,56,gx,452,C.grid,1);
+ o+=R(0,0,960,56,'#0d141c');
+ o+=R(20,16,phase?118:118,26,phase?'#24364a':C.cu,'rx="13"')+T(79,34,phase?'전공정 FAB':'후공정 TSP',{a:'middle',c:phase?'#bcd3ea':'#1a1006',s:13,w:700});
+ o+=T(156,35,sc[0],{s:19,w:700});
+ o+=T(940,35,tr.name+' · '+(idx+1)+' / '+tr.scenes.length,{a:'end',c:C.mute,s:14});
+ o+='<g>'+sc[4](t,track)+'</g>';
+ o+=R(0,452,960,88,'#0d141c');
+ wrap(sc[2],58).slice(0,3).forEach(function(l,i){o+=T(24,478+i*24,l,{s:15,c:'#d5dde7'});});
+ o+=R(0,537,960*((idx+t)/tr.scenes.length),3,C.cu);
+ sv.innerHTML=o;
+ desc.textContent=sc[2];point.textContent=sc[3];
+ var total=tr.scenes.length*DUR,el=idx*DUR+tIn;bar.style.width=(100*el/total)+'%';time.textContent=fmt(el)+' / '+fmt(total);
+ [].forEach.call(list.children,function(b,i){b.classList.toggle('on',i===idx);});
+}
+function buildList(){list.innerHTML='';TR[track].scenes.forEach(function(k,i){var b=document.createElement('button');b.type='button';b.textContent=(i+1)+'. '+S[k][0];if(S[k][1]==='F')b.className='fab';b.addEventListener('click',function(){idx=i;tIn=0;render();});list.appendChild(b);});}
+function setTrack(k){track=k;idx=0;tIn=0;document.getElementById('tg').classList.toggle('on',k==='gen');document.getElementById('th').classList.toggle('on',k==='hbm');buildList();render();}
+function loop(ts){if(!playing)return;var dt=last?ts-last:16;last=ts;tIn+=dt*speed;if(tIn>=DUR){if(idx<TR[track].scenes.length-1){idx++;tIn=0;}else{tIn=DUR;setPlay(false);}}render();requestAnimationFrame(loop);}
+function setPlay(p){playing=p;playB.textContent=p?'일시정지':'재생';if(p){last=0;if(idx===TR[track].scenes.length-1&&tIn>=DUR){idx=0;tIn=0;}requestAnimationFrame(loop);}}
+playB.addEventListener('click',function(){setPlay(!playing);});
+document.getElementById('prev').addEventListener('click',function(){idx=Math.max(0,idx-1);tIn=0;render();});
+document.getElementById('next').addEventListener('click',function(){idx=Math.min(TR[track].scenes.length-1,idx+1);tIn=0;render();});
+document.getElementById('spd').addEventListener('change',function(e){speed=parseFloat(e.target.value)||1;});
+document.getElementById('tg').addEventListener('click',function(){setTrack('gen');});
+document.getElementById('th').addEventListener('click',function(){setTrack('hbm');});
+window.__movie={show:function(k,i,f){setPlay(false);setTrack(k);idx=i;tIn=DUR*f;render();},setTrack:setTrack,play:function(){idx=0;tIn=0;setPlay(true);},total:function(){return TR[track].scenes.length*DUR;}};
+if(location.hash==='#record')document.body.classList.add('rec');
+setTrack('gen');
+tIn=DUR*0.6;render();tIn=0;
+var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(!reduce&&location.hash!=='#record')setPlay(true);
+})();
+</script>
