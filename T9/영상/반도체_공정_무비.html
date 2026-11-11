@@ -51,7 +51,7 @@ body.rec .stage{border:0;border-radius:0}
 <div class="wrap">
 <header>
   <div><h1>반도체 공정 무비</h1><p class="sub">웨이퍼 한 장이 일반 반도체 패키지, 또는 HBM이 되어 AI 가속기에 들어가기까지. 트랜지스터와 하이브리드 본딩은 확대해서 따로 봅니다.</p></div>
-  <div class="tracks" role="tablist" aria-label="트랙 선택"><button type="button" data-k="gen" class="on" role="tab">일반 반도체</button><button type="button" data-k="hbm" role="tab">HBM</button><button type="button" data-k="tr" role="tab">트랜지스터</button><button type="button" data-k="hb" role="tab">하이브리드 본딩</button></div>
+  <div class="tracks" role="tablist" aria-label="트랙 선택"><button type="button" data-k="gen" class="on" role="tab">일반 반도체</button><button type="button" data-k="hbm" role="tab">HBM</button><button type="button" data-k="cyc" role="tab">층 쌓기 사이클</button><button type="button" data-k="tr" role="tab">트랜지스터</button><button type="button" data-k="hb" role="tab">하이브리드 본딩</button></div>
   <div class="tracks deep" role="tablist" aria-label="심화 트랙"><span class="dl">심화</span><button type="button" data-k="dthin" role="tab">박막화</button><button type="button" data-k="ddice" role="tab">다이싱</button><button type="button" data-k="dcow" role="tab">CoW 적층</button><button type="button" data-k="dwarp" role="tab">리플로우·휨</button><button type="button" data-k="dmold" role="tab">몰드</button><button type="button" data-k="dtest" role="tab">테스트</button><button type="button" data-k="dheat" role="tab">방열</button><button type="button" data-k="dfa" role="tab">불량 분석</button><button type="button" data-k="dall" role="tab">심화 전체</button></div>
 </header>
 <div class="stage"><svg id="sv" viewBox="0 0 960 540" role="img" aria-label="반도체 공정 애니메이션"></svg></div>
@@ -781,8 +781,90 @@ S.i5=['최신: 자동 검사 · 공정 간 데이터 연결','T','검사 이미�
  o+=T(480,130,'칩 단위 데이터 추적 + 비전 자동 판정',{a:'middle',s:16,w:700,c:C.cu});
  return o;},'최신'];
 
+/* ===================== 층 쌓기 사이클 트랙 ===================== */
+var CY_STEPS=['① 증착','② 감광액','③ 노광','④ 현상','⑤ 식각','⑥ 제거'];
+function cycBar(k){var o='';CY_STEPS.forEach(function(s,i){var x=150+i*112,on=i===k,done=k>i;
+ o+=R(x,66,100,28,on?C.cu:(done?'#2c4a3a':'#16212d'),'rx="14" stroke="'+(on?C.cu:'#2f4054')+'"')+T(x+50,85,s,{a:'middle',s:13,w:on?700:500,c:on?'#1a1006':(done?'#9fd3b4':C.mute)});
+ if(i<5)o+=Ln(x+100,80,x+112,80,'#2f4054',2);});return o;}
+var CX0=180,CX1=780,CSY=330,OP=[[330,410],[550,630]];
+function inOp(x){return OP.some(function(p){return x>=p[0]&&x<p[1];});}
+function cyBase(){return R(CX0,CSY,CX1-CX0,80,C.si)+T(CX1+10,CSY+44,'실리콘',{c:C.si,s:13,w:600});}
+function cyFilm(h,cut){var o='';if(!cut)return R(CX0,CSY-h,CX1-CX0,h,C.ox);
+ var xs=[CX0].concat([].concat.apply([],OP)).concat([CX1]);for(var i=0;i<xs.length-1;i+=2)o+=R(xs[i],CSY-h,xs[i+1]-xs[i],h,C.ox);
+ OP.forEach(function(p){o+=R(p[0],CSY-h*(1-cut),p[1]-p[0],h*(1-cut),C.ox);});return o;}
+function cyPR(y,h,expo,dev){var o='',xs=[CX0].concat([].concat.apply([],OP)).concat([CX1]);
+ for(var i=0;i<xs.length-1;i+=2)o+=R(xs[i],y,xs[i+1]-xs[i],h,C.pr);
+ OP.forEach(function(p){var hh=h*(1-(dev||0));o+=R(p[0],y+(h-hh),p[1]-p[0],hh,expo?C.prx:C.pr);});return o;}
+function lbl(x,y,s,c){return T(x,y,s,{c:c||C.ink,s:13,w:600});}
+S.k1=['한 층을 만드는 6단계','F','반도체는 이 6단계를 한 세트로 수십 번 반복해 층을 쌓습니다. 감광액은 원하는 곳만 깎으려고 잠깐 덮는 임시 가림막이고, 매번 벗겨냅니다.','포인트: 감광액 = 스텐실. 깎는 대신 ⑤에서 불순물을 넣기도(이온주입) 합니다.',function(t){
+ var k=Math.floor(t*6.99)%6,o=cycBar(k),cx=480,cy=290,r=120;
+ CY_STEPS.forEach(function(s,i){var a=-Math.PI/2+i*Math.PI/3,x=cx+r*Math.cos(a),y=cy+r*Math.sin(a),on=i===k;
+  o+=Ci(x,y,34,on?C.cu:'#16212d','stroke="'+(on?C.cu:'#2f4054')+'" stroke-width="2"')+T(x,y+5,s.slice(2),{a:'middle',s:13,w:700,c:on?'#1a1006':C.ink});});
+ o+='<path d="M'+(cx+60)+' '+(cy-150)+' A150 150 0 1 1 '+(cx-60)+' '+(cy-150)+'" fill="none" stroke="#2f4054" stroke-width="2" stroke-dasharray="5 5"/>';
+ o+=T(cx,cy+5,'한 층',{a:'middle',s:18,w:700,c:C.cu})+T(cx,cy+28,'→ 다음 층 반복',{a:'middle',s:13,c:C.mute});
+ o+=T(800,200,'증착할 막만 바뀌고',{a:'middle',s:14,c:C.mute})+T(800,222,'순서는 같습니다',{a:'middle',s:14,c:C.mute});
+ return o;}];
+S.k2=['① 증착: 막을 깐다','F','웨이퍼 전체에 새 막(예: 산화막)을 고르게 깝니다. 기체를 반응시키는 CVD, 금속 원자를 떼어 붙이는 PVD, 원자 한 층씩 쌓는 ALD가 있습니다.','관리: 막 두께와 균일도, 입자(파티클).',function(t){
+ var a=ez(sg(t,.1,.85)),o=cycBar(0)+cyBase()+cyFilm(30*a);
+ for(var i=0;i<26;i++){var x=CX0+20+rnd(i)*560,y=130+((t*500+i*37)%(CSY-30*a-130));o+=Ci(x,y,3,C.ox,'opacity="'+(1-a*.6)+'"');}
+ o+=lbl(CX1+10,CSY-10,'새 막',C.ox);return o;}];
+S.k3=['② 감광액을 바른다','F','막 위에 빛에 반응하는 감광액(PR)을 떨어뜨리고 웨이퍼를 빠르게 돌려 얇고 고르게 펴 바릅니다(스핀 코팅). 살짝 구워 굳힙니다.','관리: 감광액 두께 균일도. 아직 아무 무늬도 없습니다.',function(t){
+ var a=ez(sg(t,.15,.85)),o=cycBar(1)+cyBase()+cyFilm(30),w=300*a;
+ o+=R(480-w,CSY-30-18,2*w,18,C.pr);if(a<1)o+=R(472,150,16,40,'#6b7684')+Ln(480,190,480,CSY-48,C.pr,4,'stroke-dasharray="4 4"');
+ o+='<path d="M380 '+(CSY+100)+' A100 20 0 1 0 580 '+(CSY+100)+'" fill="none" stroke="'+C.mute+'" stroke-width="2"/>'+T(480,CSY+128-0,'회전',{a:'middle',s:12,c:C.mute});
+ o+=lbl(CX1+10,CSY-36,'감광액',C.pr);return o;}];
+S.k4=['③ 노광: 빛으로 무늬를 찍는다','F','회로 무늬가 뚫린 마스크를 통해 빛(EUV 등)을 쬡니다. 빛을 받은 부분의 감광액만 성질이 바뀝니다. 아직 깎인 곳은 없습니다.','관리: 초점, 노광량, 아래층과의 정렬(오버레이).',function(t){
+ var a=sg(t,.25,.8),o=cycBar(2)+cyBase()+cyFilm(30)+cyPR(CSY-48,18,a>.3,0);
+ o+=R(CX0,150,CX1-CX0,16,C.mask);OP.forEach(function(p){o+=R(p[0],150,p[1]-p[0],16,C.bg);});o+=lbl(CX1+10,163,'마스크',C.mute);
+ OP.forEach(function(p){for(var x=p[0]+8;x<p[1];x+=16)o+=Ln(x,110,x,L(110,CSY-48,Math.min(1,a*1.5)),C.light,2,'opacity=".8"');});
+ o+=T(480,125,'빛',{a:'middle',s:14,w:700,c:C.light});
+ if(a>.5)o+=lbl(640,CSY-60,'빛 받은 감광액 → 성질 변함',C.prx);return o;}];
+S.k5=['④ 현상: 빛 받은 감광액을 녹인다','F','현상액에 담그면 빛을 받은 감광액만 녹아 없어집니다. 이제 감광액에 마스크와 같은 구멍이 뚫렸고, 그 아래 막이 드러납니다.','이 구멍이 다음 단계에서 "깎일 자리"가 됩니다.',function(t){
+ var a=ez(sg(t,.15,.8)),o=cycBar(3)+cyBase()+cyFilm(30)+cyPR(CSY-48,18,true,a);
+ for(var i=0;i<10;i++){var x=CX0+rnd(i+3)*600,y=200+((t*260+i*30)%80);o+=Ci(x,y,4,'#6fb7e8','opacity=".6"');}
+ o+=T(480,180,'현상액',{a:'middle',s:13,c:'#6fb7e8'});if(a>.8)OP.forEach(function(p){o+=arrow((p[0]+p[1])/2,CSY-90,(p[0]+p[1])/2,CSY-36,C.cu);});
+ o+=lbl(CX1+10,CSY-36,'구멍 뚫린 감광액',C.pr);return o;}];
+S.k6=['⑤ 식각: 드러난 곳만 깎는다','F','플라즈마(또는 약액)로 깎으면 감광액이 덮은 곳은 보호되고, 구멍 아래 막만 깎여 나갑니다. 감광액 무늬가 막으로 옮겨집니다.','관리: 깊이, 수직도, 선택비(감광액은 덜, 막은 잘 깎이게).',function(t){
+ var a=ez(sg(t,.15,.85)),o=cycBar(4)+cyBase()+cyFilm(30,a)+cyPR(CSY-48,18,true,1);
+ for(var i=0;i<24;i++){var x=CX0+rnd(i+11)*600,y=150+((t*420+i*19)%(CSY-190));o+=Ci(x,y,3,C.pl,'opacity=".75"');}
+ o+=T(480,135,'플라즈마',{a:'middle',s:13,w:700,c:C.pl});return o;}];
+S.k7=['⑥ 감광액 제거: 무늬 막만 남는다','F','다 쓴 감광액을 벗겨내고 세정합니다. 막에 회로 무늬 한 층이 새겨졌습니다. 감광액은 완성품에 남지 않는 일회용 가림막입니다.','이제 다음 층을 위해 ①로 돌아갑니다.',function(t){
+ var a=ez(sg(t,.1,.6)),o=cycBar(5)+cyBase()+cyFilm(30,1);o+='<g opacity="'+(1-a)+'">'+cyPR(CSY-48-40*a,18,true,1)+'</g>';
+ if(t>.65)o+=T(480,200,'무늬가 새겨진 막 1층 완성',{a:'middle',s:18,w:700,c:C.good})+arrow(480,212,480,CSY-40,C.good);return o;}];
+S.k8=['⑤ 대신 이온주입을 하기도 한다','F','같은 방법으로 감광액 구멍을 만든 뒤, 깎는 대신 불순물 이온을 쏘면 구멍 아래 실리콘에만 불순물이 들어갑니다. 트랜지스터의 소스·드레인을 이렇게 만듭니다.','감광액이 "이온 가림막" 역할. 이후 열처리로 활성화.',function(t){
+ var a=sg(t,.1,.8),o=cycBar(4)+cyBase();o+=cyPR(CSY-18,18,true,1);
+ OP.forEach(function(p){o+=R(p[0],CSY,p[1]-p[0],26*ez(a),'#e8a05a','opacity=".9"');for(var x=p[0]+10;x<p[1];x+=20){var y=L(120,CSY-4,(t*3+x*.01)%1);o+=arrow(x,y-24,x,y,'#f2c46d');}});
+ for(var x2=CX0+30;x2<CX1;x2+=60){if(!inOp(x2)){var y2=L(120,CSY-20,(t*3+x2*.01)%1);o+=arrow(x2,y2-24,x2,y2,'#8a7a5a');}}
+ o+=T(480,110,'이온',{a:'middle',s:14,w:700,c:'#f2c46d'})+lbl(CX1+10,CSY+20,'불순물 영역',' #e8a05a'.trim());return o;}];
+S.k9=['반복 1: 트랜지스터를 먼저 짓는다','F','사이클을 여러 번 돌려 웨이퍼 표면에 트랜지스터를 만듭니다. 소자 분리 → 우물 → 게이트 → 소스·드레인 → 컨택, 단계마다 감광액 사이클이 한 번 이상 들어갑니다.','이 구간을 FEOL이라고 부릅니다.',function(t){
+ var st=Math.min(4,Math.floor(t*5)),o='',names=['소자 분리(STI)','우물(Well)','게이트','소스·드레인','컨택'];
+ o+=cyBase();if(st>=1)o+=R(CX0+60,CSY,480,60,'#5d7aa0','opacity=".55"');
+ o+=R(CX0,CSY,60,50,C.ox)+R(CX1-60,CSY,60,50,C.ox);
+ if(st>=2)o+=R(430,CSY-8,100,8,'#d9d27a')+R(430,CSY-60,100,52,'#9aa6b4');
+ if(st>=3)o+=R(300,CSY,110,22,'#e8a05a')+R(550,CSY,110,22,'#e8a05a');
+ if(st>=4){o+=R(345,CSY-110,20,110,C.cu)+R(595,CSY-110,20,110,C.cu)+R(470,CSY-110,20,50,C.cu)+R(CX0+60,CSY-120,480,10,C.ox,'opacity=".5"');}
+ names.forEach(function(n,i){var on=i===st;o+=R(110+i*150,70,138,28,on?C.cu:(i<st?'#2c4a3a':'#16212d'),'rx="14"')+T(179+i*150,89,n,{a:'middle',s:12,w:on?700:500,c:on?'#1a1006':(i<st?'#9fd3b4':C.mute)});});
+ o+=T(480,135,'단계마다: 증착 → 감광액 → 노광 → 현상 → 식각/이온주입 → 제거',{a:'middle',s:13,c:C.mute});
+ o+=T(480,CSY+105,'트랜지스터 (웨이퍼 맨 아래층)',{a:'middle',s:14,w:600,c:C.ink});return o;}];
+S.k10=['반복 2: 그 위에 배선층을 쌓는다','F','트랜지스터 위로 절연막과 구리 배선을 아파트처럼 여러 층 쌓습니다. 층마다 같은 감광액 사이클로 홈을 판 뒤 구리를 채우고 CMP로 평평하게 갈아냅니다.','이 구간이 BEOL. 최신 칩은 감광액 사이클을 수십 번 거칩니다.',function(t){
+ var n=Math.min(7,1+Math.floor(t*8)),o=cyBase()+R(CX0+60,CSY,480,60,'#5d7aa0','opacity=".45"')+R(430,CSY-40,100,40,'#9aa6b4');
+ for(var i=0;i<n;i++){var y=CSY-40-(i+1)*32,w=(i<3?40:i<5?70:110);o+=R(CX0,y,CX1-CX0,32,'#2a3442','stroke="#3a4656"');
+  for(var x=CX0+30;x<CX1-w;x+=w*2+20)o+=R(x,y+8,w,14,C.cu);if(i>0)o+=R(CX0+90+i*30,y+22,12,10,C.cu);}
+ o+=T(CX1+10,CSY-40-n*32+20,n+'층째',{s:15,w:700,c:C.cu});
+ o+=T(480,90,'층마다: 증착 → 감광액 → 노광 → 현상 → 식각 → 제거 → 구리 채움 → CMP',{a:'middle',s:13,c:C.mute});
+ o+=T(CX0-10,CSY-40-n*16,'위로 갈수록',{a:'end',s:12,c:C.mute})+T(CX0-10,CSY-24-n*16,'굵은 배선',{a:'end',s:12,c:C.mute});return o;}];
+S.k11=['완성 → 검사 → 후공정(TSP)으로','T','이렇게 수십 번의 사이클로 칩 수백 개가 새겨진 웨이퍼가 완성되면, EDS로 칩마다 전기 검사를 하고 TSP로 넘어가 연삭·절단·적층·몰드·테스트를 거칩니다.','HBM은 후공정에서도 이 사이클(감광액→노광→식각·도금)을 다시 씁니다: TSV, 범프, 재배선.',function(t){
+ var o='',a=sg(t,0,.4),b=sg(t,.4,.7),c=sg(t,.7,1);
+ o+=Ci(220,280,110,'#2a3846');for(var gx=0;gx<9;gx++)for(var gy=0;gy<9;gy++){var x=220+(gx-4)*22,y=280+(gy-4)*22;if((x-220)*(x-220)+(y-280)*(y-280)<9000)o+=R(x-9,y-9,18,18,rnd(gx*9+gy)<.08&&a>.5?C.bad:'#8ea7c0','opacity="'+(.5+.5*a)+'" rx="2"');}
+ o+=T(220,420,'완성 웨이퍼 (+EDS 검사)',{a:'middle',s:14,w:600});
+ o+=arrow(350,280,430,280,b>0?C.cu:'#2f4054');
+ o+=box(450,190,220,180,b>0?C.cu:C.mute,'TSP 후공정',['연삭 · 절단','적층 · 몰드','테스트 · 출하'],.35+.65*b);
+ o+=box(700,190,230,180,c>0?C.good:C.mute,'HBM이면 여기서도',['감광액 사이클로','TSV · 범프 · 재배선'],.35+.65*c);
+ return o;}];
+
 var TR={
  gen:{name:'일반 반도체',scenes:['wafer','ox','photo','etch','dep','beol','eds','bg','saw','da','wb','mold','mark','sba','sing','ftest','done']},
+ cyc:{name:'층 쌓기 사이클',dur:7000,scenes:['k1','k2','k3','k4','k5','k6','k7','k8','k9','k10','k11']},
  tr:{name:'트랜지스터',scenes:['t1','t2','t3','t4','t5','t6','t7','t8']},
  hb:{name:'하이브리드 본딩',scenes:['b1','b2','b3','b4','b5','b6','b7','b8']},
  dthin:{name:'심화 · 박막화',dur:9000,scenes:['a1','a2','a3','a4','a5']},
